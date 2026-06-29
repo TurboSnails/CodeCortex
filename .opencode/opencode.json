@@ -1,0 +1,29 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git"
+  ],
+  "permission": {
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "webfetch": "allow",
+    "question": "allow",
+    "edit": {
+      "*": "ask",
+      ".worktrees/**": "allow",
+      "openspec/changes/**": "allow",
+      "openspec/specs/**": "allow",
+      "openspec/schemas/**": "deny",
+      "openspec/config.yaml": "deny",
+      ".opencode/**": "allow",
+      "AGENTS.md": "allow",
+      "opencode.json": "allow"
+    },
+    "bash": {
+      "*": "allow"
+    },
+    "skill": "allow",
+    "task": "allow"
+  }
+}
