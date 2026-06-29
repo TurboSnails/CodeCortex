@@ -43,7 +43,14 @@
 ### 5. 多模型审核：三态全局开关
 **决策**：全局配置（关闭 / 询问 / 自动）持久化在本地配置文件（如 `~/.codecortex/config.json`）。"关闭"需手动点击审核按钮；"询问"在 Stop hook 触发时弹出阻塞确认弹窗；"自动"直接将 git diff 发送给配置的审核模型（Gemini/GPT 等，API key 用户自备）。
 **理由**：默认关闭保证不浪费 token、不强加额外延迟；"询问"用阻塞弹窗而非 toast，因为审核与否是有分量的决定，不应被当作可忽略的通知。
-**实现要点**：Stop hook 的 `reason` 字段需要过滤——仅在任务真正完成时触发审核流程，排除等待 permission、用户中断等情况。
+**实测修正（任务 1.3）**：实际抓取 Claude Code Stop hook payload 后发现**不存在 `reason` 字段**。真实字段为：
+```json
+{"session_id","transcript_path","cwd","permission_mode","effort",
+ "hook_event_name":"Stop","stop_hook_active":false,
+ "last_assistant_message":"...","background_tasks":[],"session_crons":[]}
+```
+`stop_hook_active` 是布尔值，仅用于防止"Stop hook 强制续写"造成的死循环，不能用来区分"任务完成"与"等待权限"。而且经验证，"等待权限"根本不会触发 Stop——权限确认发生在 PreToolUse 阶段，是同一轮对话内的阻塞，CC 不会"停下"。
+**修正后的过滤策略**：放弃按字段精确过滤，改为对 `last_assistant_message` 做轻量启发式判断（例如以问号结尾、包含"需要你确认/请问"等模式 → 判定为"提问而非完成"，抑制审核触发）；该启发式不保证 100% 准确，属于已知限制，详见 Risks。
 
 ### 6. 远程/移动访问不自建隧道
 **决策**：v1 不实现认证、不实现隧道穿透，网关默认只绑定 `localhost`；需要远程访问时由用户自行用 Tailscale/同等工具打通局域网。
@@ -52,7 +59,7 @@
 ## Risks / Trade-offs
 
 - **[风险] hooks payload 信息粒度可能不够丰富（如没有完整 diff 内容）** → 缓解：网关在收到 PostToolUse 事件后，直接读取对应 workspace 的 git diff，而不是完全依赖 hook payload
-- **[风险] Stop hook 在等待 permission 时触发，导致审核误触发** → 缓解：依据 hook payload 的 `reason`/`stop_hook_active` 等字段过滤，需在实现前以当前 Claude Code 版本验证字段可用性
+- **[风险] Stop hook 没有字段能精确区分"任务完成"和"CC 在提问"** → 缓解：用 `last_assistant_message` 的启发式判断（问号/确认类措辞）做粗筛；"等待权限"已确认不会触发 Stop，无需为此过滤；启发式误判时用户在"询问"弹窗里选"否"即可，成本可控
 - **[风险] 网关重启导致内存中的 session 状态丢失** → 缓解：可接受，因为下一次 hook 触发会重新注册 session；历史事件时间线丢失是 v1 的已知限制
 - **[风险] 本地网关无认证，一旦通过 Tailscale 等暴露到局域网，同网段内其他设备可访问** → 缓解：文档明确提示默认仅 localhost 绑定，远程访问的访问控制责任交给 Tailscale ACL，不在本方案内置认证
 - **[风险] 多模型审核引入外部 API 调用成本和延迟** → 缓解：默认关闭，用户主动选择开启，且需自备 API key
@@ -63,6 +70,6 @@
 
 ## Open Questions
 
-- Claude Code 当前版本 hooks payload 的具体字段（尤其 Stop hook 的 `reason`）需要在实现前实测确认
+- ~~Claude Code 当前版本 hooks payload 的具体字段~~ 已实测确认（见决策 5），不再是 open question
 - 规划层生成的 OpenSpec change 应该写入被监控项目自身的 `openspec/` 目录，还是 CodeCortex 工具独立维护的目录——待实现时根据被监控项目是否已有 `openspec/` 决定
 - 前端框架（React/Svelte/其他）留待 tasks 阶段细化，不影响本设计的架构决策

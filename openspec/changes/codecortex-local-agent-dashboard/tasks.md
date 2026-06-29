@@ -1,12 +1,12 @@
 ## 1. 网关基础设施（hook-gateway）
 
-- [ ] 1.1 搭建 Node.js 网关项目骨架（Express/Fastify + `ws`），确定端口和启动方式
-- [ ] 1.2 实现 hook 事件接收端点，接受 SessionStart / PreToolUse / PostToolUse / Stop 四类 POST 请求
-- [ ] 1.3 实测当前 Claude Code 版本的 hook payload 字段（尤其 Stop 的 `reason`/`stop_hook_active`），确认是否满足设计假设
-- [ ] 1.4 实现内存中的 session 注册表（以 `session_id` 为 key），处理新建/更新/缺失记录的重建逻辑
-- [ ] 1.5 实现 WebSocket 广播：事件到达后向所有已连接客户端推送，按 `session_id` 标记
-- [ ] 1.6 网关默认只绑定 `localhost`，验证局域网内其他设备无法直接访问
-- [ ] 1.7 编写 `~/.claude/settings.json` 的 hooks 配置示例/安装脚本，确保不影响 CC 原生行为
+- [x] 1.1 搭建 Node.js 网关项目骨架（Express/Fastify + `ws`），确定端口和启动方式
+- [x] 1.2 实现 hook 事件接收端点，接受 SessionStart / PreToolUse / PostToolUse / Stop 四类 POST 请求
+- [x] 1.3 实测当前 Claude Code 版本的 hook payload 字段（尤其 Stop 的 `reason`/`stop_hook_active`），确认是否满足设计假设
+- [x] 1.4 实现内存中的 session 注册表（以 `session_id` 为 key），处理新建/更新/缺失记录的重建逻辑
+- [x] 1.5 实现 WebSocket 广播：事件到达后向所有已连接客户端推送，按 `session_id` 标记
+- [x] 1.6 网关默认只绑定 `localhost`，验证局域网内其他设备无法直接访问
+- [x] 1.7 编写 `~/.claude/settings.json` 的 hooks 配置示例/安装脚本，确保不影响 CC 原生行为
 
 ## 2. 单 Session 可视化（session-monitor 基础）
 
@@ -37,7 +37,7 @@
 - [ ] 5.1 设计本地配置文件结构（如 `~/.codecortex/config.json`），存储审核模式（关闭/询问/自动）和审核模型 API 配置
 - [ ] 5.2 实现设置 UI：三态开关，切换后立即生效
 - [ ] 5.3 实现"关闭"模式下的手动审核按钮及触发逻辑
-- [ ] 5.4 实现 Stop hook 的 `reason` 过滤逻辑，区分"任务真正完成"与"等待权限/中断"
+- [ ] 5.4 实现 `last_assistant_message` 启发式判断（问号/确认类措辞 → 视为"提问"，抑制审核触发）
 - [ ] 5.5 实现"询问"模式：任务完成时弹出阻塞确认弹窗
 - [ ] 5.6 实现"自动"模式：任务完成时自动调用审核模型
 - [ ] 5.7 实现审核请求：将当前 git diff 发送给配置的外部模型 API（Gemini/GPT），处理 API key 缺失等异常情况

@@ -19,21 +19,23 @@
 - **THEN** 系统将当前 session 的 git diff 发送给配置的审核模型，并在审核面板展示返回意见
 
 ### Requirement: Ask-Before-Review Confirmation
-当审核模式为「询问」时，session 在真正完成时 SHALL 弹出阻塞式确认弹窗询问用户是否审核，而不是静默触发或静默跳过。
+当审核模式为「询问」时，session 触发 Stop hook 且 `last_assistant_message` 未被判定为"提问"时，SHALL 弹出阻塞式确认弹窗询问用户是否审核，而不是静默触发或静默跳过。
 
-#### Scenario: 任务完成后弹出询问
-- **WHEN** 审核模式为「询问」，CC 触发 Stop hook 且 `reason` 表示任务真正完成
+注：Claude Code 的 Stop hook payload 不含 `reason` 字段，也没有专门标识"等待权限"的字段（等待权限发生在 PreToolUse 阶段、不会触发 Stop）。判断是否为真正完成，依赖对 `last_assistant_message` 文本的启发式判断（如是否以问号结尾、是否包含"需要确认/请问"等措辞）。
+
+#### Scenario: 完成类消息触发询问
+- **WHEN** 审核模式为「询问」，CC 触发 Stop hook，且 `last_assistant_message` 未匹配"提问"启发式规则
 - **THEN** UI 弹出阻塞确认弹窗，包含"是"和"否"两个选项
 
-#### Scenario: 等待权限确认时不弹出询问
-- **WHEN** 审核模式为「询问」，CC 触发 Stop hook 但 `reason` 表示正在等待用户授权（非任务完成）
+#### Scenario: 提问类消息不弹出询问
+- **WHEN** 审核模式为「询问」，CC 触发 Stop hook，且 `last_assistant_message` 匹配"提问"启发式规则（如以问号结尾）
 - **THEN** 不弹出审核询问弹窗
 
 ### Requirement: Automatic Review Trigger
-当审核模式为「自动」时，session 真正完成时 SHALL 自动将 diff 发送审核，无需用户任何操作，审核结果到达后展示在审核面板。
+当审核模式为「自动」时，session 触发 Stop hook 且 `last_assistant_message` 未被判定为"提问"时，SHALL 自动将 diff 发送审核，无需用户任何操作，审核结果到达后展示在审核面板。
 
 #### Scenario: 自动审核触发
-- **WHEN** 审核模式为「自动」，CC 触发 Stop hook 且确认任务已完成
+- **WHEN** 审核模式为「自动」，CC 触发 Stop hook，且 `last_assistant_message` 未匹配"提问"启发式规则
 - **THEN** 系统自动调用配置的审核模型并在审核面板展示结果，不打断用户当前操作
 
 ### Requirement: Review Result Display

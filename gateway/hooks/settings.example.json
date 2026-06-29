@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "curl -s --max-time 2 -X POST http://127.0.0.1:4317/hooks -H 'content-type: application/json' -d @- >/dev/null 2>&1 || true" }] }
+    ],
+    "PreToolUse": [
+      { "hooks": [{ "type": "command", "command": "curl -s --max-time 2 -X POST http://127.0.0.1:4317/hooks -H 'content-type: application/json' -d @- >/dev/null 2>&1 || true" }] }
+    ],
+    "PostToolUse": [
+      { "hooks": [{ "type": "command", "command": "curl -s --max-time 2 -X POST http://127.0.0.1:4317/hooks -H 'content-type: application/json' -d @- >/dev/null 2>&1 || true" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "curl -s --max-time 2 -X POST http://127.0.0.1:4317/hooks -H 'content-type: application/json' -d @- >/dev/null 2>&1 || true" }] }
+    ]
+  }
+}
