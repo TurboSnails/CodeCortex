@@ -517,6 +517,10 @@ export const api = {
       }),
     getLatest: (sessionId: string) =>
       request<import("./types").ReviewResult>(`/review/${encodeURIComponent(sessionId)}`),
+    getHistory: (sessionId: string) =>
+      request<import("./types").ReviewHistoryResponse>(
+        `/review/${encodeURIComponent(sessionId)}/history`
+      ),
   },
 };
 
