@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShieldCheck, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { api } from "../lib/api";
+import { MarkdownContent } from "./conversation/MarkdownContent";
 import type { ReviewResult } from "../lib/types";
 
 interface Props {
@@ -59,11 +60,9 @@ export function ReviewTrigger({ sessionId }: Props) {
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>Fetching diff and calling review model…</span>
                 </div>
-              ) : (
-                <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">
-                  {result?.review}
-                </pre>
-              )}
+              ) : result?.review ? (
+                <MarkdownContent text={result.review} dense />
+              ) : null}
             </div>
           )}
         </div>

@@ -215,6 +215,17 @@ export function SessionDetail() {
     return () => { cancelled = true; };
   }, [id]);
 
+  const handleToggleTask = useCallback(
+    (taskIndex: number, done: boolean) => {
+      if (!id) return;
+      api.plan
+        .toggleTask(id, taskIndex, done)
+        .then(setPlan)
+        .catch(() => {});
+    },
+    [id]
+  );
+
   // Load transcripts list (for Agent → Conversation navigation ID mapping)
   useEffect(() => {
     if (!id) return;
@@ -685,7 +696,7 @@ export function SessionDetail() {
             </div>
           )}
 
-          {plan && <PlanPanel plan={plan} />}
+          {plan && <PlanPanel plan={plan} onToggle={handleToggleTask} />}
 
           <ReviewTrigger sessionId={id ?? ""} />
 

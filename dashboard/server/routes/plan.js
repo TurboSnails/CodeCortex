@@ -60,6 +60,26 @@ function readTasksFromFile(filePath) {
     }));
 }
 
+// Toggles the checkbox at `taskIndex` (counting only task-checkbox lines, in
+// order) and rewrites the file. Returns the updated task list, or null if
+// taskIndex is out of range.
+function toggleTaskInFile(filePath, taskIndex, done) {
+  const lines = fs.readFileSync(filePath, "utf8").split("\n");
+  let seen = -1;
+  let found = false;
+  const nextLines = lines.map((line) => {
+    if (!/^- \[[ x]\]/.test(line)) return line;
+    seen += 1;
+    if (seen !== taskIndex) return line;
+    found = true;
+    const text = line.replace(/^- \[[ x]\]\s*/, "").trim();
+    return `- [${done ? "x" : " "}] ${text}`;
+  });
+  if (!found) return null;
+  fs.writeFileSync(filePath, nextLines.join("\n"), "utf8");
+  return readTasksFromFile(filePath);
+}
+
 // POST /api/plan/:sessionId — create a plan for a session
 router.post("/:sessionId", (req, res) => {
   const { sessionId } = req.params;
@@ -111,6 +131,39 @@ router.get("/:sessionId", (req, res) => {
   }
 
   const tasks = readTasksFromFile(filePath);
+  return res.status(200).json({ changeName: plan.change_name, tasks });
+});
+
+// PATCH /api/plan/:sessionId/tasks/:index — toggle a task's done state
+router.patch("/:sessionId/tasks/:index", (req, res) => {
+  const { sessionId, index } = req.params;
+  const taskIndex = Number(index);
+  const { done } = req.body || {};
+
+  if (!Number.isInteger(taskIndex) || taskIndex < 0) {
+    return res.status(400).json({ error: "index must be a non-negative integer" });
+  }
+  if (typeof done !== "boolean") {
+    return res.status(400).json({ error: "done must be a boolean" });
+  }
+
+  const plan = stmts.getSessionPlan.get(sessionId);
+  if (!plan) {
+    return res.status(404).json({ error: "no plan for this session" });
+  }
+
+  const filePath = tasksFilePath(sessionId);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: "plan file missing" });
+  }
+
+  const tasks = toggleTaskInFile(filePath, taskIndex, done);
+  if (!tasks) {
+    return res.status(400).json({ error: "task index out of range" });
+  }
+
+  broadcast("plan_updated", { sessionId, changeName: plan.change_name, tasks });
+
   return res.status(200).json({ changeName: plan.change_name, tasks });
 });
 

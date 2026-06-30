@@ -497,6 +497,11 @@ export const api = {
       request<{ changeName: string; tasks: { done: boolean; text: string }[] }>(
         `/plan/${encodeURIComponent(sessionId)}`
       ),
+    toggleTask: (sessionId: string, taskIndex: number, done: boolean) =>
+      request<{ changeName: string; tasks: { done: boolean; text: string }[] }>(
+        `/plan/${encodeURIComponent(sessionId)}/tasks/${taskIndex}`,
+        { method: "PATCH", body: JSON.stringify({ done }) }
+      ),
   },
 
   review: {

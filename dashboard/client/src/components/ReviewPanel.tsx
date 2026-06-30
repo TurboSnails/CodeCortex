@@ -1,4 +1,5 @@
 import { X, Bot, Loader2 } from "lucide-react";
+import { MarkdownContent } from "./conversation/MarkdownContent";
 import type { ReviewResult } from "../lib/types";
 
 interface Props {
@@ -34,9 +35,7 @@ export function ReviewPanel({ result, onClose, loading = false }: Props) {
             <span className="text-sm">Reviewing changes…</span>
           </div>
         ) : result ? (
-          <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">
-            {result.review}
-          </pre>
+          <MarkdownContent text={result.review} />
         ) : (
           <p className="text-sm text-slate-500">No review result.</p>
         )}

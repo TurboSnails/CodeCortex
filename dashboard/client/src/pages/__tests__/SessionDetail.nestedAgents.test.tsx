@@ -94,6 +94,7 @@ vi.mock("../../lib/api", () => ({
     plan: {
       get: vi.fn(() => Promise.reject(new Error("no plan"))),
       create: vi.fn(() => Promise.resolve({ changeName: "test", tasks: [] })),
+      toggleTask: vi.fn(() => Promise.resolve({ changeName: "test", tasks: [] })),
     },
     review: {
       trigger: vi.fn(() => Promise.reject(new Error("no review"))),

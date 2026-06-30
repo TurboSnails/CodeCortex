@@ -377,6 +377,7 @@ vi.mock("../../lib/api", async (importOriginal) => {
       plan: {
         get: vi.fn(() => Promise.reject(new Error("no plan"))),
         create: r({ changeName: "test-plan", tasks: [] }),
+        toggleTask: r({ changeName: "test-plan", tasks: [] }),
       },
       review: {
         getConfig: r({ reviewMode: "off", reviewModel: { provider: "gemini", apiKey: "", model: "gemini-1.5-flash", baseUrl: null } }),

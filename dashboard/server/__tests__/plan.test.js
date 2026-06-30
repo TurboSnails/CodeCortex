@@ -165,3 +165,49 @@ describe("GET /api/plan/:sessionId", () => {
     assert.ok(doneTask.text.includes("task one"));
   });
 });
+
+describe("PATCH /api/plan/:sessionId/tasks/:index", () => {
+  it("returns 404 when no plan exists for the session", async () => {
+    insertSession("patch-no-plan-session");
+    const res = await req("PATCH", "/api/plan/patch-no-plan-session/tasks/0", { done: true });
+    assert.equal(res.status, 404);
+  });
+
+  it("toggles a task to done and persists it to tasks.md", async () => {
+    const sessionId = "patch-test-1";
+    insertSession(sessionId);
+    await req("POST", `/api/plan/${sessionId}`, { description: "1. task one\n2. task two" });
+
+    const res = await req("PATCH", `/api/plan/${sessionId}/tasks/0`, { done: true });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.tasks[0].done, true);
+    assert.equal(res.body.tasks[1].done, false);
+
+    const planFile = path.join(PLANS_DIR, sessionId, "tasks.md");
+    const content = fs.readFileSync(planFile, "utf8");
+    assert.ok(content.includes("- [x] task one"));
+    assert.ok(content.includes("- [ ] task two"));
+  });
+
+  it("toggles a task back to not-done", async () => {
+    const sessionId = "patch-test-2";
+    insertSession(sessionId);
+    await req("POST", `/api/plan/${sessionId}`, { description: "1. task one\n2. task two" });
+    await req("PATCH", `/api/plan/${sessionId}/tasks/0`, { done: true });
+
+    const res = await req("PATCH", `/api/plan/${sessionId}/tasks/0`, { done: false });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.tasks[0].done, false);
+  });
+
+  it("returns 400 for an out-of-range task index", async () => {
+    const sessionId = "patch-test-3";
+    insertSession(sessionId);
+    await req("POST", `/api/plan/${sessionId}`, { description: "only one task" });
+
+    const res = await req("PATCH", `/api/plan/${sessionId}/tasks/5`, { done: true });
+    assert.equal(res.status, 400);
+  });
+});
