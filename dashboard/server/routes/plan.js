@@ -1,6 +1,7 @@
 /**
  * Planning layer routes — create and read OpenSpec-style task plans for sessions.
- * Plans are stored as tasks.md files under CODECORTEX_PLANS_DIR (default ~/.codecortex/plans/).
+ * When the session cwd contains an openspec/ directory, writes a proper change
+ * there. Otherwise falls back to ~/.codecortex/plans/<sessionId>/.
  */
 
 const { Router } = require("express");
@@ -9,45 +10,15 @@ const path = require("path");
 const os = require("os");
 const { stmts } = require("../db");
 const { broadcast } = require("../websocket");
+const { toSlug, parseTasks, detectPlanLocation, generateOpenSpecChange } =
+  require("../lib/openspec-plan");
+const planWatcher = require("../lib/plan-watcher");
+
+const PLANS_BASE =
+  process.env.CODECORTEX_PLANS_DIR ||
+  path.join(os.homedir(), ".codecortex", "plans");
 
 const router = Router();
-
-const PLANS_DIR =
-  process.env.CODECORTEX_PLANS_DIR || path.join(os.homedir(), ".codecortex", "plans");
-
-function plansDir() {
-  return PLANS_DIR;
-}
-
-function tasksFilePath(sessionId) {
-  return path.join(plansDir(), sessionId, "tasks.md");
-}
-
-function toSlug(description) {
-  return description
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .trim()
-    .replace(/\s+/g, "-")
-    .slice(0, 40)
-    .replace(/-+$/, "");
-}
-
-function parseTasks(description) {
-  const lines = description.split("\n").map((l) => l.trim()).filter(Boolean);
-  const numbered = lines.filter((l) => /^\d+[.)]\s/.test(l));
-  if (numbered.length > 1) {
-    return numbered.map((l) => l.replace(/^\d+[.)]\s+/, "").trim());
-  }
-  // Single prose description → one task
-  return [description.trim()];
-}
-
-function buildTasksMd(changeName, tasks) {
-  const header = `# Plan: ${changeName}\n\n`;
-  const body = tasks.map((t) => `- [ ] ${t}`).join("\n");
-  return header + body + "\n";
-}
 
 function readTasksFromFile(filePath) {
   const content = fs.readFileSync(filePath, "utf8");
@@ -60,9 +31,14 @@ function readTasksFromFile(filePath) {
     }));
 }
 
-// Toggles the checkbox at `taskIndex` (counting only task-checkbox lines, in
-// order) and rewrites the file. Returns the updated task list, or null if
-// taskIndex is out of range.
+// Returns the absolute path to tasks.md for a plan row.
+// New rows use change_dir; legacy rows (change_dir IS NULL) fall back to
+// the old plans_dir/<session_id> layout.
+function getTasksFilePath(plan) {
+  if (plan.change_dir) return path.join(plan.change_dir, "tasks.md");
+  return path.join(plan.plans_dir, plan.session_id, "tasks.md");
+}
+
 function toggleTaskInFile(filePath, taskIndex, done) {
   const lines = fs.readFileSync(filePath, "utf8").split("\n");
   let seen = -1;
@@ -100,20 +76,22 @@ router.post("/:sessionId", (req, res) => {
   }
 
   const changeName = toSlug(description) || `plan-${Date.now()}`;
-  const sessionPlanDir = path.join(plansDir(), sessionId);
-  fs.mkdirSync(sessionPlanDir, { recursive: true });
-
   const tasks = parseTasks(description);
-  const tasksContent = buildTasksMd(changeName, tasks);
-  fs.writeFileSync(path.join(sessionPlanDir, "tasks.md"), tasksContent, "utf8");
+  const { type: planType, changeDir } = detectPlanLocation(
+    session.cwd || "",
+    sessionId
+  );
+  generateOpenSpecChange(changeDir, sessionId, description, tasks);
 
-  stmts.insertSessionPlan.run(sessionId, changeName, plansDir());
+  stmts.insertSessionPlan.run(sessionId, changeName, PLANS_BASE, planType, changeDir);
 
   const taskObjects = tasks.map((t) => ({ done: false, text: t }));
-
   broadcast("plan_updated", { sessionId, changeName, tasks: taskObjects });
 
-  return res.status(201).json({ changeName, tasks: taskObjects });
+  const tasksPath = path.join(changeDir, "tasks.md");
+  planWatcher.watch(sessionId, tasksPath);
+
+  return res.status(201).json({ changeName, tasks: taskObjects, planType, changeDir });
 });
 
 // GET /api/plan/:sessionId — read current plan tasks
@@ -125,7 +103,7 @@ router.get("/:sessionId", (req, res) => {
     return res.status(404).json({ error: "no plan for this session" });
   }
 
-  const filePath = tasksFilePath(sessionId);
+  const filePath = getTasksFilePath(plan);
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ error: "plan file missing" });
   }
@@ -152,19 +130,23 @@ router.patch("/:sessionId/tasks/:index", (req, res) => {
     return res.status(404).json({ error: "no plan for this session" });
   }
 
-  const filePath = tasksFilePath(sessionId);
+  const filePath = getTasksFilePath(plan);
   if (!fs.existsSync(filePath)) {
     return res.status(404).json({ error: "plan file missing" });
   }
 
-  const tasks = toggleTaskInFile(filePath, taskIndex, done);
-  if (!tasks) {
-    return res.status(400).json({ error: "task index out of range" });
+  const updatedTasks = toggleTaskInFile(filePath, taskIndex, done);
+  if (updatedTasks === null) {
+    return res.status(404).json({ error: "task index out of range" });
   }
 
-  broadcast("plan_updated", { sessionId, changeName: plan.change_name, tasks });
+  broadcast("plan_updated", {
+    sessionId,
+    changeName: plan.change_name,
+    tasks: updatedTasks,
+  });
 
-  return res.status(200).json({ changeName: plan.change_name, tasks });
+  return res.status(200).json({ changeName: plan.change_name, tasks: updatedTasks });
 });
 
 module.exports = router;

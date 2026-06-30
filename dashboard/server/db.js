@@ -1325,8 +1325,8 @@ const stmts = {
   // ── Session plans (planning layer) ────────────────────────────────────────
   getSessionPlan: db.prepare("SELECT * FROM session_plans WHERE session_id = ?"),
   insertSessionPlan: db.prepare(
-    `INSERT INTO session_plans (session_id, change_name, plans_dir, created_at)
-     VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
+    `INSERT INTO session_plans (session_id, change_name, plans_dir, plan_type, change_dir, created_at)
+     VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
   ),
 
   // ── Session reviews (multi-model review) ─────────────────────────────────
