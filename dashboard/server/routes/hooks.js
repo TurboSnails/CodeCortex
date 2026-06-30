@@ -12,6 +12,7 @@ const TranscriptCache = require("../lib/transcript-cache");
 const { scanAndImportSubagents } = require("../../scripts/import-history");
 const { evaluateEvent } = require("../lib/alerts");
 const { ingestWorkflowsForSession } = require("../lib/workflow-ingest");
+const { triggerIfAppropriate } = require("../lib/review");
 
 const router = Router();
 
@@ -385,6 +386,9 @@ const processEvent = db.transaction((hookType, data) => {
       if (mainAgentId) {
         broadcast("agent_updated", stmts.getAgent.get(mainAgentId));
       }
+
+      // Trigger review if mode is ask/auto and message looks like a completion.
+      triggerIfAppropriate(sessionId, data.last_assistant_message);
       break;
     }
 

@@ -39,14 +39,14 @@
 
 ## 5. 多模型审核（multi-model-review）
 
-- [ ] 5.1 设计本地配置文件结构（如 `~/.codecortex/config.json`），存储审核模式（关闭/询问/自动）和审核模型 API 配置
-- [ ] 5.2 实现设置 UI：三态开关，切换后立即生效
-- [ ] 5.3 实现"关闭"模式下的手动审核按钮及触发逻辑
-- [ ] 5.4 实现 `last_assistant_message` 启发式判断（问号/确认类措辞 → 视为"提问"，抑制审核触发）
-- [ ] 5.5 实现"询问"模式：任务完成时弹出阻塞确认弹窗
-- [ ] 5.6 实现"自动"模式：任务完成时自动调用审核模型
-- [ ] 5.7 实现审核请求：将当前 git diff 发送给配置的外部模型 API（Gemini/GPT），处理 API key 缺失等异常情况
-- [ ] 5.8 实现审核面板：展示模型名称和审核意见文本
+- [x] 5.1 设计本地配置文件结构 `~/.codecortex/config.json`，存储审核模式（关/询问/自动）和模型配置
+- [x] 5.2 实现 ReviewSettings UI：三态单选 + 提供商选择 + Model/API Key 输入 + 自定义 baseUrl（Settings 页底部）
+- [x] 5.3 实现"关闭"模式下的手动审核按钮（ReviewTrigger，嵌入 SessionDetail agents 标签页）
+- [x] 5.4 实现 `last_assistant_message` 启发式判断（isQuestion，中英双语模式）
+- [x] 5.5 实现"询问"模式：Stop hook → review_prompt WS 事件 → 客户端 ReviewPrompt 阻塞弹窗
+- [x] 5.6 实现"自动"模式：Stop hook → 直接调用 performReview → review_ready WS 事件推送
+- [x] 5.7 实现审核请求：git diff + OpenAI-compatible HTTP（支持 Gemini / GPT / Kimi / MiniMax / Custom），API key 缺失时返回友好提示
+- [x] 5.8 实现审核面板：ReviewPanel 浮动卡片 + ReviewTrigger 折叠展示，含模型名称和审核意见
 
 ## 6. 收尾验证
 

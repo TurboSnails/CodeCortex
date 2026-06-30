@@ -68,6 +68,7 @@ import type {
 } from "../lib/types";
 import { WorkflowRunsPanel } from "../components/workflows/WorkflowRunsPanel";
 import { PlanPanel } from "../components/PlanPanel";
+import { ReviewTrigger } from "../components/ReviewTrigger";
 
 type DetailTab = "agents" | "conversation" | "timeline";
 
@@ -685,6 +686,8 @@ export function SessionDetail() {
           )}
 
           {plan && <PlanPanel plan={plan} />}
+
+          <ReviewTrigger sessionId={id ?? ""} />
 
           {agents.length === 0 ? (
             <p className="text-sm text-gray-500">{t("detail.noAgents")}</p>

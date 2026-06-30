@@ -396,7 +396,9 @@ export interface WSMessage {
     | "alert_triggered"
     | "alert_updated"
     | "workflow_upserted"
-    | "plan_updated";
+    | "plan_updated"
+    | "review_prompt"
+    | "review_ready";
   data:
     | Session
     | Agent
@@ -802,4 +804,28 @@ export interface PlanTask {
 export interface SessionPlan {
   changeName: string;
   tasks: PlanTask[];
+}
+
+// ── Review layer ──────────────────────────────────────────────────────────────
+
+export type ReviewMode = "off" | "ask" | "auto";
+export type ReviewProvider = "openai" | "gemini" | "kimi" | "minimax" | "custom";
+
+export interface ReviewModelConfig {
+  provider: ReviewProvider;
+  apiKey: string;
+  model: string;
+  baseUrl: string | null;
+}
+
+export interface ReviewConfig {
+  reviewMode: ReviewMode;
+  reviewModel: ReviewModelConfig;
+}
+
+export interface ReviewResult {
+  id: number;
+  model: string;
+  review: string;
+  createdAt: string;
 }

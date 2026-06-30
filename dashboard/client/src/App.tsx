@@ -23,27 +23,48 @@ import { useWebSocket } from "./hooks/useWebSocket";
 import { useNotifications } from "./hooks/useNotifications";
 import { eventBus } from "./lib/eventBus";
 import { PlanningPrompt } from "./components/PlanningPrompt";
+import { ReviewPrompt } from "./components/ReviewPrompt";
+import { ReviewPanel } from "./components/ReviewPanel";
 import { api } from "./lib/api";
-import type { WSMessage, Session } from "./lib/types";
+import type { WSMessage, Session, ReviewResult } from "./lib/types";
 
 export default function App() {
   const [pendingPlanSession, setPendingPlanSession] = useState<Session | null>(null);
   const [planSubmitting, setPlanSubmitting] = useState(false);
+
+  // Review state
+  const [reviewPromptSessionId, setReviewPromptSessionId] = useState<string | null>(null);
+  const [reviewResult, setReviewResult] = useState<ReviewResult | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   const onMessage = useCallback((msg: WSMessage) => {
     eventBus.publish(msg);
     if (msg.type === "session_created") {
       setPendingPlanSession(msg.data as Session);
     }
+    if (msg.type === "review_prompt") {
+      const { sessionId } = msg.data as { sessionId: string };
+      setReviewPromptSessionId(sessionId);
+    }
+    if (msg.type === "review_ready") {
+      const payload = msg.data as { sessionId: string; model: string; review: string; id: number };
+      setReviewResult({ id: payload.id, model: payload.model, review: payload.review, createdAt: new Date().toISOString() });
+      setReviewLoading(false);
+      setReviewPromptSessionId(null);
+    }
   }, []);
 
   const { connected } = useWebSocket(onMessage);
   useNotifications();
 
-  // Dismiss prompt on Escape
+  // Dismiss prompts on Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setPendingPlanSession(null);
+      if (e.key === "Escape") {
+        setPendingPlanSession(null);
+        setReviewPromptSessionId(null);
+        setReviewResult(null);
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -60,6 +81,19 @@ export default function App() {
     }
   }
 
+  async function handleReviewConfirm() {
+    if (!reviewPromptSessionId) return;
+    setReviewPromptSessionId(null);
+    setReviewLoading(true);
+    setReviewResult(null);
+    try {
+      const result = await api.review.trigger(reviewPromptSessionId);
+      setReviewResult({ id: 0, model: result.model, review: result.review, createdAt: new Date().toISOString() });
+    } finally {
+      setReviewLoading(false);
+    }
+  }
+
   return (
     <>
       <SplashScreen />
@@ -69,6 +103,20 @@ export default function App() {
           onSkip={() => setPendingPlanSession(null)}
           onPlan={handlePlan}
           submitting={planSubmitting}
+        />
+      )}
+      {reviewPromptSessionId && !reviewLoading && !reviewResult && (
+        <ReviewPrompt
+          sessionId={reviewPromptSessionId}
+          onConfirm={handleReviewConfirm}
+          onDismiss={() => setReviewPromptSessionId(null)}
+        />
+      )}
+      {(reviewLoading || reviewResult) && (
+        <ReviewPanel
+          result={reviewResult}
+          loading={reviewLoading}
+          onClose={() => { setReviewResult(null); setReviewLoading(false); }}
         />
       )}
       <BrowserRouter>

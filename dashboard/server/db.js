@@ -388,6 +388,18 @@ db.exec(`
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS session_reviews (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id  TEXT NOT NULL,
+    model       TEXT NOT NULL,
+    diff        TEXT,
+    review      TEXT,
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_session_reviews_session ON session_reviews(session_id, created_at DESC);
 `);
 
 // Migrate: link agent rows to a workflow run. Workflow inner-agents are already
@@ -1303,6 +1315,15 @@ const stmts = {
   insertSessionPlan: db.prepare(
     `INSERT INTO session_plans (session_id, change_name, plans_dir, created_at)
      VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
+  ),
+
+  // ── Session reviews (multi-model review) ─────────────────────────────────
+  insertReview: db.prepare(
+    `INSERT INTO session_reviews (session_id, model, diff, review)
+     VALUES (?, ?, ?, ?)`
+  ),
+  latestReview: db.prepare(
+    "SELECT * FROM session_reviews WHERE session_id = ? ORDER BY created_at DESC, id DESC LIMIT 1"
   ),
 };
 

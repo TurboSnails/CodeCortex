@@ -63,6 +63,7 @@ const runRouter = require("./routes/run");
 const alertsRouter = require("./routes/alerts");
 const webhooksRouter = require("./routes/webhooks");
 const planRouter = require("./routes/plan");
+const reviewRouter = require("./routes/review");
 
 function createApp() {
   const app = express();
@@ -92,6 +93,7 @@ function createApp() {
   app.use("/api/alerts", alertsRouter);
   app.use("/api/webhooks", webhooksRouter);
   app.use("/api/plan", planRouter);
+  app.use("/api/review", reviewRouter);
   app.get("/api/openapi.json", (_req, res) => {
     res.json(openApiSpec);
   });

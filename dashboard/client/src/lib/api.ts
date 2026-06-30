@@ -498,6 +498,21 @@ export const api = {
         `/plan/${encodeURIComponent(sessionId)}`
       ),
   },
+
+  review: {
+    getConfig: () => request<import("./types").ReviewConfig>("/review/config"),
+    patchConfig: (updates: Partial<import("./types").ReviewConfig>) =>
+      request<import("./types").ReviewConfig>("/review/config", {
+        method: "PATCH",
+        body: JSON.stringify(updates),
+      }),
+    trigger: (sessionId: string) =>
+      request<{ model: string; review: string }>(`/review/${encodeURIComponent(sessionId)}`, {
+        method: "POST",
+      }),
+    getLatest: (sessionId: string) =>
+      request<import("./types").ReviewResult>(`/review/${encodeURIComponent(sessionId)}`),
+  },
 };
 
 function requestBackupsHelper(params?: { scope?: "user" | "project"; type?: CcArtifactType }) {
