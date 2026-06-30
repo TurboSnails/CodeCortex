@@ -2,9 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Complete three deferred gaps in CodeCortex: real OpenSpec file generation for the planning layer, file-watcher task auto-sync, and a review history tab in SessionDetail.
+**Status:** Approved (2026-07-01)
+**Spec:** `docs/superpowers/specs/2026-07-01-codecortex-planning-review-improvements-design.md`
 
-**Architecture:** Server-side adds a new `openspec-plan.js` lib that detects whether the session's working directory has an `openspec/` folder and writes a proper change there (or falls back to `~/.codecortex/plans/`). A lightweight `plan-watcher.js` wraps `fs.watch` to push `plan_updated` WS events when `tasks.md` changes on disk. The existing `session_reviews` table already stores all history; we just expose it via a new `/history` endpoint and a new `ReviewsTab` component.
+**Goal:** Complete three deferred gaps in CodeCortex: real OpenSpec file generation for the planning layer, file-watcher task auto-sync, and a paginated review history tab in SessionDetail.
+
+**Architecture:** Server-side adds a new `openspec-plan.js` lib that detects whether the session's working directory has an `openspec/` folder and writes a proper change there (or falls back to `~/.codecortex/plans/`). A `plan-watcher.js` wraps `fs.watch` to push `plan_updated` WS events when `tasks.md` changes on disk, with `unwatchAll` for clean shutdown. The existing `session_reviews` table stores all history; we expose it via a paginated `/history?offset=&limit=` endpoint and a new `ReviewsTab` component using `IntersectionObserver` for infinite scroll.
 
 **Tech Stack:** Node.js (Express, better-sqlite3, fs.watch), React 18 + TypeScript, Tailwind CSS, Vitest (client), node:test (server), lucide-react icons.
 
@@ -13,11 +16,12 @@
 - Server tests use Node's built-in `node:test` + `assert/strict` — no Jest/Vitest on server side.
 - Client tests use Vitest + @testing-library/react.
 - Run `npm run test:server` after every server task; run `npm run test:client` after every client task.
-- Never commit a failing test suite.
+- **Never commit a failing test suite. Every commit point must have a green tree.**
 - All new server files go in `dashboard/server/`; all new client files go in `dashboard/client/src/`.
 - `broadcast(type, data)` is imported from `../websocket` in server route/lib files.
 - DB uses `better-sqlite3` (synchronous). Never use `db.prepare()` outside the `stmts` object in `db.js`.
 - `CODECORTEX_PLANS_DIR` env var overrides the default `~/.codecortex/plans` path (used in tests).
+- **Commit strategy:** Each Task ends with its own commit. Cross-task coordination uses `feature flags` (env vars or runtime checks) only when unavoidable — prefer "tree stays green" over "atomic mega-commit".
 
 ---
 
@@ -25,42 +29,49 @@
 
 | Action | Path | Responsibility |
 |--------|------|----------------|
-| Create | `dashboard/server/lib/openspec-plan.js` | detectPlanLocation, generateOpenSpecChange, parseTasks, toSlug |
-| Create | `dashboard/server/lib/plan-watcher.js` | fs.watch wrapper: watch/unwatch per sessionId |
+| Create | `dashboard/server/lib/openspec-plan.js` | detectPlanLocation, generateOpenSpecChange, parseTasks, parseTasksFromFileContent, toSlug, makeSlug |
+| Create | `dashboard/server/lib/plan-watcher.js` | fs.watch wrapper: watch/unwatch/unwatchAll per sessionId |
 | Create | `dashboard/server/__tests__/openspec-plan.test.js` | Unit tests for openspec-plan.js |
 | Create | `dashboard/server/__tests__/plan-watcher.test.js` | Unit tests for plan-watcher.js |
-| Create | `dashboard/client/src/components/ReviewsTab.tsx` | Reviews history tab component |
+| Create | `dashboard/client/src/components/ReviewsTab.tsx` | Reviews history tab component (infinite scroll) |
 | Create | `dashboard/client/src/components/__tests__/ReviewsTab.test.tsx` | Component tests |
-| Modify | `dashboard/server/db.js:384-402, 1314-1328` | ALTER TABLE migrations + listReviews stmt + updated insertSessionPlan |
-| Modify | `dashboard/server/routes/plan.js` | Import from openspec-plan.js, use change_dir, call planWatcher |
-| Modify | `dashboard/server/routes/review.js` | Add GET /history endpoint |
+| Modify | `dashboard/server/db.js` | ALTER TABLE migrations + listReviews stmt + updated insertSessionPlan (5 params) + countReviews |
+| Modify | `dashboard/server/routes/plan.js` | Full refactor: import from openspec-plan, use change_dir, fallback for legacy rows, call planWatcher |
+| Modify | `dashboard/server/routes/review.js` | Add GET /history with pagination |
 | Modify | `dashboard/server/routes/hooks.js` | Call planWatcher.unwatch on Stop |
-| Modify | `dashboard/server/__tests__/plan.test.js` | Add planType/changeDir assertions + openspec path test |
-| Modify | `dashboard/server/__tests__/review.test.js` | Add /history endpoint tests |
-| Modify | `dashboard/client/src/lib/types.ts:826-831` | Add ReviewHistoryResponse interface |
-| Modify | `dashboard/client/src/lib/api.ts:507-519` | Add review.getHistory method |
-| Modify | `dashboard/client/src/pages/SessionDetail.tsx:73,621-667` | Add "reviews" tab + ReviewsTab |
+| Modify | `dashboard/server/index.js` | Call planWatcher.unwatchAll on SIGTERM/SIGINT |
+| Modify | `dashboard/server/__tests__/plan.test.js` | Add planType/changeDir assertions + openspec path test + legacy row fallback test |
+| Modify | `dashboard/server/__tests__/review.test.js` | Add /history endpoint tests (pagination, hasMore, limits) |
+| Modify | `dashboard/client/src/lib/types.ts` | Add ReviewHistoryResponse interface |
+| Modify | `dashboard/client/src/lib/api.ts` | Add review.getHistory with offset/limit |
+| Modify | `dashboard/client/src/pages/SessionDetail.tsx` | Add "reviews" tab + ReviewsTab + History icon |
 | Modify | `dashboard/client/src/pages/__tests__/screens.snapshot.test.tsx` | Regenerate snapshot (new tab) |
+| Modify | `dashboard/client/src/pages/__tests__/SessionDetail.nestedAgents.test.tsx` | Add review.getHistory mock |
 
 ---
 
-## Task 1: DB Migrations + listReviews stmt
+## Task 1: DB Migrations — Phase 1 of 2 (non-breaking ALTER + new stmts)
+
+> **Why split:** v1's `insertSessionPlan` takes 3 params (session_id, change_name, plans_dir). v2 takes 5 (adds plan_type, change_dir). The current `routes/plan.js` POST calls the 3-param version. We must keep the tree green at every commit.
+>
+> **Strategy:** This commit adds only the non-breaking migrations (`listReviews`, `countReviews`, ALTER TABLE) — the new columns are added but `insertSessionPlan` still takes 3 params. Routes don't read the new columns yet. Task 3 bumps `insertSessionPlan` to 5 params and updates the only caller.
 
 **Files:**
-- Modify: `dashboard/server/db.js:405-415` (after existing migration try-catch blocks)
-- Modify: `dashboard/server/db.js:1314-1328` (stmts object)
+- Modify: `dashboard/server/db.js` — migrations section + stmts object
 
 **Interfaces:**
-- Produces: `stmts.listReviews(sessionId)` → rows `{ id, session_id, model, review, created_at }[]`
-- Produces: `stmts.insertSessionPlan` updated to accept 5 params: `(session_id, change_name, plans_dir, plan_type, change_dir)`
+- Consumes: existing `sessions`, `session_reviews`, `session_plans` tables (read-only here)
 - Produces: `session_plans` table with two new nullable columns: `plan_type TEXT DEFAULT 'standalone'`, `change_dir TEXT`
+- Produces: `stmts.listReviews(sessionId, limit, offset)` → rows
+- Produces: `stmts.countReviews(sessionId)` → `{ count: number }`
+- `stmts.insertSessionPlan` **unchanged** (still 3 params — bumped in Task 3)
 
 - [ ] **Step 1: Add ALTER TABLE migrations to db.js**
 
-Open `dashboard/server/db.js`. Find the existing migration try-catch block around line 405 (it starts with `// Migrate: link agent rows to a workflow run`). Add the following two try-catch blocks **after** that section:
+Open `dashboard/server/db.js`. Find the existing migration try-catch block (search for `// Migrate:`). Add the following two try-catch blocks **after** the last existing one:
 
 ```js
-// Migrate: add plan_type and change_dir to session_plans
+// Migrate: add plan_type and change_dir to session_plans (v2 planning layer)
 try {
   db.prepare("SELECT plan_type FROM session_plans LIMIT 1").get();
 } catch {
@@ -73,38 +84,42 @@ try {
 }
 ```
 
-- [ ] **Step 2: Add listReviews stmt to the stmts object**
+- [ ] **Step 2: Add listReviews and countReviews stmts**
 
-In the `stmts` object (around line 1325, after `latestReview`), add:
+In the `stmts` object, after `latestReview`, add:
 
 ```js
   listReviews: db.prepare(
-    "SELECT id, session_id, model, review, created_at FROM session_reviews WHERE session_id = ? ORDER BY created_at DESC, id DESC LIMIT 50"
+    "SELECT id, session_id, model, review, created_at FROM session_reviews WHERE session_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?"
+  ),
+  countReviews: db.prepare(
+    "SELECT COUNT(*) AS count FROM session_reviews WHERE session_id = ?"
   ),
 ```
 
-- [ ] **Step 3: Update insertSessionPlan stmt to include new columns**
-
-Find the existing `insertSessionPlan` stmt (line ~1315) and replace it:
-
-```js
-  insertSessionPlan: db.prepare(
-    `INSERT INTO session_plans (session_id, change_name, plans_dir, plan_type, change_dir, created_at)
-     VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
-  ),
-```
-
-- [ ] **Step 4: Run server tests to confirm no regressions**
+- [ ] **Step 3: Run server tests to confirm no regressions**
 
 ```bash
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && npm run test:server 2>&1 | tail -20
 ```
 
-Expected: all existing tests pass. The existing `plan.test.js` will now fail because `insertSessionPlan` expects 5 params but `routes/plan.js` still passes 3 — that is expected and will be fixed in Task 3.
+Expected: all existing tests pass. New columns added with defaults, new stmts registered but unused by routes.
 
-> **Note:** After this step, `plan.test.js` tests for POST will fail (3 params vs 5). This is intentional and temporary. Do NOT commit until Task 3 is also done.
+- [ ] **Step 4: Commit**
 
-- [ ] **Step 5: Commit Tasks 1+3 together after Task 3 is complete** *(deferred — see Task 3 Step 8)*
+```bash
+cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard
+git add server/db.js
+git commit -m "$(cat <<'EOF'
+feat(db): add plan_type/change_dir columns and listReviews/countReviews stmts
+
+Non-breaking migration: new columns added with DEFAULT 'standalone',
+existing insertSessionPlan unchanged. New stmts unused until Task 3/5.
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+EOF
+)"
+```
 
 ---
 
@@ -115,8 +130,12 @@ Expected: all existing tests pass. The existing `plan.test.js` will now fail bec
 - Create: `dashboard/server/__tests__/openspec-plan.test.js`
 
 **Interfaces:**
+- Consumes: `fs`, `path`, `os` Node built-ins
+- Consumes: env var `CODECORTEX_PLANS_DIR` (optional, falls back to `~/.codecortex/plans`)
 - Produces: `parseTasks(description: string): string[]`
-- Produces: `toSlug(description: string): string`
+- Produces: `parseTasksFromFileContent(content: string): { done: boolean, text: string }[]`
+- Produces: `toSlug(description: string): string` (40-char truncated)
+- Produces: `makeSlug(sessionId: string): string` (`YYYY-MM-DD-codecortex-<8>-<4hash>`)
 - Produces: `detectPlanLocation(cwd: string, sessionId: string): { type: 'openspec'|'standalone', changeDir: string }`
 - Produces: `generateOpenSpecChange(changeDir: string, sessionId: string, description: string, tasks: string[]): void`
 
@@ -131,15 +150,20 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-// Set env var before requiring the module
 const TEST_PLANS_DIR = path.join(os.tmpdir(), `openspec-plan-test-${Date.now()}`);
 process.env.CODECORTEX_PLANS_DIR = TEST_PLANS_DIR;
 
-const { parseTasks, toSlug, detectPlanLocation, generateOpenSpecChange } =
-  require("../lib/openspec-plan");
+const {
+  parseTasks,
+  parseTasksFromFileContent,
+  toSlug,
+  makeSlug,
+  detectPlanLocation,
+  generateOpenSpecChange,
+} = require("../lib/openspec-plan");
 
 describe("parseTasks", () => {
-  it("returns single task for prose", () => {
+  it("returns single task for prose (no number)", () => {
     assert.deepEqual(parseTasks("Fix the login bug"), ["Fix the login bug"]);
   });
 
@@ -157,8 +181,29 @@ describe("parseTasks", () => {
     );
   });
 
-  it("returns single task when only one numbered item", () => {
-    assert.deepEqual(parseTasks("1. Only task"), ["1. Only task"]);
+  it("returns single task when only one numbered item (strips number)", () => {
+    assert.deepEqual(parseTasks("1. Only task"), ["Only task"]);
+  });
+});
+
+describe("parseTasksFromFileContent", () => {
+  it("parses v1 header format", () => {
+    const content = "# Plan: my-plan\n\n- [ ] Task one\n- [x] Task two\n";
+    assert.deepEqual(parseTasksFromFileContent(content), [
+      { done: false, text: "Task one" },
+      { done: true, text: "Task two" },
+    ]);
+  });
+
+  it("ignores non-checkbox lines", () => {
+    const content = "## Why\n\nSome prose.\n\n- [ ] Real task\n";
+    assert.deepEqual(parseTasksFromFileContent(content), [
+      { done: false, text: "Real task" },
+    ]);
+  });
+
+  it("returns empty for empty file", () => {
+    assert.deepEqual(parseTasksFromFileContent(""), []);
   });
 });
 
@@ -172,7 +217,20 @@ describe("toSlug", () => {
   });
 
   it("truncates at 40 chars", () => {
-    assert.equal(toSlug("a".repeat(50)).length <= 40, true);
+    assert.ok(toSlug("a".repeat(50)).length <= 40);
+  });
+});
+
+describe("makeSlug", () => {
+  it("includes date, prefix, sessionId prefix, and 4-char hash", () => {
+    const slug = makeSlug("abcdefghijklmnop");
+    assert.match(slug, /^\d{4}-\d{2}-\d{2}-codecortex-abcdefgh-[a-z0-9]{4}$/);
+  });
+
+  it("produces different slugs for different sessionIds with same prefix", () => {
+    const s1 = makeSlug("aaaaaaaa-1111");
+    const s2 = makeSlug("aaaaaaaa-2222");
+    assert.notEqual(s1, s2);
   });
 });
 
@@ -198,7 +256,7 @@ describe("detectPlanLocation", () => {
 });
 
 describe("generateOpenSpecChange", () => {
-  it("creates .openspec.yaml, proposal.md, and tasks.md", () => {
+  it("creates .openspec.yaml, proposal.md, and tasks.md with v1-compat header", () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "openspec-gen-test-"));
     try {
       generateOpenSpecChange(tmp, "sess-test-123", "Fix auth bug", [
@@ -216,7 +274,7 @@ describe("generateOpenSpecChange", () => {
       assert.ok(proposal.includes("- Update middleware"));
 
       const tasks = fs.readFileSync(path.join(tmp, "tasks.md"), "utf8");
-      assert.ok(tasks.includes("## Tasks"));
+      assert.ok(tasks.startsWith("# Plan:"), "tasks.md must use v1 header format");
       assert.ok(tasks.includes("- [ ] Update middleware"));
       assert.ok(tasks.includes("- [ ] Add test"));
     } finally {
@@ -262,23 +320,54 @@ function toSlug(description) {
     .replace(/-+$/, "");
 }
 
+// Make a short alphanumeric hash (base36) from a string.
+// Used to disambiguate slugs when two sessionIds share the first 8 chars.
+function shortHash(input) {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) {
+    h = (h * 31 + input.charCodeAt(i)) | 0;
+  }
+  // Convert to unsigned 32-bit, then to base36, take last 4 chars
+  return (h >>> 0).toString(36).padStart(4, "0").slice(-4);
+}
+
+function makeSlug(sessionId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const prefix = sessionId.slice(0, 8);
+  const hash = shortHash(sessionId);
+  return `${today}-codecortex-${prefix}-${hash}`;
+}
+
 function parseTasks(description) {
   const lines = description.split("\n").map((l) => l.trim()).filter(Boolean);
   const numbered = lines.filter((l) => /^\d+[.)]\s/.test(l));
   if (numbered.length > 1) {
     return numbered.map((l) => l.replace(/^\d+[.)]\s+/, "").trim());
   }
+  if (numbered.length === 1) {
+    return [numbered[0].replace(/^\d+[.)]\s+/, "").trim()];
+  }
   return [description.trim()];
+}
+
+// Read-side parser used by both GET /api/plan and plan-watcher. Independent of
+// header format (v1 # Plan: or v2 ## Tasks) — only looks at checkbox lines.
+function parseTasksFromFileContent(content) {
+  return content
+    .split("\n")
+    .filter((l) => /^- \[[ x]\]/.test(l))
+    .map((l) => ({
+      done: l.startsWith("- [x]"),
+      text: l.replace(/^- \[[ x]\]\s*/, "").trim(),
+    }));
 }
 
 function detectPlanLocation(cwd, sessionId) {
   const openspecDir = path.join(cwd, "openspec");
   if (fs.existsSync(openspecDir)) {
-    const today = new Date().toISOString().slice(0, 10);
-    const slug = `${today}-codecortex-${sessionId.slice(0, 8)}`;
     return {
       type: "openspec",
-      changeDir: path.join(openspecDir, "changes", slug),
+      changeDir: path.join(openspecDir, "changes", makeSlug(sessionId)),
     };
   }
   const baseDir =
@@ -292,6 +381,7 @@ function detectPlanLocation(cwd, sessionId) {
 
 function generateOpenSpecChange(changeDir, sessionId, description, tasks) {
   fs.mkdirSync(changeDir, { recursive: true });
+  const changeName = path.basename(changeDir);
   const today = new Date().toISOString().slice(0, 10);
 
   fs.writeFileSync(
@@ -307,15 +397,24 @@ function generateOpenSpecChange(changeDir, sessionId, description, tasks) {
     "utf8"
   );
 
+  // Use v1 header format (# Plan: <changeName>) so legacy row fallback path
+  // can also parse this file with the same checkbox regex.
   const checkboxes = tasks.map((t) => `- [ ] ${t}`).join("\n");
   fs.writeFileSync(
     path.join(changeDir, "tasks.md"),
-    `## Tasks\n\n${checkboxes}\n`,
+    `# Plan: ${changeName}\n\n${checkboxes}\n`,
     "utf8"
   );
 }
 
-module.exports = { toSlug, parseTasks, detectPlanLocation, generateOpenSpecChange };
+module.exports = {
+  toSlug,
+  makeSlug,
+  parseTasks,
+  parseTasksFromFileContent,
+  detectPlanLocation,
+  generateOpenSpecChange,
+};
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**
@@ -324,7 +423,7 @@ module.exports = { toSlug, parseTasks, detectPlanLocation, generateOpenSpecChang
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && node --test server/__tests__/openspec-plan.test.js 2>&1 | tail -10
 ```
 
-Expected: all tests pass (8 assertions, 0 failures).
+Expected: all tests pass.
 
 - [ ] **Step 5: Run full server suite to confirm no regressions**
 
@@ -332,27 +431,73 @@ Expected: all tests pass (8 assertions, 0 failures).
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && npm run test:server 2>&1 | tail -5
 ```
 
-Expected: all pre-existing tests pass (plan.test.js POST failures from Task 1 are still present — OK, still deferred).
+Expected: all pass (no callers yet, lib is unused).
 
-- [ ] **Step 6: Commit** *(hold — commit together with Task 3 to keep passing state)*
+- [ ] **Step 6: Commit**
+
+```bash
+cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard
+git add server/lib/openspec-plan.js server/__tests__/openspec-plan.test.js
+git commit -m "$(cat <<'EOF'
+feat(server): add openspec-plan lib with detect/generate/slug helpers
+
+Pure functions for OpenSpec integration: detectPlanLocation (cwd probe),
+generateOpenSpecChange (writes 3 files with v1-compat tasks.md header),
+parseTasksFromFileContent (format-agnostic reader), makeSlug (date +
+sessionId prefix + 4-char hash for collision resistance).
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+EOF
+)"
+```
 
 ---
 
-## Task 3: Refactor routes/plan.js + fix insertSessionPlan call
+## Task 3: Refactor routes/plan.js + bump insertSessionPlan to 5 params
+
+> **Why this works as a separate green commit:** We add a `feature flag` of sorts — the route still calls the 3-param `insertSessionPlan` BUT we pass the new fields via a fallback. Cleaner approach: bump the stmt to 5 params AND update the single caller in the same commit. Since only one caller exists, this is a single atomic change.
 
 **Files:**
-- Modify: `dashboard/server/routes/plan.js` (full refactor)
-- Modify: `dashboard/server/__tests__/plan.test.js` (add new assertions)
+- Modify: `dashboard/server/db.js` — `insertSessionPlan` stmt (3 → 5 params)
+- Modify: `dashboard/server/routes/plan.js` — full refactor
+- Create: `dashboard/server/lib/plan-watcher.js` — stub (replaced in Task 4)
+- Modify: `dashboard/server/__tests__/plan.test.js` — add new assertions
 
 **Interfaces:**
-- Consumes: `toSlug`, `parseTasks`, `detectPlanLocation`, `generateOpenSpecChange` from `../lib/openspec-plan`
-- `POST /api/plan/:sessionId` now returns `{ changeName, tasks, planType, changeDir }`
-- `GET /api/plan/:sessionId` unchanged response shape
-- `PATCH /api/plan/:sessionId/tasks/:index` unchanged response shape
+- Consumes: `parseTasks`, `parseTasksFromFileContent`, `detectPlanLocation`, `generateOpenSpecChange`, `makeSlug` from `../lib/openspec-plan` (Task 2)
+- Consumes: `planWatcher.watch/unwatch/unwatchAll` stub from `../lib/plan-watcher` (Task 4 replaces stub; this commit only needs the stub interface to exist)
+- Consumes: `stmts.listReviews` and `stmts.countReviews` (Task 1) — not used here, but the columns are
+- Consumes: existing `stmts.getSession`, `stmts.getSessionPlan` from `../db`
+- Produces: `POST /api/plan/:sessionId` now returns `{ changeName, tasks, planType, changeDir }`
+- Produces: `GET /api/plan/:sessionId` unchanged response shape
+- Produces: `PATCH /api/plan/:sessionId/tasks/:index` unchanged response shape
+- Produces: Legacy row fallback: if `plan.change_dir` IS NULL, use `path.join(plan.plans_dir, plan.session_id, "tasks.md")` (v1 layout)
+- Produces: `stmts.insertSessionPlan` 5-param signature: `(session_id, change_name, plans_dir, plan_type, change_dir)`
 
-- [ ] **Step 1: Rewrite dashboard/server/routes/plan.js**
+- [ ] **Step 1: Bump insertSessionPlan to 5 params in db.js**
 
-Replace the entire file content with:
+Find `insertSessionPlan` in db.js stmts object. Replace with:
+
+```js
+  insertSessionPlan: db.prepare(
+    `INSERT INTO session_plans (session_id, change_name, plans_dir, plan_type, change_dir, created_at)
+     VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
+  ),
+```
+
+- [ ] **Step 2: Create plan-watcher.js stub**
+
+Create `dashboard/server/lib/plan-watcher.js`:
+
+```js
+// Stub — replaced in Task 4
+function watch() {}
+function unwatch() {}
+function unwatchAll() {}
+module.exports = { watch, unwatch, unwatchAll };
+```
+
+- [ ] **Step 3: Rewrite dashboard/server/routes/plan.js**
 
 ```js
 /**
@@ -367,8 +512,12 @@ const path = require("path");
 const os = require("os");
 const { stmts } = require("../db");
 const { broadcast } = require("../websocket");
-const { toSlug, parseTasks, detectPlanLocation, generateOpenSpecChange } =
-  require("../lib/openspec-plan");
+const {
+  parseTasks,
+  parseTasksFromFileContent,
+  detectPlanLocation,
+  generateOpenSpecChange,
+} = require("../lib/openspec-plan");
 const planWatcher = require("../lib/plan-watcher");
 
 const PLANS_BASE =
@@ -377,20 +526,20 @@ const PLANS_BASE =
 
 const router = Router();
 
+// Read-side: parse tasks.md content into { done, text }[].
+// Both v1 (`# Plan: <name>`) and v2 (`## Tasks`) headers are accepted because
+// the regex only matches checkbox lines, not headers.
 function readTasksFromFile(filePath) {
   const content = fs.readFileSync(filePath, "utf8");
-  return content
-    .split("\n")
-    .filter((l) => /^- \[[ x]\]/.test(l))
-    .map((l) => ({
-      done: l.startsWith("- [x]"),
-      text: l.replace(/^- \[[ x]\]\s*/, "").trim(),
-    }));
+  return parseTasksFromFileContent(content);
 }
 
 // Returns the absolute path to tasks.md for a plan row.
-// New rows use change_dir; legacy rows (change_dir IS NULL) fall back to
-// the old plans_dir/<session_id> layout.
+// New rows have change_dir set. Legacy v1 rows (change_dir IS NULL) fall back
+// to the old plans_dir/<session_id>/ layout. Note: plan.plans_dir is the base
+// path (~/.codecortex/plans) — NOT a per-session directory — so we join with
+// session_id to reconstruct the v1 path. This is the implicit coupling that
+// v1's insertSessionPlan established; we rely on it for backward compat.
 function getTasksFilePath(plan) {
   if (plan.change_dir) return path.join(plan.change_dir, "tasks.md");
   return path.join(plan.plans_dir, plan.session_id, "tasks.md");
@@ -432,7 +581,6 @@ router.post("/:sessionId", (req, res) => {
     return res.status(409).json({ error: "plan already exists for this session" });
   }
 
-  const changeName = toSlug(description) || `plan-${Date.now()}`;
   const tasks = parseTasks(description);
   const { type: planType, changeDir } = detectPlanLocation(
     session.cwd || "",
@@ -440,6 +588,7 @@ router.post("/:sessionId", (req, res) => {
   );
   generateOpenSpecChange(changeDir, sessionId, description, tasks);
 
+  const changeName = require("../lib/openspec-plan").makeSlug(sessionId);
   stmts.insertSessionPlan.run(sessionId, changeName, PLANS_BASE, planType, changeDir);
 
   const taskObjects = tasks.map((t) => ({ done: false, text: t }));
@@ -509,78 +658,88 @@ router.patch("/:sessionId/tasks/:index", (req, res) => {
 module.exports = router;
 ```
 
-- [ ] **Step 2: Update plan.test.js — add planType/changeDir assertions and openspec path test**
+- [ ] **Step 4: Add new assertions to plan.test.js**
 
-In `dashboard/server/__tests__/plan.test.js`, find the test `"creates a plan and returns tasks when session exists"`. Add assertions for the new fields after the existing assertions:
+In `dashboard/server/__tests__/plan.test.js`, find the test `"creates a plan and returns tasks when session exists"`. Add assertions for the new fields after the existing assertions (before the closing `});`):
 
 ```js
-assert.equal(res.body.planType, "standalone"); // no openspec/ in test cwd
-assert.ok(typeof res.body.changeDir === "string");
-assert.ok(res.body.changeDir.includes(sessionId));
+    assert.equal(res.body.planType, "standalone"); // no openspec/ in test cwd (os.tmpdir())
+    assert.ok(typeof res.body.changeDir === "string");
+    assert.ok(res.body.changeDir.includes(sessionId));
 ```
 
-Also add a new test after the existing `POST` tests:
+Add a new test at the end of `POST` describe block (before the `GET` describe):
 
 ```js
-it("uses openspec/ location when cwd contains openspec directory", async () => {
-  const sessionId = "plan-test-openspec-1";
-  // Create a temp dir with openspec/ subdirectory
-  const tmpCwd = fs.mkdtempSync(path.join(os.tmpdir(), "codecortex-openspec-cwd-"));
-  fs.mkdirSync(path.join(tmpCwd, "openspec"));
-  insertSession(sessionId, tmpCwd);
+  it("uses openspec/ location when cwd contains openspec directory", async () => {
+    const sessionId = "plan-test-openspec-1";
+    const tmpCwd = fs.mkdtempSync(path.join(os.tmpdir(), "codecortex-openspec-cwd-"));
+    fs.mkdirSync(path.join(tmpCwd, "openspec"));
+    insertSession(sessionId, tmpCwd);
 
-  const res = await req("POST", `/api/plan/${sessionId}`, {
-    description: "1. Create route\n2. Add test",
+    const res = await req("POST", `/api/plan/${sessionId}`, {
+      description: "1. Create route\n2. Add test",
+    });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.planType, "openspec");
+    assert.ok(res.body.changeDir.includes(path.join(tmpCwd, "openspec", "changes")));
+
+    // proposal.md and .openspec.yaml should exist alongside tasks.md
+    assert.ok(fs.existsSync(path.join(res.body.changeDir, "proposal.md")));
+    assert.ok(fs.existsSync(path.join(res.body.changeDir, ".openspec.yaml")));
+
+    fs.rmSync(tmpCwd, { recursive: true });
   });
-  assert.equal(res.status, 201);
-  assert.equal(res.body.planType, "openspec");
-  assert.ok(res.body.changeDir.includes(path.join(tmpCwd, "openspec", "changes")));
 
-  // proposal.md and .openspec.yaml should exist alongside tasks.md
-  assert.ok(fs.existsSync(path.join(res.body.changeDir, "proposal.md")));
-  assert.ok(fs.existsSync(path.join(res.body.changeDir, ".openspec.yaml")));
+  it("legacy plan row (change_dir NULL) is readable via fallback path", async () => {
+    const sessionId = "plan-test-legacy-1";
+    insertSession(sessionId);
 
-  fs.rmSync(tmpCwd, { recursive: true });
-});
+    // Insert a v1-style row: change_dir NULL, plans_dir = PLANS_DIR
+    db.prepare(
+      `INSERT INTO session_plans (session_id, change_name, plans_dir, created_at)
+       VALUES (?, ?, ?, datetime('now'))`
+    ).run(sessionId, "legacy-change", PLANS_DIR);
+
+    // v1 wrote tasks.md at PLANS_DIR/<sessionId>/tasks.md
+    const legacyDir = path.join(PLANS_DIR, sessionId);
+    fs.mkdirSync(legacyDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(legacyDir, "tasks.md"),
+      "# Plan: legacy-change\n\n- [ ] legacy task\n",
+      "utf8"
+    );
+
+    const res = await req("GET", `/api/plan/${sessionId}`, null);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.tasks.length, 1);
+    assert.equal(res.body.tasks[0].text, "legacy task");
+  });
 ```
 
-- [ ] **Step 3: Run server tests — all should pass now**
+- [ ] **Step 5: Run server tests — all should pass now**
 
 ```bash
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && npm run test:server 2>&1 | tail -10
 ```
 
-Expected: all tests pass including the new openspec test. (plan-watcher is required but not yet implemented — plan.js calls `planWatcher.watch` which will fail unless we create a stub. **Create a minimal stub first in Step 4 if tests fail due to missing plan-watcher**.)
+Expected: all tests pass including the new openspec test and legacy fallback test.
 
-- [ ] **Step 4 (conditional): Create minimal plan-watcher.js stub if Step 3 fails**
-
-If Step 3 fails with `Cannot find module '../lib/plan-watcher'`, create a stub at `dashboard/server/lib/plan-watcher.js`:
-
-```js
-// Stub — replaced in Task 4
-function watch() {}
-function unwatch() {}
-module.exports = { watch, unwatch };
-```
-
-Then re-run Step 3.
-
-- [ ] **Step 5: Commit Tasks 1 + 2 + 3 together**
+- [ ] **Step 6: Commit**
 
 ```bash
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard
-git add server/db.js server/routes/plan.js server/lib/openspec-plan.js \
-        server/__tests__/openspec-plan.test.js server/__tests__/plan.test.js \
-        server/lib/plan-watcher.js
+git add server/db.js server/routes/plan.js server/lib/plan-watcher.js \
+        server/__tests__/plan.test.js
 git commit -m "$(cat <<'EOF'
 feat: openspec integration for planning layer
 
-- DB migrations: plan_type + change_dir columns on session_plans
-- New lib/openspec-plan.js: detectPlanLocation (openspec/ auto-detect),
-  generateOpenSpecChange (.openspec.yaml + proposal.md + tasks.md)
-- routes/plan.js refactored to use openspec-plan; POST response includes
-  planType and changeDir fields; legacy rows fall back gracefully
+- Bump insertSessionPlan to 5 params (adds plan_type, change_dir)
+- Refactor routes/plan.js to detect cwd's openspec/ directory and write
+  proper change files (.openspec.yaml + proposal.md + tasks.md)
+- Legacy v1 row fallback: change_dir NULL rows read from plans_dir/<id>/
 - plan-watcher.js stub (replaced in next commit)
+- New tests: openspec path, planType/changeDir fields, legacy row compat
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
@@ -589,31 +748,36 @@ EOF
 
 ---
 
-## Task 4: plan-watcher.js + wire up
+## Task 4: plan-watcher.js — real implementation
 
 **Files:**
 - Modify: `dashboard/server/lib/plan-watcher.js` (replace stub)
 - Create: `dashboard/server/__tests__/plan-watcher.test.js`
 - Modify: `dashboard/server/routes/hooks.js` (add planWatcher.unwatch on Stop)
+- Modify: `dashboard/server/index.js` (add planWatcher.unwatchAll on SIGTERM/SIGINT)
 
 **Interfaces:**
-- Consumes: `broadcast` from `../websocket`
-- Produces: `watch(sessionId: string, tasksPath: string, broadcastFn?: Function): void`
-- Produces: `unwatch(sessionId: string): void`
-- `broadcastFn` defaults to `broadcast` from websocket.js; injectable for tests
+- Consumes: `parseTasksFromFileContent` from `../lib/openspec-plan` (Task 2)
+- Consumes: `broadcast` from `../websocket` (existing)
+- Consumes: stub `plan-watcher.js` (Task 3) — replaced in Step 3
+- Consumes: existing `routes/hooks.js` Stop handler
+- Consumes: existing `server/index.js` startup code
+- Produces: `watch(sessionId, tasksPath)` — starts fs.watch; 200ms debounce; broadcasts `plan_updated` on file change; idempotent per sessionId
+- Produces: `watchWith(sessionId, tasksPath, broadcastFn)` — test-only injectable broadcast
+- Produces: `unwatch(sessionId)` — closes watcher; safe to call when not watched
+- Produces: `unwatchAll()` — closes all watchers; used on server shutdown
 
 - [ ] **Step 1: Write failing tests for plan-watcher.js**
 
 Create `dashboard/server/__tests__/plan-watcher.test.js`:
 
 ```js
-const { describe, it, before, after, beforeEach } = require("node:test");
+const { describe, it, after, before } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-// Require after any env setup
 const planWatcher = require("../lib/plan-watcher");
 
 let tmpDir;
@@ -631,38 +795,71 @@ describe("plan-watcher", () => {
   });
 
   after(() => {
-    planWatcher.unwatch("sess-w1");
+    planWatcher.unwatchAll();
     fs.rmSync(tmpDir, { recursive: true });
   });
 
   it("calls broadcastFn with plan_updated when tasks.md is modified", async () => {
     const calls = [];
-    planWatcher.watch("sess-w1", tasksFile, (type, data) => calls.push({ type, data }));
+    const sessionId = "sess-w1";
+    planWatcher.watchWith(sessionId, tasksFile, (type, data) =>
+      calls.push({ type, data })
+    );
 
-    // Give the watcher time to initialize, then modify the file
     await sleep(50);
     fs.writeFileSync(tasksFile, "## Tasks\n\n- [x] Task one\n", "utf8");
-    await sleep(400); // debounce is 200ms + buffer
+    await sleep(400);
 
     assert.ok(calls.length >= 1, "expected at least one broadcast call");
     assert.equal(calls[0].type, "plan_updated");
-    assert.equal(calls[0].data.sessionId, "sess-w1");
+    assert.equal(calls[0].data.sessionId, sessionId);
     assert.ok(Array.isArray(calls[0].data.tasks));
     assert.equal(calls[0].data.tasks[0].done, true);
+
+    planWatcher.unwatch(sessionId);
   });
 
   it("does not register duplicate watchers for the same sessionId", () => {
-    const calls = [];
-    const broadcastFn = (type, data) => calls.push({ type, data });
-    planWatcher.watch("sess-w1", tasksFile, broadcastFn);
-    planWatcher.watch("sess-w1", tasksFile, broadcastFn); // second call is a no-op
-    // No assertion on calls — just verify no error is thrown
+    const sessionId = "sess-dup";
+    const fn = () => {};
+    planWatcher.watchWith(sessionId, tasksFile, fn);
+    planWatcher.watchWith(sessionId, tasksFile, fn); // no-op
+    planWatcher.unwatch(sessionId);
   });
 
   it("unwatch stops the watcher without error", () => {
-    planWatcher.watch("sess-unwatch", tasksFile, () => {});
-    assert.doesNotThrow(() => planWatcher.unwatch("sess-unwatch"));
-    assert.doesNotThrow(() => planWatcher.unwatch("sess-unwatch")); // double unwatch is safe
+    const sessionId = "sess-unwatch";
+    planWatcher.watchWith(sessionId, tasksFile, () => {});
+    assert.doesNotThrow(() => planWatcher.unwatch(sessionId));
+    assert.doesNotThrow(() => planWatcher.unwatch(sessionId));
+  });
+
+  it("unwatchAll closes every active watcher", () => {
+    planWatcher.watchWith("sess-a", tasksFile, () => {});
+    planWatcher.watchWith("sess-b", tasksFile, () => {});
+    assert.doesNotThrow(() => planWatcher.unwatchAll());
+    // After unwatchAll, further unwatch calls are safe
+    assert.doesNotThrow(() => planWatcher.unwatch("sess-a"));
+    assert.doesNotThrow(() => planWatcher.unwatch("sess-b"));
+  });
+
+  it("debounces multiple rapid changes into one broadcast", async () => {
+    const sessionId = "sess-debounce";
+    const calls = [];
+    planWatcher.watchWith(sessionId, tasksFile, (type, data) =>
+      calls.push({ type, data })
+    );
+
+    await sleep(50);
+    fs.writeFileSync(tasksFile, "## Tasks\n\n- [x] Task one\n- [ ] Task two\n", "utf8");
+    fs.writeFileSync(tasksFile, "## Tasks\n\n- [x] Task one\n- [x] Task two\n", "utf8");
+    fs.writeFileSync(tasksFile, "## Tasks\n\n- [x] Task one\n- [x] Task two\n- [ ] Task three\n", "utf8");
+
+    await sleep(400);
+    // 3 rapid writes should produce exactly 1 broadcast (debounced)
+    assert.equal(calls.length, 1, `expected 1 call, got ${calls.length}`);
+
+    planWatcher.unwatch(sessionId);
   });
 });
 ```
@@ -673,59 +870,67 @@ describe("plan-watcher", () => {
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && node --test server/__tests__/plan-watcher.test.js 2>&1 | tail -10
 ```
 
-Expected: the broadcast test fails (stub watch does nothing).
+Expected: tests fail (stub `watch` does nothing; `watchWith` does not exist).
 
 - [ ] **Step 3: Replace stub with real plan-watcher.js**
-
-Replace `dashboard/server/lib/plan-watcher.js` with:
 
 ```js
 const fs = require("fs");
 const { broadcast: defaultBroadcast } = require("../websocket");
+const { parseTasksFromFileContent } = require("./openspec-plan");
 
 const watchers = new Map(); // sessionId → { watcher, timer }
 
-function readTasksFromFile(filePath) {
+function readTasks(filePath) {
   try {
-    const content = fs.readFileSync(filePath, "utf8");
-    return content
-      .split("\n")
-      .filter((l) => /^- \[[ x]\]/.test(l))
-      .map((l) => ({
-        done: l.startsWith("- [x]"),
-        text: l.replace(/^- \[[ x]\]\s*/, "").trim(),
-      }));
+    return parseTasksFromFileContent(fs.readFileSync(filePath, "utf8"));
   } catch {
     return [];
   }
 }
 
-function watch(sessionId, tasksPath, broadcastFn = defaultBroadcast) {
-  if (watchers.has(sessionId)) return; // prevent duplicate watchers
+// Internal: register a watcher with a custom broadcast fn (for tests).
+// Public callers (routes/plan.js) use watch() which defaults to websocket.broadcast.
+function watchWith(sessionId, tasksPath, broadcastFn) {
+  if (watchers.has(sessionId)) return; // prevent duplicate
 
   let timer = null;
 
   const watcher = fs.watch(tasksPath, { persistent: false }, () => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
-      const tasks = readTasksFromFile(tasksPath);
+      // Re-check session is still watched (could have been unwatched during debounce)
+      if (!watchers.has(sessionId)) return;
+      const tasks = readTasks(tasksPath);
       broadcastFn("plan_updated", { sessionId, tasks });
     }, 200);
   });
 
   watcher.on("error", () => unwatch(sessionId));
 
-  watchers.set(sessionId, { watcher, get timer() { return timer; } });
+  watchers.set(sessionId, { watcher, getTimer: () => timer });
+}
+
+function watch(sessionId, tasksPath) {
+  watchWith(sessionId, tasksPath, defaultBroadcast);
 }
 
 function unwatch(sessionId) {
   const entry = watchers.get(sessionId);
   if (!entry) return;
-  try { entry.watcher.close(); } catch {}
+  try {
+    entry.watcher.close();
+  } catch {}
   watchers.delete(sessionId);
 }
 
-module.exports = { watch, unwatch };
+function unwatchAll() {
+  for (const sessionId of [...watchers.keys()]) {
+    unwatch(sessionId);
+  }
+}
+
+module.exports = { watch, watchWith, unwatch, unwatchAll };
 ```
 
 - [ ] **Step 4: Run plan-watcher tests**
@@ -734,11 +939,11 @@ module.exports = { watch, unwatch };
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && node --test server/__tests__/plan-watcher.test.js 2>&1 | tail -10
 ```
 
-Expected: all 3 tests pass.
+Expected: all 5 tests pass.
 
 - [ ] **Step 5: Wire planWatcher.unwatch into hooks.js on Stop event**
 
-In `dashboard/server/routes/hooks.js`, find the Stop event handler. Add the unwatch call after the existing Stop broadcast (search for `"stop"` or `hook_event_name === "Stop"`):
+In `dashboard/server/routes/hooks.js`, find the Stop event handler (search for `hook_event_name === "Stop"` or similar). Add the unwatch call after the existing Stop broadcast:
 
 ```js
 const planWatcher = require("../lib/plan-watcher");
@@ -747,25 +952,44 @@ const planWatcher = require("../lib/plan-watcher");
 planWatcher.unwatch(sessionId);
 ```
 
-- [ ] **Step 6: Run full server test suite**
+- [ ] **Step 6: Wire planWatcher.unwatchAll into server/index.js on shutdown**
+
+In `dashboard/server/index.js`, find the existing `process.on("SIGTERM" / "SIGINT")` handlers. If they exist, add the unwatchAll call inside them. If they don't exist, add new handlers near the bottom:
+
+```js
+const planWatcher = require("./lib/plan-watcher");
+
+function gracefulShutdown(signal) {
+  planWatcher.unwatchAll();
+  server.close(() => process.exit(0));
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+```
+
+Verify the file already has a `server` reference; if not, use the variable that holds the `app.listen(...)` return value.
+
+- [ ] **Step 7: Run full server test suite**
 
 ```bash
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && npm run test:server 2>&1 | tail -10
 ```
 
-Expected: all tests pass.
+Expected: all pass.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard
-git add server/lib/plan-watcher.js server/__tests__/plan-watcher.test.js server/routes/hooks.js
+git add server/lib/plan-watcher.js server/__tests__/plan-watcher.test.js \
+        server/routes/hooks.js server/index.js
 git commit -m "$(cat <<'EOF'
-feat: plan-watcher for automatic task.md file sync
+feat: plan-watcher for automatic tasks.md sync + clean shutdown
 
 Watches tasks.md with fs.watch; debounces 200ms then broadcasts
-plan_updated WS event. Cleans up on session Stop hook. Injectable
-broadcastFn for testability.
+plan_updated WS event. Cleans up on session Stop hook and on server
+SIGTERM/SIGINT. Injectable broadcastFn (watchWith) for testability.
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
@@ -774,15 +998,20 @@ EOF
 
 ---
 
-## Task 5: Review History API (server)
+## Task 5: Review History API (server, paginated)
 
 **Files:**
-- Modify: `dashboard/server/routes/review.js` (add GET /history)
+- Modify: `dashboard/server/routes/review.js` (add GET /history with pagination)
 - Modify: `dashboard/server/__tests__/review.test.js` (add /history tests)
 
 **Interfaces:**
-- Produces: `GET /api/review/:sessionId/history` → `{ reviews: ReviewResult[], total: number }`
-- `ReviewResult` shape (server): `{ id: number, model: string, review: string, createdAt: string }`
+- Consumes: `stmts.listReviews(sessionId, limit, offset)` and `stmts.countReviews(sessionId)` (Task 1)
+- Consumes: existing `routes/review.js` (POST/GET /:sessionId, GET/PATCH /config)
+- Consumes: existing `session_reviews` table
+- Produces: `GET /api/review/:sessionId/history?offset=0&limit=20` → `{ reviews: ReviewResult[], total: number, hasMore: boolean }`
+- Produces: `limit` clamped to [1, 50], default 20
+- Produces: `offset` clamped to >= 0, default 0
+- Produces: `ReviewResult` shape (server): `{ id: number, model: string, review: string, createdAt: string }`
 
 - [ ] **Step 1: Add failing tests for /history to review.test.js**
 
@@ -790,43 +1019,67 @@ Open `dashboard/server/__tests__/review.test.js`. Find the last `describe` block
 
 ```js
 describe("GET /api/review/:sessionId/history", () => {
-  it("returns empty list when no reviews exist", async () => {
+  function insertReviews(sessionId, count) {
+    for (let i = 0; i < count; i++) {
+      db.prepare(
+        "INSERT INTO session_reviews (session_id, model, diff, review) VALUES (?, ?, ?, ?)"
+      ).run(sessionId, `model-${i}`, null, `Review ${i}`);
+    }
+  }
+
+  it("returns empty list with total=0 when no reviews exist", async () => {
     insertSession("review-hist-sess-1");
     const res = await req("GET", "/api/review/review-hist-sess-1/history");
     assert.equal(res.status, 200);
     assert.deepEqual(res.body.reviews, []);
     assert.equal(res.body.total, 0);
+    assert.equal(res.body.hasMore, false);
   });
 
-  it("returns all reviews in descending order", async () => {
+  it("returns first page with default limit=20", async () => {
     insertSession("review-hist-sess-2");
-    // Directly insert review rows
-    const { db } = require("../db");
-    db.prepare(
-      "INSERT INTO session_reviews (session_id, model, diff, review) VALUES (?, ?, ?, ?)"
-    ).run("review-hist-sess-2", "gemini/gemini-1.5-flash", null, "First review");
-    db.prepare(
-      "INSERT INTO session_reviews (session_id, model, diff, review) VALUES (?, ?, ?, ?)"
-    ).run("review-hist-sess-2", "openai/gpt-4o", null, "Second review");
+    insertReviews("review-hist-sess-2", 25);
 
     const res = await req("GET", "/api/review/review-hist-sess-2/history");
     assert.equal(res.status, 200);
-    assert.equal(res.body.reviews.length, 2);
-    assert.equal(res.body.total, 2);
-    // Most recent first
-    assert.equal(res.body.reviews[0].model, "openai/gpt-4o");
-    assert.equal(res.body.reviews[1].model, "gemini/gemini-1.5-flash");
-    assert.ok(typeof res.body.reviews[0].id === "number");
-    assert.ok(typeof res.body.reviews[0].createdAt === "string");
+    assert.equal(res.body.reviews.length, 20);
+    assert.equal(res.body.total, 25);
+    assert.equal(res.body.hasMore, true);
+    // Most recent first (highest id first)
+    assert.equal(res.body.reviews[0].model, "model-24");
   });
 
-  it("returns 200 with empty list for session with no reviews (not 404)", async () => {
+  it("returns next page with offset=20", async () => {
     insertSession("review-hist-sess-3");
-    const res = await req("GET", "/api/review/review-hist-sess-3/history");
+    insertReviews("review-hist-sess-3", 25);
+
+    const res = await req("GET", "/api/review/review-hist-sess-3/history?offset=20");
     assert.equal(res.status, 200);
+    assert.equal(res.body.reviews.length, 5);
+    assert.equal(res.body.hasMore, false);
+    assert.equal(res.body.reviews[0].model, "model-4");
+  });
+
+  it("clamps limit to max 50", async () => {
+    insertSession("review-hist-sess-4");
+    insertReviews("review-hist-sess-4", 60);
+
+    const res = await req("GET", "/api/review/review-hist-sess-4/history?limit=999");
+    assert.equal(res.status, 200);
+    assert.equal(res.body.reviews.length, 50);
+    assert.equal(res.body.hasMore, true);
+    assert.equal(res.body.total, 60);
+  });
+
+  it("returns 400 for negative offset", async () => {
+    insertSession("review-hist-sess-5");
+    const res = await req("GET", "/api/review/review-hist-sess-5/history?offset=-1");
+    assert.equal(res.status, 400);
   });
 });
 ```
+
+You may need to add `const { db } = require("../db");` at the top of the test file if not already present.
 
 - [ ] **Step 2: Run review tests to verify new tests fail**
 
@@ -841,17 +1094,32 @@ Expected: new tests fail with 404 (route not found).
 In `dashboard/server/routes/review.js`, add the following route **before** the existing `GET /:sessionId` route (order matters — `/history` must be matched before `/:sessionId`):
 
 ```js
-// GET /api/review/:sessionId/history — all reviews for this session
+// GET /api/review/:sessionId/history?offset=0&limit=20 — paginated review history
 router.get("/:sessionId/history", (req, res) => {
   const { sessionId } = req.params;
-  const rows = stmts.listReviews.all(sessionId);
+
+  // Parse and clamp pagination params
+  const rawOffset = Number(req.query.offset);
+  const rawLimit = Number(req.query.limit);
+  const offset = Number.isFinite(rawOffset) && rawOffset >= 0 ? Math.floor(rawOffset) : 0;
+  let limit = Number.isFinite(rawLimit) && rawLimit >= 1 ? Math.floor(rawLimit) : 20;
+  limit = Math.min(limit, 50);
+
+  if (req.query.offset !== undefined && (!Number.isFinite(rawOffset) || rawOffset < 0)) {
+    return res.status(400).json({ error: "offset must be a non-negative integer" });
+  }
+
+  const rows = stmts.listReviews.all(sessionId, limit, offset);
+  const { count: total } = stmts.countReviews.get(sessionId);
   const reviews = rows.map((r) => ({
     id: r.id,
     model: r.model,
     review: r.review,
     createdAt: r.created_at,
   }));
-  return res.json({ reviews, total: reviews.length });
+  const hasMore = offset + reviews.length < total;
+
+  return res.json({ reviews, total, hasMore });
 });
 ```
 
@@ -877,10 +1145,11 @@ Expected: all pass.
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard
 git add server/routes/review.js server/__tests__/review.test.js
 git commit -m "$(cat <<'EOF'
-feat: add review history API endpoint
+feat: paginated review history API endpoint
 
-GET /api/review/:sessionId/history returns all reviews for a session
-ordered by most recent first, capped at 50.
+GET /api/review/:sessionId/history?offset=N&limit=N returns reviews
+ordered by most recent first. limit clamped to [1,50], default 20.
+Response includes total count and hasMore for infinite scroll.
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
@@ -896,8 +1165,11 @@ EOF
 - Modify: `dashboard/client/src/lib/api.ts` (add review.getHistory)
 
 **Interfaces:**
-- Produces: `ReviewHistoryResponse = { reviews: ReviewResult[]; total: number }`
-- Produces: `api.review.getHistory(sessionId: string): Promise<ReviewHistoryResponse>`
+- Consumes: existing `ReviewResult` interface in `types.ts` (line ~826)
+- Consumes: existing `api.review` namespace in `api.ts` (line ~507)
+- Consumes: existing `request<T>(path, opts)` helper
+- Produces: `ReviewHistoryResponse = { reviews: ReviewResult[]; total: number; hasMore: boolean }`
+- Produces: `api.review.getHistory(sessionId: string, opts?: { offset?: number; limit?: number })` returns `Promise<ReviewHistoryResponse>`
 
 - [ ] **Step 1: Add ReviewHistoryResponse to types.ts**
 
@@ -907,18 +1179,23 @@ In `dashboard/client/src/lib/types.ts`, find the `ReviewResult` interface (line 
 export interface ReviewHistoryResponse {
   reviews: ReviewResult[];
   total: number;
+  hasMore: boolean;
 }
 ```
 
 - [ ] **Step 2: Add getHistory to api.ts**
 
-In `dashboard/client/src/lib/api.ts`, find the `review` namespace (around line 507). Add `getHistory` alongside the existing methods:
+In `dashboard/client/src/lib/api.ts`, find the `review` namespace (around line 507). Add `getHistory`:
 
 ```ts
-getHistory: (sessionId: string) =>
-  request<import("./types").ReviewHistoryResponse>(
-    `/review/${encodeURIComponent(sessionId)}/history`
-  ),
+getHistory: (sessionId: string, opts?: { offset?: number; limit?: number }) => {
+  const params = new URLSearchParams();
+  params.set("offset", String(opts?.offset ?? 0));
+  params.set("limit", String(opts?.limit ?? 20));
+  return request<import("./types").ReviewHistoryResponse>(
+    `/review/${encodeURIComponent(sessionId)}/history?${params}`
+  );
+},
 ```
 
 The full `review` block should now look like:
@@ -937,10 +1214,14 @@ review: {
     }),
   getLatest: (sessionId: string) =>
     request<import("./types").ReviewResult>(`/review/${encodeURIComponent(sessionId)}`),
-  getHistory: (sessionId: string) =>
-    request<import("./types").ReviewHistoryResponse>(
-      `/review/${encodeURIComponent(sessionId)}/history`
-    ),
+  getHistory: (sessionId: string, opts?: { offset?: number; limit?: number }) => {
+    const params = new URLSearchParams();
+    params.set("offset", String(opts?.offset ?? 0));
+    params.set("limit", String(opts?.limit ?? 20));
+    return request<import("./types").ReviewHistoryResponse>(
+      `/review/${encodeURIComponent(sessionId)}/history?${params}`
+    );
+  },
 },
 ```
 
@@ -967,18 +1248,24 @@ EOF
 
 ---
 
-## Task 7: ReviewsTab.tsx + tests
+## Task 7: ReviewsTab.tsx (infinite scroll, no duplicate emit)
 
 **Files:**
 - Create: `dashboard/client/src/components/ReviewsTab.tsx`
 - Create: `dashboard/client/src/components/__tests__/ReviewsTab.test.tsx`
 
 **Interfaces:**
-- Consumes: `api.review.getHistory`, `api.review.trigger`
-- Consumes: `eventBus` from `../../lib/eventBus` (via `subscribe`)
-- Consumes: `MarkdownContent` from `../conversation/MarkdownContent`
-- Props: `{ sessionId: string; onCountChange?: (n: number) => void }`
-- WS: subscribes to `review_ready` events → prepend to list
+- Consumes: `api.review.getHistory` (Task 6) and existing `api.review.trigger`
+- Consumes: `eventBus.subscribe` from `../lib/eventBus`
+- Consumes: `MarkdownContent` from `./conversation/MarkdownContent`
+- Consumes: `ReviewResult` from `../lib/types`
+- Consumes: `History` icon from `lucide-react`
+- Produces: `ReviewsTab` component exported from `../components/ReviewsTab`
+- Produces: Props `{ sessionId: string; onCountChange?: (n: number) => void }`
+- Produces: Initial load: `api.review.getHistory(sessionId, { offset: 0, limit: 20 })`
+- Produces: Infinite scroll: `IntersectionObserver` on sentinel ref → load next page
+- Produces: WS subscribe `review_ready` → prepend to list, emit count via ref-guarded callback
+- Produces: `onCountChange` only fires when count actually changes (ref de-dup)
 
 - [ ] **Step 1: Write failing tests**
 
@@ -989,36 +1276,26 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ReviewsTab } from "../ReviewsTab";
 
-const mockReviews = [
-  {
-    id: 2,
-    model: "openai/gpt-4o",
-    review: "## Summary\nLooks good.",
-    createdAt: "2026-07-01T10:00:00.000Z",
-  },
-  {
-    id: 1,
-    model: "gemini/gemini-1.5-flash",
-    review: "No issues found.",
-    createdAt: "2026-07-01T09:00:00.000Z",
-  },
+const mockReviewsPage1 = [
+  { id: 20, model: "openai/gpt-4o", review: "## Summary\nLooks good.", createdAt: "2026-07-01T10:00:00.000Z" },
+  { id: 19, model: "gemini/gemini-1.5-flash", review: "No issues found.", createdAt: "2026-07-01T09:00:00.000Z" },
+];
+const mockReviewsPage2 = [
+  { id: 18, model: "kimi/moonshot-v1", review: "Third review.", createdAt: "2026-07-01T08:00:00.000Z" },
 ];
 
-vi.mock("../../lib/api", () => ({
+const getHistoryMock = vi.fn();
+
+vi.mock("../../../lib/api", () => ({
   api: {
     review: {
-      getHistory: vi.fn(() =>
-        Promise.resolve({ reviews: mockReviews, total: 2 })
-      ),
-      trigger: vi.fn(() =>
-        Promise.resolve({ model: "openai/gpt-4o", review: "New review" })
-      ),
+      getHistory: (...args: any[]) => getHistoryMock(...args),
     },
   },
 }));
 
 let busCallback: ((msg: any) => void) | null = null;
-vi.mock("../../lib/eventBus", () => ({
+vi.mock("../../../lib/eventBus", () => ({
   eventBus: {
     subscribe: vi.fn((cb: (msg: any) => void) => {
       busCallback = cb;
@@ -1030,80 +1307,77 @@ vi.mock("../../lib/eventBus", () => ({
 describe("ReviewsTab", () => {
   beforeEach(() => {
     busCallback = null;
-    vi.clearAllMocks();
+    getHistoryMock.mockReset();
+    getHistoryMock.mockResolvedValue({ reviews: mockReviewsPage1, total: 21, hasMore: true });
   });
 
   it("shows loading then renders review list", async () => {
     render(<ReviewsTab sessionId="sess-1" />);
-    await waitFor(() =>
-      expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument());
     expect(screen.getByText("gemini/gemini-1.5-flash")).toBeInTheDocument();
   });
 
   it("renders empty state when no reviews", async () => {
-    const { api } = await import("../../lib/api");
-    (api.review.getHistory as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      reviews: [],
-      total: 0,
-    });
+    getHistoryMock.mockResolvedValueOnce({ reviews: [], total: 0, hasMore: false });
     render(<ReviewsTab sessionId="sess-empty" />);
-    await waitFor(() =>
-      expect(screen.getByText(/暂无审核记录/)).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText(/暂无审核记录/)).toBeInTheDocument());
   });
 
-  it("calls onCountChange with review count on load", async () => {
+  it("calls onCountChange with total count on initial load", async () => {
     const onCountChange = vi.fn();
     render(<ReviewsTab sessionId="sess-1" onCountChange={onCountChange} />);
-    await waitFor(() => expect(onCountChange).toHaveBeenCalledWith(2));
+    await waitFor(() => expect(onCountChange).toHaveBeenCalledWith(21));
+  });
+
+  it("does not emit duplicate onCountChange for the same count", async () => {
+    const onCountChange = vi.fn();
+    render(<ReviewsTab sessionId="sess-1" onCountChange={onCountChange} />);
+    await waitFor(() => expect(onCountChange).toHaveBeenCalledWith(21));
+    // Trigger a render that doesn't change the count
+    fireEvent.click(screen.getAllByRole("button")[0]);
+    await waitFor(() => expect(screen.getByText(/Looks good/)).toBeInTheDocument());
+    // onCountChange should still have been called exactly once (or with same value)
+    const callsFor21 = onCountChange.mock.calls.filter(([n]) => n === 21);
+    expect(callsFor21.length).toBe(1);
   });
 
   it("expands review content on click", async () => {
     render(<ReviewsTab sessionId="sess-1" />);
-    await waitFor(() =>
-      expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument()
-    );
-    // Initially collapsed — markdown not visible
+    await waitFor(() => expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument());
     expect(screen.queryByText(/Looks good/)).not.toBeInTheDocument();
-    // Click the first row
     fireEvent.click(screen.getAllByRole("button")[0]);
-    await waitFor(() =>
-      expect(screen.getByText(/Looks good/)).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText(/Looks good/)).toBeInTheDocument());
   });
 
   it("prepends new review from review_ready WS event", async () => {
-    render(<ReviewsTab sessionId="sess-1" />);
-    await waitFor(() =>
-      expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument()
-    );
-    // Fire a WS event
+    const onCountChange = vi.fn();
+    render(<ReviewsTab sessionId="sess-1" onCountChange={onCountChange} />);
+    await waitFor(() => expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument());
     busCallback?.({
       type: "review_ready",
-      data: {
-        sessionId: "sess-1",
-        id: 3,
-        model: "kimi/moonshot-v1",
-        review: "New WS review",
-        createdAt: new Date().toISOString(),
-      },
+      data: { sessionId: "sess-1", id: 100, model: "kimi/moonshot-v1", review: "New WS review", createdAt: new Date().toISOString() },
     });
-    await waitFor(() =>
-      expect(screen.getByText("kimi/moonshot-v1")).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText("New WS review")).toBeInTheDocument());
+    // Count should have updated to 22 (21 + 1)
+    const lastCall = onCountChange.mock.calls[onCountChange.mock.calls.length - 1];
+    expect(lastCall[0]).toBe(22);
   });
 
   it("ignores review_ready events for other sessions", async () => {
     render(<ReviewsTab sessionId="sess-1" />);
-    await waitFor(() =>
-      expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument()
-    );
+    await waitFor(() => expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument());
     busCallback?.({
       type: "review_ready",
       data: { sessionId: "other-sess", id: 99, model: "x/y", review: "other", createdAt: "" },
     });
     expect(screen.queryByText("x/y")).not.toBeInTheDocument();
+  });
+
+  it("calls getHistory with offset=0 and limit=20 on initial load", async () => {
+    render(<ReviewsTab sessionId="sess-1" />);
+    await waitFor(() => expect(screen.getByText("openai/gpt-4o")).toBeInTheDocument());
+    expect(getHistoryMock).toHaveBeenCalledWith("sess-1", { offset: 0, limit: 20 });
+    expect(getHistoryMock.mock.calls.length).toBe(1);
   });
 });
 ```
@@ -1119,7 +1393,7 @@ Expected: fails with `Cannot find module '../ReviewsTab'`.
 - [ ] **Step 3: Create dashboard/client/src/components/ReviewsTab.tsx**
 
 ```tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { History } from "lucide-react";
 import { api } from "../lib/api";
 import { eventBus } from "../lib/eventBus";
@@ -1130,6 +1404,8 @@ interface Props {
   sessionId: string;
   onCountChange?: (n: number) => void;
 }
+
+const PAGE_SIZE = 20;
 
 function formatTime(iso: string) {
   try {
@@ -1147,27 +1423,101 @@ function formatTime(iso: string) {
 export function ReviewsTab({ sessionId, onCountChange }: Props) {
   const [reviews, setReviews] = useState<ReviewResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
+  // Ref-guarded count emission: only call onCountChange when count actually changes
+  const lastEmittedCount = useRef<number>(-1);
+  const emitCount = useCallback(
+    (n: number) => {
+      if (lastEmittedCount.current === n) return;
+      lastEmittedCount.current = n;
+      onCountChange?.(n);
+    },
+    [onCountChange]
+  );
+
+  // Initial load
   useEffect(() => {
     setLoading(true);
+    setReviews([]);
+    setHasMore(false);
+    setTotal(0);
+    lastEmittedCount.current = -1;
     api.review
-      .getHistory(sessionId)
-      .then(({ reviews: data }) => {
+      .getHistory(sessionId, { offset: 0, limit: PAGE_SIZE })
+      .then(({ reviews: data, total: t, hasMore: hm }) => {
         setReviews(data);
-        onCountChange?.(data.length);
+        setTotal(t);
+        setHasMore(hm);
+        emitCount(t);
       })
       .catch(() => {
         setReviews([]);
-        onCountChange?.(0);
+        setTotal(0);
+        setHasMore(false);
+        emitCount(0);
       })
       .finally(() => setLoading(false));
-  }, [sessionId]);
+  }, [sessionId, emitCount]);
 
+  // Load more page
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const { reviews: more, hasMore: hm } = await api.review.getHistory(sessionId, {
+        offset: reviews.length,
+        limit: PAGE_SIZE,
+      });
+      setReviews((prev) => {
+        // Dedupe by id (defense in depth)
+        const existingIds = new Set(prev.map((r) => r.id));
+        const unique = more.filter((r) => !existingIds.has(r.id));
+        return [...prev, ...unique];
+      });
+      setHasMore(hm);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, reviews.length, sessionId]);
+
+  // IntersectionObserver for infinite scroll
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "100px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
+
+  // Track the actual count in a ref so WS handler emits the right value
+  // without depending on stale state from setTotal/setReviews callbacks.
+  const countRef = useRef<number>(0);
+  useEffect(() => {
+    countRef.current = total;
+  }, [total]);
+
+  // WS subscribe: prepend new review and emit count via ref-based counter
   useEffect(() => {
     return eventBus.subscribe((msg) => {
       if (msg.type !== "review_ready") return;
-      const d = msg.data as { sessionId: string; id: number; model: string; review: string; createdAt: string };
+      const d = msg.data as {
+        sessionId: string;
+        id: number;
+        model: string;
+        review: string;
+        createdAt: string;
+      };
       if (d.sessionId !== sessionId) return;
       const newReview: ReviewResult = {
         id: d.id,
@@ -1175,15 +1525,18 @@ export function ReviewsTab({ sessionId, onCountChange }: Props) {
         review: d.review,
         createdAt: d.createdAt ?? new Date().toISOString(),
       };
-      setReviews((prev) => [newReview, ...prev]);
-      onCountChange?.((prev) => prev + 1 as any); // type coerce — real count from state
+      setReviews((prev) => {
+        if (prev.some((r) => r.id === newReview.id)) return prev;
+        return [newReview, ...prev];
+      });
+      setTotal((t) => t + 1);
+      // emitCount will be called via the total useEffect when total updates,
+      // but to ensure the parent sees the count immediately we emit here too
+      // with the ref-based counter (avoiding the duplicate-emit problem).
+      countRef.current += 1;
+      emitCount(countRef.current);
     });
-  }, [sessionId]);
-
-  // Keep onCountChange in sync when reviews list changes via WS prepend
-  useEffect(() => {
-    onCountChange?.(reviews.length);
-  }, [reviews.length]);
+  }, [sessionId, emitCount]);
 
   if (loading) {
     return (
@@ -1236,10 +1589,21 @@ export function ReviewsTab({ sessionId, onCountChange }: Props) {
           )}
         </div>
       ))}
+
+      <div ref={sentinelRef} className="h-1" />
+
+      {loadingMore && (
+        <div className="text-center text-xs text-slate-500 py-2">加载中…</div>
+      )}
+      {!hasMore && reviews.length > 0 && (
+        <div className="text-center text-xs text-slate-600 py-2">已加载全部 {total} 条</div>
+      )}
     </div>
   );
 }
 ```
+
+> **Implementation note:** The WS handler uses a `countRef` to track the running total independently of React state, so the count emitted to the parent is always the current value (not a stale closure). `emitCount`'s `lastEmittedCount` ref still de-dupes, preventing any duplicate calls.
 
 - [ ] **Step 4: Run ReviewsTab tests**
 
@@ -1247,7 +1611,7 @@ export function ReviewsTab({ sessionId, onCountChange }: Props) {
 cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard && npm run test:client -- --reporter=verbose 2>&1 | grep -E "ReviewsTab|✓|✗|FAIL" | head -15
 ```
 
-Expected: all 6 ReviewsTab tests pass.
+Expected: all 7 ReviewsTab tests pass.
 
 - [ ] **Step 5: Run full client suite**
 
@@ -1264,10 +1628,12 @@ cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/dashboard
 git add client/src/components/ReviewsTab.tsx \
         client/src/components/__tests__/ReviewsTab.test.tsx
 git commit -m "$(cat <<'EOF'
-feat: add ReviewsTab component for review history
+feat: add ReviewsTab component with infinite scroll + ref-guarded count
 
-Loads history via api.review.getHistory, subscribes to review_ready WS
-events to prepend live results. Expandable rows with MarkdownContent.
+Loads history via api.review.getHistory with offset/limit pagination.
+IntersectionObserver on sentinel ref triggers loadMore when in view.
+WS review_ready events prepend live results. onCountChange only fires
+when count actually changes (lastEmittedCount ref de-dupe).
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
@@ -1281,11 +1647,17 @@ EOF
 **Files:**
 - Modify: `dashboard/client/src/pages/SessionDetail.tsx`
 - Modify: `dashboard/client/src/pages/__tests__/screens.snapshot.test.tsx` (snapshot regen)
+- Modify: `dashboard/client/src/pages/__tests__/SessionDetail.nestedAgents.test.tsx` (add review.getHistory mock)
 
 **Interfaces:**
-- Consumes: `ReviewsTab` from `../components/ReviewsTab`
-- `DetailTab` type extended with `"reviews"`
-- Tab badge: `reviewCount` state (integer), shown when > 0
+- Consumes: `ReviewsTab` component from `../components/ReviewsTab` (Task 7)
+- Consumes: `History` icon from `lucide-react`
+- Consumes: existing `DetailTab` type alias (line ~73)
+- Consumes: existing tab nav JSX block (around line 621-667)
+- Consumes: existing test mocks for `api` in SessionDetail test files
+- Produces: `DetailTab` type extended with `"reviews"`
+- Produces: Tab nav button for "Reviews" with `reviewCount` badge
+- Produces: Tab content panel rendering `<ReviewsTab sessionId onCountChange={setReviewCount} />`
 
 - [ ] **Step 1: Add "reviews" to DetailTab and import ReviewsTab in SessionDetail.tsx**
 
@@ -1305,7 +1677,7 @@ type DetailTab = "agents" | "conversation" | "timeline" | "reviews";
 import { ReviewsTab } from "../components/ReviewsTab";
 ```
 
-**c)** Add icon import — find the existing lucide-react import line and add `History` to it.
+**c)** Add `History` to the existing lucide-react import line.
 
 **d)** Add `reviewCount` state after the existing tab state (around line 102):
 ```ts
@@ -1340,7 +1712,7 @@ Find the tab nav area (around line 621). After the Timeline tab button (which en
 
 - [ ] **Step 3: Add the Reviews tab content panel**
 
-Find the tab content section (around line 667). After the `visitedTabs.has("timeline")` block (around line 925), add:
+Find the tab content section (around line 667). After the `visitedTabs.has("timeline")` block, add:
 
 ```tsx
 {visitedTabs.has("reviews") && (
@@ -1353,8 +1725,6 @@ Find the tab content section (around line 667). After the `visitedTabs.has("time
 )}
 ```
 
-Also extend the `visitedTabs` initial set to include "reviews" if needed, or confirm the `useEffect` that tracks `activeTab` → `visitedTabs` handles it (it does — the existing effect adds the tab to visitedTabs on first visit).
-
 - [ ] **Step 4: Add `review` mock to SessionDetail test mocks**
 
 In `dashboard/client/src/pages/__tests__/SessionDetail.nestedAgents.test.tsx` (and any other SessionDetail test files), the `api` mock must include `review.getHistory`. Find the existing `review` mock block and add:
@@ -1365,7 +1735,7 @@ review: {
   getConfig: vi.fn(() => Promise.resolve({ reviewMode: "off", reviewModel: { provider: "gemini", apiKey: "", model: "gemini-1.5-flash", baseUrl: null } })),
   patchConfig: vi.fn(),
   getLatest: vi.fn(() => Promise.reject(new Error("no review"))),
-  getHistory: vi.fn(() => Promise.resolve({ reviews: [], total: 0 })), // ADD THIS
+  getHistory: vi.fn(() => Promise.resolve({ reviews: [], total: 0, hasMore: false })),
 },
 ```
 
@@ -1373,7 +1743,7 @@ Check for other test files that mock `api`:
 ```bash
 grep -rn "review:" dashboard/client/src --include="*.test.*" | grep -v getHistory
 ```
-Add `getHistory: vi.fn(() => Promise.resolve({ reviews: [], total: 0 }))` to every mock that has a `review:` block.
+Add `getHistory: vi.fn(() => Promise.resolve({ reviews: [], total: 0, hasMore: false }))` to every mock that has a `review:` block.
 
 - [ ] **Step 5: Run client tests (expect snapshot failure)**
 
@@ -1417,8 +1787,9 @@ git add client/src/pages/SessionDetail.tsx \
 git commit -m "$(cat <<'EOF'
 feat: add Reviews tab to SessionDetail
 
-Reviews tab shows full history of multi-model code reviews for the
-session. Badge shows count when > 0. Live updates via review_ready WS.
+Reviews tab shows paginated history of multi-model code reviews with
+infinite scroll. Badge shows total count when > 0. Live updates via
+review_ready WS.
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 EOF
@@ -1430,18 +1801,31 @@ EOF
 ## Self-Review
 
 **Spec coverage check:**
-- ✅ OpenSpec integration: `detectPlanLocation` auto-detects `openspec/`, generates `.openspec.yaml` + `proposal.md` + `tasks.md`
+- ✅ OpenSpec integration: `detectPlanLocation` auto-detects `openspec/`, generates `.openspec.yaml` + `proposal.md` + `tasks.md` (shallow format)
 - ✅ Standalone fallback: uses `CODECORTEX_PLANS_DIR` or `~/.codecortex/plans`
-- ✅ Backward compatibility: legacy DB rows with `change_dir = NULL` fall back to `plans_dir/session_id` path
-- ✅ File watcher: `plan-watcher.js` fires `plan_updated` WS on external file changes, no user manual refresh needed
-- ✅ Watcher cleanup: `unwatch` called on Stop hook
-- ✅ Review history API: `GET /api/review/:sessionId/history` returns up to 50 rows
-- ✅ Reviews tab: new tab in SessionDetail with expand/collapse rows and live WS prepend
+- ✅ Backward compatibility: legacy DB rows with `change_dir = NULL` fall back to `plans_dir/session_id` path; v1 tasks.md header `# Plan:` is preserved
+- ✅ File watcher: `plan-watcher.js` fires `plan_updated` WS on external file changes; 200ms debounce; idempotent
+- ✅ Watcher cleanup: `unwatch` on Stop hook, `unwatchAll` on SIGTERM/SIGINT
+- ✅ Review history API: `GET /api/review/:sessionId/history?offset=&limit=` returns paginated rows with `total` + `hasMore`
+- ✅ Reviews tab: new tab in SessionDetail with expand/collapse rows, live WS prepend, infinite scroll, ref-guarded count
+- ✅ Slug collision resistance: 4-char hash suffix on sessionId
 
-**Placeholder scan:** None found — all steps contain actual code.
+**Placeholder scan:** None found.
+
+**Internal consistency:**
+- DB stmts: `listReviews` takes 3 args (sessionId, limit, offset); route handler passes these in same order ✅
+- `getTasksFilePath` comment explains implicit coupling with `plans_dir` ✅
+- `unwatchAll` exported, used in `index.js` and tests ✅
+- `parseTasksFromFileContent` is format-agnostic (handles both v1 and v2 headers) ✅
 
 **Type consistency:**
-- `ReviewResult` used in `ReviewsTab` matches the interface in `types.ts` (`id`, `model`, `review`, `createdAt`)
-- `broadcastFn` signature `(type: string, data: object) => void` matches `broadcast` in `websocket.js`
-- `plan_updated` WS payload `{ sessionId, tasks }` matches existing client handler in `SessionDetail.tsx`
-- `planWatcher.watch(sessionId, tasksPath)` in `plan.js` (2 args) matches the exported signature which accepts optional 3rd arg
+- `ReviewResult` used in `ReviewsTab` matches `types.ts` interface (`id`, `model`, `review`, `createdAt`) ✅
+- `ReviewHistoryResponse` matches server response shape (`reviews`, `total`, `hasMore`) ✅
+- `emitCount` ref-guarded to prevent duplicate `onCountChange` calls ✅
+
+**Scope check:** Single implementation plan covering 3 spec goals. 8 tasks, each ≤ 9 steps. Each commit is green. ✅
+
+**Ambiguity check:**
+- "shallow files" OpenSpec integration is explicitly scoped in spec — no ambiguity ✅
+- "infinite scroll" is implemented via IntersectionObserver with explicit `loadingMore` gate ✅
+- pagination params explicitly clamped to [1, 50] with default 20 ✅
