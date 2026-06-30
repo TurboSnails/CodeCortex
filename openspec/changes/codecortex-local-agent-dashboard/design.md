@@ -72,4 +72,4 @@
 
 - ~~Claude Code 当前版本 hooks payload 的具体字段~~ 已实测确认（见决策 5），不再是 open question
 - 规划层生成的 OpenSpec change 应该写入被监控项目自身的 `openspec/` 目录，还是 CodeCortex 工具独立维护的目录——待实现时根据被监控项目是否已有 `openspec/` 决定
-- 前端框架（React/Svelte/其他）留待 tasks 阶段细化，不影响本设计的架构决策
+- ~~前端框架~~ 已确定：React + Vite，与 gateway 共用 TypeScript 类型定义

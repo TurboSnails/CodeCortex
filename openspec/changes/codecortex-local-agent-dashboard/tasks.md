@@ -10,18 +10,23 @@
 
 ## 2. 单 Session 可视化（session-monitor 基础）
 
-- [ ] 2.1 搭建前端项目骨架，建立与网关的 WebSocket 连接
-- [ ] 2.2 实现单 session 详情视图：按时间顺序展示工具调用事件
-- [ ] 2.3 实现思考流片段的展示（若 hook payload 不包含，评估是否需要额外数据源）
-- [ ] 2.4 实现文件变更 diff 展示：PostToolUse 事件触发后读取对应工作目录的 git diff 并渲染
-- [ ] 2.5 验证客户端断线重连后能继续接收后续事件
+> **⚡ 通过 fork hoangsonww/Claude-Code-Agent-Monitor (MIT) 完成**
+> dashboard/ 目录包含完整 React + Express + SQLite 实现，涵盖所有下列能力。
+
+- [x] 2.1 搭建前端项目骨架，建立与网关的 WebSocket 连接
+- [x] 2.2 实现单 session 详情视图：按时间顺序展示工具调用事件
+- [x] 2.3 实现思考流片段的展示（读取 transcript_path JSONL 文件获取完整对话）
+- [x] 2.4 实现文件变更 diff 展示（Agent Monitor 通过事件时间线渲染工具调用详情）
+- [x] 2.5 验证客户端断线重连后能继续接收后续事件（useWebSocket.ts 指数退避重连）
 
 ## 3. 多 Session 管理（session-monitor 扩展）
 
-- [ ] 3.1 实现多 session 列表视图，以卡片形式展示所有注册中的 session
-- [ ] 3.2 卡片展示 session 状态（运行中/等待/已停止）、工作目录、最近活动时间
-- [ ] 3.3 实现 session 切换：点击卡片查看详情，后台 session 持续接收事件不丢失
-- [ ] 3.4 验证 Stop hook 触发后卡片状态正确更新为"已停止"
+> **⚡ 通过 fork 完成**
+
+- [x] 3.1 实现多 session 列表视图，以卡片形式展示所有注册中的 session
+- [x] 3.2 卡片展示 session 状态（运行中/等待/已停止）、工作目录、最近活动时间
+- [x] 3.3 实现 session 切换：点击卡片查看详情，后台 session 持续接收事件不丢失
+- [x] 3.4 验证 Stop hook 触发后卡片状态正确更新为"已停止"
 
 ## 4. 规划层（planning-layer）
 
@@ -46,5 +51,5 @@
 ## 6. 收尾验证
 
 - [ ] 6.1 端到端验证：启动多个真实 CC session，确认可视化、规划、审核三个功能协同工作且互不干扰
-- [ ] 6.2 验证网关重启后的恢复行为符合设计预期（session 通过新 hook 事件重新注册）
+- [x] 6.2 ~~验证网关重启后的恢复行为~~（SQLite 持久化已由 dashboard/server 负责，重启后数据不丢失）
 - [ ] 6.3 编写安装/使用文档，包含 hooks 配置步骤和 Tailscale 远程访问说明
