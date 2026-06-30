@@ -90,6 +90,30 @@ describe("POST /api/plan/:sessionId", () => {
     assert.ok(res.body.tasks.length > 0);
     assert.equal(res.body.tasks[0].done, false);
     assert.equal(typeof res.body.tasks[0].text, "string");
+    assert.equal(res.body.planType, "standalone"); // no openspec/ in test cwd
+    assert.ok(typeof res.body.changeDir === "string");
+    assert.ok(res.body.changeDir.includes(sessionId));
+  });
+
+  it("uses openspec/ location when cwd contains openspec directory", async () => {
+    const sessionId = "plan-test-openspec-1";
+    // Create a temp dir with openspec/ subdirectory
+    const tmpCwd = fs.mkdtempSync(path.join(os.tmpdir(), "codecortex-openspec-cwd-"));
+    fs.mkdirSync(path.join(tmpCwd, "openspec"));
+    insertSession(sessionId, tmpCwd);
+
+    const res = await req("POST", `/api/plan/${sessionId}`, {
+      description: "1. Create route\n2. Add test",
+    });
+    assert.equal(res.status, 201);
+    assert.equal(res.body.planType, "openspec");
+    assert.ok(res.body.changeDir.includes(path.join(tmpCwd, "openspec", "changes")));
+
+    // proposal.md and .openspec.yaml should exist alongside tasks.md
+    assert.ok(fs.existsSync(path.join(res.body.changeDir, "proposal.md")));
+    assert.ok(fs.existsSync(path.join(res.body.changeDir, ".openspec.yaml")));
+
+    fs.rmSync(tmpCwd, { recursive: true });
   });
 
   it("creates tasks.md file in CODECORTEX_PLANS_DIR", async () => {
@@ -202,12 +226,12 @@ describe("PATCH /api/plan/:sessionId/tasks/:index", () => {
     assert.equal(res.body.tasks[0].done, false);
   });
 
-  it("returns 400 for an out-of-range task index", async () => {
+  it("returns 404 for an out-of-range task index", async () => {
     const sessionId = "patch-test-3";
     insertSession(sessionId);
     await req("POST", `/api/plan/${sessionId}`, { description: "only one task" });
 
     const res = await req("PATCH", `/api/plan/${sessionId}/tasks/5`, { done: true });
-    assert.equal(res.status, 400);
+    assert.equal(res.status, 404);
   });
 });

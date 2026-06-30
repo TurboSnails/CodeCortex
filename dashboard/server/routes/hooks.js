@@ -13,6 +13,7 @@ const { scanAndImportSubagents } = require("../../scripts/import-history");
 const { evaluateEvent } = require("../lib/alerts");
 const { ingestWorkflowsForSession } = require("../lib/workflow-ingest");
 const { triggerIfAppropriate } = require("../lib/review");
+const planWatcher = require("../lib/plan-watcher");
 
 const router = Router();
 
@@ -389,6 +390,7 @@ const processEvent = db.transaction((hookType, data) => {
 
       // Trigger review if mode is ask/auto and message looks like a completion.
       triggerIfAppropriate(sessionId, data.last_assistant_message);
+      planWatcher.unwatch(sessionId);
       break;
     }
 

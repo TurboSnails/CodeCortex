@@ -50,6 +50,31 @@ router.post("/:sessionId", async (req, res) => {
   }
 });
 
+// GET /api/review/:sessionId/history — paginated history of all reviews
+router.get("/:sessionId/history", (req, res) => {
+  const { sessionId } = req.params;
+
+  // Parse + validate pagination
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 50);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+  if (Number.isNaN(limit) || Number.isNaN(offset)) {
+    return res.status(400).json({ error: "limit/offset must be non-negative integers" });
+  }
+
+  const rows = stmts.listReviews.all(sessionId, limit, offset);
+  const total = stmts.countReviews.get(sessionId).count;
+
+  const reviews = rows.map((r) => ({
+    id: r.id,
+    model: r.model,
+    review: r.review,
+    createdAt: r.created_at,
+  }));
+
+  return res.json({ reviews, total });
+});
+
 // GET /api/review/:sessionId — latest review result
 router.get("/:sessionId", (req, res) => {
   const { sessionId } = req.params;

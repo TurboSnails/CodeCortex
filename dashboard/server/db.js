@@ -718,6 +718,18 @@ db.exec(
   }
 }
 
+// Migrate: add plan_type and change_dir to session_plans (v2 planning layer)
+try {
+  db.prepare("SELECT plan_type FROM session_plans LIMIT 1").get();
+} catch {
+  db.prepare("ALTER TABLE session_plans ADD COLUMN plan_type TEXT DEFAULT 'standalone'").run();
+}
+try {
+  db.prepare("SELECT change_dir FROM session_plans LIMIT 1").get();
+} catch {
+  db.prepare("ALTER TABLE session_plans ADD COLUMN change_dir TEXT").run();
+}
+
 // Migrate: add compaction baseline columns to token_usage.
 // When conversation compaction rewrites the JSONL, pre-compaction token counts
 // are lost from the transcript. Baselines preserve those counts so the effective
@@ -1313,8 +1325,8 @@ const stmts = {
   // ── Session plans (planning layer) ────────────────────────────────────────
   getSessionPlan: db.prepare("SELECT * FROM session_plans WHERE session_id = ?"),
   insertSessionPlan: db.prepare(
-    `INSERT INTO session_plans (session_id, change_name, plans_dir, created_at)
-     VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
+    `INSERT INTO session_plans (session_id, change_name, plans_dir, plan_type, change_dir, created_at)
+     VALUES (?, ?, ?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
   ),
 
   // ── Session reviews (multi-model review) ─────────────────────────────────
@@ -1324,6 +1336,12 @@ const stmts = {
   ),
   latestReview: db.prepare(
     "SELECT * FROM session_reviews WHERE session_id = ? ORDER BY created_at DESC, id DESC LIMIT 1"
+  ),
+  listReviews: db.prepare(
+    "SELECT id, session_id, model, review, created_at FROM session_reviews WHERE session_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?"
+  ),
+  countReviews: db.prepare(
+    "SELECT COUNT(*) AS count FROM session_reviews WHERE session_id = ?"
   ),
 };
 

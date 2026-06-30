@@ -829,3 +829,8 @@ export interface ReviewResult {
   review: string;
   createdAt: string;
 }
+
+export interface ReviewHistoryResponse {
+  reviews: ReviewResult[];
+  total: number;
+}

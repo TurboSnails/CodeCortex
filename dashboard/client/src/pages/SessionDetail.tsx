@@ -23,6 +23,7 @@ import {
   Play,
   ExternalLink,
   Workflow,
+  History,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { eventBus } from "../lib/eventBus";
@@ -69,8 +70,9 @@ import type {
 import { WorkflowRunsPanel } from "../components/workflows/WorkflowRunsPanel";
 import { PlanPanel } from "../components/PlanPanel";
 import { ReviewTrigger } from "../components/ReviewTrigger";
+import { ReviewsTab } from "../components/ReviewsTab";
 
-type DetailTab = "agents" | "conversation" | "timeline";
+type DetailTab = "agents" | "conversation" | "timeline" | "reviews";
 
 const EVENTS_INITIAL_BATCH = 50;
 const EVENTS_MORE_BATCH = 500;
@@ -100,6 +102,7 @@ export function SessionDetail() {
     return new Set<string>();
   });
   const [activeTab, setActiveTab] = useState<DetailTab>("agents");
+  const [reviewCount, setReviewCount] = useState(0);
   // Keep tabs mounted once visited so switching between them doesn't unmount/
   // remount their subtrees (which causes a perceptible flash on click).
   const [visitedTabs, setVisitedTabs] = useState<Set<DetailTab>>(() => new Set(["agents"]));
@@ -662,6 +665,25 @@ export function SessionDetail() {
           <List className="w-4 h-4" />
           Timeline ({events.length}/{eventsTotal})
         </button>
+        <button
+          onClick={() => {
+            setActiveTab("reviews");
+            setTranscriptNotFound(false);
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "reviews"
+              ? "border-violet-500 text-violet-400"
+              : "border-transparent text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          <History className="w-4 h-4" />
+          Reviews
+          {reviewCount > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-indigo-900/60 text-indigo-300 font-mono">
+              {reviewCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -1029,6 +1051,12 @@ export function SessionDetail() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {visitedTabs.has("reviews") && (
+        <div hidden={activeTab !== "reviews"}>
+          <ReviewsTab sessionId={id ?? ""} onCountChange={setReviewCount} />
         </div>
       )}
     </div>
