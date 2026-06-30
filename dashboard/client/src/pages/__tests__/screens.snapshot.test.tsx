@@ -384,6 +384,7 @@ vi.mock("../../lib/api", async (importOriginal) => {
         patchConfig: r({ reviewMode: "off", reviewModel: { provider: "gemini", apiKey: "", model: "gemini-1.5-flash", baseUrl: null } }),
         trigger: vi.fn(() => Promise.reject(new Error("no review"))),
         getLatest: vi.fn(() => Promise.reject(new Error("no review"))),
+        getHistory: r({ reviews: [], total: 0 }),
       },
     },
   };
