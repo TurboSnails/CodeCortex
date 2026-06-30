@@ -91,6 +91,10 @@ vi.mock("../../lib/api", () => ({
       ),
       facets: vi.fn(() => Promise.resolve({ event_types: [], tool_names: [] })),
     },
+    plan: {
+      get: vi.fn(() => Promise.reject(new Error("no plan"))),
+      create: vi.fn(() => Promise.resolve({ changeName: "test", tasks: [] })),
+    },
   },
 }));
 

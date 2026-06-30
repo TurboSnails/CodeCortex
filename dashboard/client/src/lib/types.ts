@@ -395,7 +395,8 @@ export interface WSMessage {
     | "cc_config_changed"
     | "alert_triggered"
     | "alert_updated"
-    | "workflow_upserted";
+    | "workflow_upserted"
+    | "plan_updated";
   data:
     | Session
     | Agent
@@ -790,3 +791,15 @@ export const SESSION_STATUS_CONFIG: Record<
     dot: "bg-slate-400",
   },
 };
+
+// ── Planning layer ────────────────────────────────────────────────────────────
+
+export interface PlanTask {
+  done: boolean;
+  text: string;
+}
+
+export interface SessionPlan {
+  changeName: string;
+  tasks: PlanTask[];
+}

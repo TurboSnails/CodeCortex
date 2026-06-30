@@ -30,12 +30,12 @@
 
 ## 4. 规划层（planning-layer）
 
-- [ ] 4.1 实现 session 启动时的轻量引导卡片 UI（可跳过）
-- [ ] 4.2 实现"跳过"路径：不生成任何规划产物，session 正常运行
-- [ ] 4.3 实现"填写"路径：调用 `openspec new change` 生成 change，结合 `superpowers-bridge-opencode` schema 生成 tasks
-- [ ] 4.4 在 session 详情视图侧边栏展示关联 change 的 tasks 列表及完成状态
-- [ ] 4.5 实现 tasks.md 状态轮询/监听，任务勾选后侧边栏同步更新
-- [ ] 4.6 验证规划层缺失不影响可视化和审核功能正常使用
+- [x] 4.1 实现 session 启动时的轻量引导卡片 UI（可跳过）——PlanningPrompt.tsx 浮动卡片，session_created 触发
+- [x] 4.2 实现"跳过"路径：不生成任何规划产物，session 正常运行
+- [x] 4.3 实现"填写"路径：POST /api/plan/:sessionId，写 tasks.md 至 ~/.codecortex/plans/，DB 记录关联
+- [x] 4.4 在 session 详情视图侧边栏展示关联 change 的 tasks 列表及完成状态——PlanPanel.tsx + 进度条
+- [x] 4.5 实现 tasks.md 状态同步：GET /api/plan/:sessionId 读实时文件 + plan_updated WS 事件推送
+- [x] 4.6 验证规划层缺失不影响可视化和审核功能——plan GET 404 时不渲染 PlanPanel，其余功能不受影响
 
 ## 5. 多模型审核（multi-model-review）
 

@@ -5,7 +5,7 @@
  */
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Layout } from "./components/Layout";
 import { SplashScreen } from "./components/SplashScreen";
 import { Dashboard } from "./pages/Dashboard";
@@ -22,19 +22,55 @@ import { NotFound } from "./pages/NotFound";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { useNotifications } from "./hooks/useNotifications";
 import { eventBus } from "./lib/eventBus";
-import type { WSMessage } from "./lib/types";
+import { PlanningPrompt } from "./components/PlanningPrompt";
+import { api } from "./lib/api";
+import type { WSMessage, Session } from "./lib/types";
 
 export default function App() {
+  const [pendingPlanSession, setPendingPlanSession] = useState<Session | null>(null);
+  const [planSubmitting, setPlanSubmitting] = useState(false);
+
   const onMessage = useCallback((msg: WSMessage) => {
     eventBus.publish(msg);
+    if (msg.type === "session_created") {
+      setPendingPlanSession(msg.data as Session);
+    }
   }, []);
 
   const { connected } = useWebSocket(onMessage);
   useNotifications();
 
+  // Dismiss prompt on Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setPendingPlanSession(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  async function handlePlan(description: string) {
+    if (!pendingPlanSession) return;
+    setPlanSubmitting(true);
+    try {
+      await api.plan.create(pendingPlanSession.id, description);
+    } finally {
+      setPlanSubmitting(false);
+      setPendingPlanSession(null);
+    }
+  }
+
   return (
     <>
       <SplashScreen />
+      {pendingPlanSession && (
+        <PlanningPrompt
+          session={pendingPlanSession}
+          onSkip={() => setPendingPlanSession(null)}
+          onPlan={handlePlan}
+          submitting={planSubmitting}
+        />
+      )}
       <BrowserRouter>
         <Routes>
           <Route element={<Layout wsConnected={connected} />}>

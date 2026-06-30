@@ -64,8 +64,10 @@ import type {
   CostResult,
   TranscriptInfo,
   WorkflowRun,
+  SessionPlan,
 } from "../lib/types";
 import { WorkflowRunsPanel } from "../components/workflows/WorkflowRunsPanel";
+import { PlanPanel } from "../components/PlanPanel";
 
 type DetailTab = "agents" | "conversation" | "timeline";
 
@@ -108,6 +110,7 @@ export function SessionDetail() {
   const [transcriptNotFound, setTranscriptNotFound] = useState(false);
   const notFoundTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [expandedEvents, setExpandedEvents] = useState<Set<number>>(() => new Set());
+  const [plan, setPlan] = useState<SessionPlan | null>(null);
 
   function toggleEvent(id: number) {
     setExpandedEvents((prev) => {
@@ -197,6 +200,19 @@ export function SessionDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Load plan if one exists for this session
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    api.plan
+      .get(id)
+      .then((result) => {
+        if (!cancelled) setPlan(result);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [id]);
 
   // Load transcripts list (for Agent → Conversation navigation ID mapping)
   useEffect(() => {
@@ -442,6 +458,12 @@ export function SessionDetail() {
       ) {
         load();
       }
+      if (msg.type === "plan_updated") {
+        const payload = msg.data as { sessionId: string; changeName: string; tasks: SessionPlan["tasks"] };
+        if (payload.sessionId === id) {
+          setPlan({ changeName: payload.changeName, tasks: payload.tasks });
+        }
+      }
       if (msg.type === "new_event") {
         // Debounce bursts into one filter-aware refetch that preserves the
         // current "Load more" pagination size.
@@ -661,6 +683,8 @@ export function SessionDetail() {
               <WorkflowRunsPanel runs={workflows} hideSessionLink />
             </div>
           )}
+
+          {plan && <PlanPanel plan={plan} />}
 
           {agents.length === 0 ? (
             <p className="text-sm text-gray-500">{t("detail.noAgents")}</p>

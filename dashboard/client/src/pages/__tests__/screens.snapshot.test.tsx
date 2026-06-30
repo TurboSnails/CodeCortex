@@ -374,6 +374,10 @@ vi.mock("../../lib/api", async (importOriginal) => {
         deliveries: r({ deliveries: [], limit: 20, offset: 0 }),
       },
       updates: { check: r({ behind: 0, ahead: 0, current: "", upstream: "" }), status: r({}) },
+      plan: {
+        get: vi.fn(() => Promise.reject(new Error("no plan"))),
+        create: r({ changeName: "test-plan", tasks: [] }),
+      },
     },
   };
 });

@@ -486,6 +486,18 @@ export const api = {
       );
     },
   },
+
+  plan: {
+    create: (sessionId: string, description: string) =>
+      request<{ changeName: string; tasks: { done: boolean; text: string }[] }>(
+        `/plan/${encodeURIComponent(sessionId)}`,
+        { method: "POST", body: JSON.stringify({ description }) }
+      ),
+    get: (sessionId: string) =>
+      request<{ changeName: string; tasks: { done: boolean; text: string }[] }>(
+        `/plan/${encodeURIComponent(sessionId)}`
+      ),
+  },
 };
 
 function requestBackupsHelper(params?: { scope?: "user" | "project"; type?: CcArtifactType }) {

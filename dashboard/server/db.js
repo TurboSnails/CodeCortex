@@ -380,6 +380,14 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_workflows_session ON workflows(session_id);
   CREATE INDEX IF NOT EXISTS idx_workflows_status ON workflows(status);
+
+  CREATE TABLE IF NOT EXISTS session_plans (
+    session_id  TEXT PRIMARY KEY,
+    change_name TEXT NOT NULL,
+    plans_dir   TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+  );
 `);
 
 // Migrate: link agent rows to a workflow run. Workflow inner-agents are already
@@ -1288,6 +1296,13 @@ const stmts = {
   ),
   listAgentsByWorkflow: db.prepare(
     "SELECT * FROM agents WHERE workflow_run_id = ? ORDER BY started_at ASC, id ASC"
+  ),
+
+  // ── Session plans (planning layer) ────────────────────────────────────────
+  getSessionPlan: db.prepare("SELECT * FROM session_plans WHERE session_id = ?"),
+  insertSessionPlan: db.prepare(
+    `INSERT INTO session_plans (session_id, change_name, plans_dir, created_at)
+     VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ','now'))`
   ),
 };
 
