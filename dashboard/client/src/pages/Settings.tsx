@@ -60,7 +60,7 @@ import { Tip } from "../components/Tip";
 import { ImportHistory } from "../components/ImportHistory";
 import { Skeleton } from "../components/Skeleton";
 import { AlertsNotifications } from "../components/AlertsNotifications";
-import type { ModelPricing, WSMessage, ReviewConfig, ReviewMode, ReviewProvider } from "../lib/types";
+import type { ModelPricing, WSMessage } from "../lib/types";
 import { ReviewSettings } from "../components/ReviewSettings";
 
 // In-page navigation for the (dense) Settings screen. Each entry maps to a

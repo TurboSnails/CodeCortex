@@ -460,7 +460,7 @@ export function SessionDetail() {
         load();
       }
       if (msg.type === "plan_updated") {
-        const payload = msg.data as { sessionId: string; changeName: string; tasks: SessionPlan["tasks"] };
+        const payload = msg.data as unknown as { sessionId: string; changeName: string; tasks: SessionPlan["tasks"] };
         if (payload.sessionId === id) {
           setPlan({ changeName: payload.changeName, tasks: payload.tasks });
         }

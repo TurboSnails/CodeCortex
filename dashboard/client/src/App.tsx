@@ -43,11 +43,11 @@ export default function App() {
       setPendingPlanSession(msg.data as Session);
     }
     if (msg.type === "review_prompt") {
-      const { sessionId } = msg.data as { sessionId: string };
+      const { sessionId } = msg.data as unknown as { sessionId: string };
       setReviewPromptSessionId(sessionId);
     }
     if (msg.type === "review_ready") {
-      const payload = msg.data as { sessionId: string; model: string; review: string; id: number };
+      const payload = msg.data as unknown as { sessionId: string; model: string; review: string; id: number };
       setReviewResult({ id: payload.id, model: payload.model, review: payload.review, createdAt: new Date().toISOString() });
       setReviewLoading(false);
       setReviewPromptSessionId(null);

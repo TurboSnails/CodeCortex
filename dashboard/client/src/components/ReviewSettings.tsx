@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ShieldCheck, Eye, EyeOff, Settings2 } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { api } from "../lib/api";
 import type { ReviewConfig, ReviewMode, ReviewProvider } from "../lib/types";
 
