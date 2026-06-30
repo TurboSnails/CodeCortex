@@ -157,3 +157,40 @@ describe("GET /api/review/:sessionId", () => {
     assert.equal(res.status, 404);
   });
 });
+
+describe("GET /api/review/:sessionId/history", () => {
+  it("returns empty list when no reviews exist", async () => {
+    insertSession("review-hist-sess-1");
+    const res = await req("GET", "/api/review/review-hist-sess-1/history");
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body.reviews, []);
+    assert.equal(res.body.total, 0);
+  });
+
+  it("returns all reviews in descending order", async () => {
+    insertSession("review-hist-sess-2");
+    // Directly insert review rows
+    db.prepare(
+      "INSERT INTO session_reviews (session_id, model, diff, review) VALUES (?, ?, ?, ?)"
+    ).run("review-hist-sess-2", "gemini/gemini-1.5-flash", null, "First review");
+    db.prepare(
+      "INSERT INTO session_reviews (session_id, model, diff, review) VALUES (?, ?, ?, ?)"
+    ).run("review-hist-sess-2", "openai/gpt-4o", null, "Second review");
+
+    const res = await req("GET", "/api/review/review-hist-sess-2/history");
+    assert.equal(res.status, 200);
+    assert.equal(res.body.reviews.length, 2);
+    assert.equal(res.body.total, 2);
+    // Most recent first
+    assert.equal(res.body.reviews[0].model, "openai/gpt-4o");
+    assert.equal(res.body.reviews[1].model, "gemini/gemini-1.5-flash");
+    assert.ok(typeof res.body.reviews[0].id === "number");
+    assert.ok(typeof res.body.reviews[0].createdAt === "string");
+  });
+
+  it("returns 200 with empty list for session with no reviews (not 404)", async () => {
+    insertSession("review-hist-sess-3");
+    const res = await req("GET", "/api/review/review-hist-sess-3/history");
+    assert.equal(res.status, 200);
+  });
+});
