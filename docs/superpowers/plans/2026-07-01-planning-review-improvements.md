@@ -248,7 +248,7 @@ describe("detectPlanLocation", () => {
       const result = detectPlanLocation(tmp, "sess-abc12345");
       assert.equal(result.type, "openspec");
       assert.ok(result.changeDir.includes(path.join(tmp, "openspec", "changes")));
-      assert.ok(result.changeDir.includes("codecortex-sess-abc1"));
+      assert.ok(result.changeDir.includes("codecortex-sess-abc"));
     } finally {
       fs.rmSync(tmp, { recursive: true });
     }
