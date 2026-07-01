@@ -20,7 +20,12 @@
   - Review: approved. Minor findings: add type-narrowing helpers to reduce `any` casts in ChatMessageList; consider a comment explaining the suppressed thinking indicator during permission requests.
 - [x] Task 3: Integrate `ChatTab` into `SessionDetail` (commit 967451a, 1/1 new tests pass, full client suite 280 pass)
   - Review: approved. I addressed the review findings before committing: removed unused imports in the new test, added `events.list` mock to eliminate console error noise, and reverted accidentally committed `package-lock.json` and vitest cache file.
-- [ ] PTY spike: Evaluate `node-pty` for intercepting Claude permission prompts (required before Tasks 4–5)
+- [x] PTY spike: Evaluate `node-pty` for intercepting Claude permission prompts
+  - **Result: BLOCKED by sandbox.**
+  - `node-pty` installs successfully, but `pty.spawn()` fails with `posix_spawnp failed` in this environment.
+  - Fallback `script -q /dev/null /bin/zsh` wrapper also fails with `tcgetattr/ioctl: Operation not supported on socket`.
+  - Therefore permission prompt interception cannot be validated here. It may work when the dashboard server runs unsandboxed on the user's machine, but that has not been proven.
+  - Decision required before Tasks 4-5.
 - [ ] Task 4: Add backend permission-response endpoint (blocked on PTY spike)
 - [ ] Task 5: Render permission requests as UI buttons (blocked on PTY spike)
 - [ ] Task 6: Responsive layout for desktop and mobile
