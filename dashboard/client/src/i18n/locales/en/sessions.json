@@ -31,5 +31,15 @@
     "costBreakdown": "Cost Breakdown",
     "eventTimeline": "Event Timeline",
     "noEvents": "No events recorded."
+  },
+  "chat": {
+    "title": "Chat",
+    "startHint": "Type a message to start a new Claude Code run for this session.",
+    "startPlaceholder": "Ask Claude to do something…",
+    "followUpPlaceholder": "Send a follow-up…",
+    "permissionApprove": "Approve",
+    "permissionReject": "Reject",
+    "permissionAlways": "Always approve",
+    "permissionTitle": "Claude is asking for permission"
   }
 }

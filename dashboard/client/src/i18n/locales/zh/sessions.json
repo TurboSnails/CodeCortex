@@ -31,5 +31,15 @@
     "costBreakdown": "费用明细",
     "eventTimeline": "事件时间线",
     "noEvents": "暂无事件记录。"
+  },
+  "chat": {
+    "title": "对话",
+    "startHint": "输入消息以开始此会话的 Claude Code 运行。",
+    "startPlaceholder": "让 Claude 做点什么…",
+    "followUpPlaceholder": "发送后续消息…",
+    "permissionApprove": "批准",
+    "permissionReject": "拒绝",
+    "permissionAlways": "始终批准",
+    "permissionTitle": "Claude 正在请求权限"
   }
 }
