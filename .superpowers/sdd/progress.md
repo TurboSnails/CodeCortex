@@ -28,7 +28,8 @@
   - Decision required before Tasks 4-5.
 - [ ] Task 4: Add backend permission-response endpoint (blocked on PTY spike)
 - [ ] Task 5: Render permission requests as UI buttons (blocked on PTY spike)
-- [ ] Task 6: Responsive layout for desktop and mobile
+- [x] Task 6: Responsive layout for desktop and mobile (commit 4eb8217, full client suite 280 pass)
+  - Review: approved. Minor observation: `overflow-hidden` is on the tab wrapper rather than the page body; practical goal achieved.
 - [ ] Task 7: Integration and end-to-end verification
 - [ ] Final whole-branch review
 
