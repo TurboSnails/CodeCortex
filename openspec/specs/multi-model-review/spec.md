@@ -1,7 +1,7 @@
 # multi-model-review Specification
 
 ## Purpose
-TBD - created by archiving change codecortex-local-agent-dashboard. Update Purpose after archive.
+定义 CodeCortex 多模型代码审核层的行为：支持关闭 / 询问 / 自动三态触发模式，基于 `last_assistant_message` 启发式过滤提问类 Stop hook，提供单次审核结果展示与分页历史审核回溯，并通过 tab badge 实时反映审核总数。
 ## Requirements
 ### Requirement: Three-State Review Mode Toggle
 系统 SHALL 提供一个全局配置项，控制多模型审核的触发方式，取值为「关闭」「询问」「自动」三态之一，默认值为「关闭」。

@@ -55,7 +55,9 @@ export interface Agent {
 }
 
 /** True when a session is paused on a permission prompt or input request. */
-export function isSessionAwaitingInput(session: Session | undefined | null): boolean {
+export function isSessionAwaitingInput(
+  session: Session | undefined | null,
+): boolean {
   return !!session?.awaiting_input_since && session.status === "active";
 }
 
@@ -70,7 +72,9 @@ export function effectiveAgentStatus(agent: Agent): EffectiveAgentStatus {
   return isAgentAwaitingInput(agent) ? AWAITING_STATUS : agent.status;
 }
 
-export function effectiveSessionStatus(session: Session): EffectiveSessionStatus {
+export function effectiveSessionStatus(
+  session: Session,
+): EffectiveSessionStatus {
   return isSessionAwaitingInput(session) ? AWAITING_STATUS : session.status;
 }
 
@@ -178,7 +182,14 @@ export interface CostResult {
 
 export interface ImportProgressMessage {
   importId?: string;
-  phase: "start" | "scan" | "extract" | "parse" | "complete" | "error" | "extract_error";
+  phase:
+    | "start"
+    | "scan"
+    | "extract"
+    | "parse"
+    | "complete"
+    | "error"
+    | "extract_error";
   source?: "default" | "path" | "upload";
   processed?: number;
   total?: number;
@@ -253,7 +264,8 @@ export interface CcConfigChangedPayload {
 
 // ── Alerting ──
 
-export type AlertRuleType = "event_pattern" | "inactivity" | "status_duration" | "token_threshold";
+export type AlertRuleType =
+  "event_pattern" | "inactivity" | "status_duration" | "token_threshold";
 
 export interface AlertRuleConfig {
   event_type?: string;
@@ -410,7 +422,8 @@ export interface WSMessage {
     | RunInputAckPayload
     | CcConfigChangedPayload
     | AlertEvent
-    | WorkflowRun;
+    | WorkflowRun
+    | ReviewReadyPayload;
   timestamp: string;
 }
 
@@ -464,7 +477,12 @@ export interface OrchestrationEdge {
 export interface OrchestrationData {
   sessionCount: number;
   mainCount: number;
-  subagentTypes: Array<{ subagent_type: string; count: number; completed: number; errors: number }>;
+  subagentTypes: Array<{
+    subagent_type: string;
+    count: number;
+    completed: number;
+    errors: number;
+  }>;
   edges: OrchestrationEdge[];
   outcomes: Array<{ status: string; count: number }>;
   compactions: { total: number; sessions: number };
@@ -505,7 +523,11 @@ export interface WorkflowPatternsData {
 }
 
 export interface ModelDelegationData {
-  mainModels: Array<{ model: string; agent_count: number; session_count: number }>;
+  mainModels: Array<{
+    model: string;
+    agent_count: number;
+    session_count: number;
+  }>;
   subagentModels: Array<{ model: string; agent_count: number }>;
   tokensByModel: Array<{
     model: string;
@@ -713,7 +735,8 @@ export interface TranscriptContent {
 /** Who actually sent a transcript message. A JSONL `type:"user"` line can be the
  *  human, a tool result, a harness injection, or (in a subagent transcript) the
  *  task handed down by the orchestrator — `sender` disambiguates for display. */
-export type TranscriptSender = "user" | "assistant" | "orchestrator" | "system" | "tool";
+export type TranscriptSender =
+  "user" | "assistant" | "orchestrator" | "system" | "tool";
 
 export interface TranscriptMessage {
   type: "user" | "assistant" | "session_event";
@@ -809,7 +832,8 @@ export interface SessionPlan {
 // ── Review layer ──────────────────────────────────────────────────────────────
 
 export type ReviewMode = "off" | "ask" | "auto";
-export type ReviewProvider = "openai" | "gemini" | "kimi" | "minimax" | "custom";
+export type ReviewProvider =
+  "openai" | "gemini" | "kimi" | "minimax" | "custom";
 
 export interface ReviewModelConfig {
   provider: ReviewProvider;
@@ -833,4 +857,13 @@ export interface ReviewResult {
 export interface ReviewHistoryResponse {
   reviews: ReviewResult[];
   total: number;
+  hasMore: boolean;
+}
+
+export interface ReviewReadyPayload {
+  sessionId: string;
+  id: number;
+  model: string;
+  review: string;
+  createdAt?: string;
 }

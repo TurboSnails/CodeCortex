@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { History } from "lucide-react";
 import { api } from "../lib/api";
 import { eventBus } from "../lib/eventBus";
-import type { ReviewResult } from "../lib/types";
+import type { ReviewReadyPayload, ReviewResult } from "../lib/types";
 import { MarkdownContent } from "./conversation/MarkdownContent";
 
 interface Props {
   sessionId: string;
   onCountChange?: (n: number) => void;
 }
+
+const PAGE_SIZE = 20;
 
 function formatTime(iso: string) {
   try {
@@ -26,35 +28,98 @@ function formatTime(iso: string) {
 export function ReviewsTab({ sessionId, onCountChange }: Props) {
   const [reviews, setReviews] = useState<ReviewResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    api.review
-      .getHistory(sessionId)
-      .then(({ reviews: data }) => {
-        setReviews(data);
-      })
-      .catch(() => {
-        setReviews([]);
-      })
-      .finally(() => setLoading(false));
-  }, [sessionId]);
+  const lastEmittedCount = useRef<number | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const offsetRef = useRef(0);
 
   useEffect(() => {
-    onCountChange?.(reviews.length);
-  }, [reviews.length, onCountChange]);
+    offsetRef.current = reviews.length;
+  }, [reviews.length]);
+
+  const emitCountIfChanged = useCallback(
+    (n: number) => {
+      if (lastEmittedCount.current !== n) {
+        lastEmittedCount.current = n;
+        onCountChange?.(n);
+      }
+    },
+    [onCountChange],
+  );
+
+  const loadPage = useCallback(
+    async (offset: number, append: boolean) => {
+      try {
+        const {
+          reviews: data,
+          total: t,
+          hasMore: more,
+        } = await api.review.getHistory(sessionId, {
+          offset,
+          limit: PAGE_SIZE,
+        });
+        setTotal(t);
+        setHasMore(more);
+        setReviews((prev) => {
+          const next = append
+            ? [...prev, ...data.filter((r) => !prev.some((p) => p.id === r.id))]
+            : data;
+          emitCountIfChanged(t);
+          return next;
+        });
+      } catch {
+        if (!append) {
+          setReviews([]);
+          setHasMore(false);
+        }
+      } finally {
+        if (append) {
+          setLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
+      }
+    },
+    [sessionId, emitCountIfChanged],
+  );
+
+  // Initial load
+  useEffect(() => {
+    setLoading(true);
+    setReviews([]);
+    setHasMore(false);
+    lastEmittedCount.current = null;
+    loadPage(0, false);
+  }, [sessionId, loadPage]);
+
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || loading || loadingMore || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) {
+          setLoadingMore(true);
+          loadPage(offsetRef.current, true);
+        }
+      },
+      { rootMargin: "100px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loading, loadingMore, hasMore, loadPage]);
 
   useEffect(() => {
     return eventBus.subscribe((msg) => {
       if (msg.type !== "review_ready") return;
-      const d = msg.data as {
-        sessionId: string;
-        id: number;
-        model: string;
-        review: string;
-        createdAt: string;
-      };
+      const d = msg.data as ReviewReadyPayload;
       if (d.sessionId !== sessionId) return;
       const newReview: ReviewResult = {
         id: d.id,
@@ -62,9 +127,18 @@ export function ReviewsTab({ sessionId, onCountChange }: Props) {
         review: d.review,
         createdAt: d.createdAt ?? new Date().toISOString(),
       };
-      setReviews((prev) => [newReview, ...prev]);
+      setReviews((prev) => {
+        if (prev.some((r) => r.id === newReview.id)) return prev;
+        const next = [newReview, ...prev];
+        setTotal((t) => {
+          const updated = t + 1;
+          emitCountIfChanged(updated);
+          return updated;
+        });
+        return next;
+      });
     });
-  }, [sessionId]);
+  }, [sessionId, emitCountIfChanged]);
 
   if (loading) {
     return (
@@ -117,6 +191,20 @@ export function ReviewsTab({ sessionId, onCountChange }: Props) {
           )}
         </div>
       ))}
+
+      <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+
+      {loadingMore && (
+        <div className="flex items-center justify-center py-3 text-slate-500 text-xs">
+          加载更多…
+        </div>
+      )}
+
+      {!hasMore && reviews.length > 0 && (
+        <div className="text-center py-3 text-slate-600 text-xs">
+          已加载全部 {total} 条
+        </div>
+      )}
     </div>
   );
 }

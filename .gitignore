@@ -1,2 +1,8 @@
 # Worktree isolation
 .worktrees/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/

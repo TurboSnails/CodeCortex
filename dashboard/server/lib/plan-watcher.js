@@ -12,6 +12,8 @@ function watch(sessionId, tasksPath, broadcastFn = defaultBroadcast) {
   const watcher = fs.watch(tasksPath, { persistent: false }, () => {
     if (timer) clearTimeout(timer);
     timer = setTimeout(() => {
+      // The watcher may have been unwatched during the debounce window.
+      if (!watchers.has(sessionId)) return;
       let content;
       try {
         content = fs.readFileSync(tasksPath, "utf8");
@@ -28,7 +30,7 @@ function watch(sessionId, tasksPath, broadcastFn = defaultBroadcast) {
 
   watcher.on("error", () => unwatch(sessionId));
 
-  watchers.set(sessionId, { watcher });
+  watchers.set(sessionId, { watcher, timer });
 }
 
 function unwatch(sessionId) {
@@ -37,7 +39,14 @@ function unwatch(sessionId) {
   try {
     entry.watcher.close();
   } catch {}
+  if (entry.timer) clearTimeout(entry.timer);
   watchers.delete(sessionId);
 }
 
-module.exports = { watch, unwatch };
+function unwatchAll() {
+  for (const sessionId of [...watchers.keys()]) {
+    unwatch(sessionId);
+  }
+}
+
+module.exports = { watch, unwatch, unwatchAll };

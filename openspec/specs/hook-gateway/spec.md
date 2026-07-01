@@ -1,7 +1,7 @@
 # hook-gateway Specification
 
 ## Purpose
-TBD - created by archiving change codecortex-local-agent-dashboard. Update Purpose after archive.
+定义 Claude Code 与 dashboard 之间的本地 hook 接入契约：在不侵入 CC 进程的前提下，接收 SessionStart / PreToolUse / PostToolUse / Stop 等事件，维护 session 注册表，并通过 WebSocket 实时广播给 UI。
 ## Requirements
 ### Requirement: Hook Event Ingestion
 网关 SHALL 暴露一个本地 HTTP 端点，接收 Claude Code 的 hooks 事件（SessionStart、PreToolUse、PostToolUse、Stop），且不修改或拦截 Claude Code 进程本身。

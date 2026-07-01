@@ -28,7 +28,9 @@ describe("plan-watcher", () => {
 
   it("calls broadcastFn with plan_updated when tasks.md is modified", async () => {
     const calls = [];
-    planWatcher.watch("sess-w1", tasksFile, (type, data) => calls.push({ type, data }));
+    planWatcher.watch("sess-w1", tasksFile, (type, data) =>
+      calls.push({ type, data }),
+    );
 
     // Give the watcher time to initialize, then modify the file
     await sleep(50);
@@ -54,5 +56,24 @@ describe("plan-watcher", () => {
     planWatcher.watch("sess-unwatch", tasksFile, () => {});
     assert.doesNotThrow(() => planWatcher.unwatch("sess-unwatch"));
     assert.doesNotThrow(() => planWatcher.unwatch("sess-unwatch")); // double unwatch is safe
+  });
+
+  it("unwatchAll closes all active watchers without error", async () => {
+    const calls = [];
+    planWatcher.watch("sess-all-1", tasksFile, (type, data) =>
+      calls.push({ type, data }),
+    );
+    planWatcher.watch("sess-all-2", tasksFile, (type, data) =>
+      calls.push({ type, data }),
+    );
+
+    assert.doesNotThrow(() => planWatcher.unwatchAll());
+
+    // After unwatchAll, further file changes should not broadcast.
+    await sleep(50);
+    fs.writeFileSync(tasksFile, "## Tasks\n\n- [x] Task one\n", "utf8");
+    await sleep(400);
+
+    assert.equal(calls.length, 0, "expected no broadcasts after unwatchAll");
   });
 });

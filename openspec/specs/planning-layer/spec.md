@@ -1,7 +1,7 @@
 # planning-layer Specification
 
 ## Purpose
-TBD - created by archiving change codecortex-local-agent-dashboard. Update Purpose after archive.
+定义 CodeCortex 规划层的行为：在 session 启动时提供可选的规划引导，根据项目是否具备 `openspec/` 目录选择 OpenSpec change 路径或 standalone 回退路径生成 tasks，并在外部修改 `tasks.md` 后通过文件监听自动同步到 UI。
 ## Requirements
 ### Requirement: Optional Planning Prompt on Session Start
 UI SHALL 在检测到新 session 启动时展示一个可跳过的轻量规划引导卡片，提示用户简要描述任务目标；用户可以选择填写或直接跳过进入正常 session。

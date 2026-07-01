@@ -12,6 +12,9 @@ import type {
   CostResult,
   DashboardEvent,
   ModelPricing,
+  ReviewConfig,
+  ReviewHistoryResponse,
+  ReviewResult,
   Session,
   SessionDrillIn,
   SessionStats,
@@ -40,7 +43,8 @@ const BASE = "/api";
  */
 export function dashboardToken(): string | null {
   try {
-    const injected = (globalThis as { __DASHBOARD_TOKEN__?: unknown }).__DASHBOARD_TOKEN__;
+    const injected = (globalThis as { __DASHBOARD_TOKEN__?: unknown })
+      .__DASHBOARD_TOKEN__;
     if (typeof injected === "string" && injected) return injected;
     const stored = localStorage.getItem("dashboard_token");
     return stored && stored.length > 0 ? stored : null;
@@ -75,7 +79,8 @@ export const api = {
   },
 
   stats: {
-    get: () => request<Stats>(`/stats?tz_offset=${new Date().getTimezoneOffset()}`),
+    get: () =>
+      request<Stats>(`/stats?tz_offset=${new Date().getTimezoneOffset()}`),
   },
 
   sessions: {
@@ -94,13 +99,17 @@ export const api = {
       if (params?.q) qs.set("q", params.q);
       if (params?.cwd) qs.set("cwd", params.cwd);
       if (params?.sort_by) qs.set("sort_by", params.sort_by);
-      if (params?.sort_desc !== undefined) qs.set("sort_desc", String(params.sort_desc));
+      if (params?.sort_desc !== undefined)
+        qs.set("sort_desc", String(params.sort_desc));
       if (params?.limit) qs.set("limit", String(params.limit));
       if (params?.offset) qs.set("offset", String(params.offset));
       const queryString = qs.toString();
-      return request<{ sessions: Session[]; total: number; limit: number; offset: number }>(
-        `/sessions${queryString ? `?${queryString}` : ""}`
-      );
+      return request<{
+        sessions: Session[];
+        total: number;
+        limit: number;
+        offset: number;
+      }>(`/sessions${queryString ? `?${queryString}` : ""}`);
     },
     get: (id: string) =>
       request<{
@@ -109,9 +118,12 @@ export const api = {
         events: DashboardEvent[];
         workflows: WorkflowRun[];
       }>(`/sessions/${encodeURIComponent(id)}`),
-    stats: (id: string) => request<SessionStats>(`/sessions/${encodeURIComponent(id)}/stats`),
+    stats: (id: string) =>
+      request<SessionStats>(`/sessions/${encodeURIComponent(id)}/stats`),
     transcripts: (id: string) =>
-      request<TranscriptListResult>(`/sessions/${encodeURIComponent(id)}/transcripts`),
+      request<TranscriptListResult>(
+        `/sessions/${encodeURIComponent(id)}/transcripts`,
+      ),
     transcript: (
       id: string,
       params?: {
@@ -121,7 +133,7 @@ export const api = {
         offset?: number;
         after?: number;
         before?: number;
-      }
+      },
     ) => {
       const qs = new URLSearchParams();
       if (params?.agent_id) qs.set("agent_id", params.agent_id);
@@ -132,13 +144,18 @@ export const api = {
       if (params?.before != null) qs.set("before", String(params.before));
       const q = qs.toString();
       return request<TranscriptResult>(
-        `/sessions/${encodeURIComponent(id)}/transcript${q ? `?${q}` : ""}`
+        `/sessions/${encodeURIComponent(id)}/transcript${q ? `?${q}` : ""}`,
       );
     },
   },
 
   agents: {
-    list: (params?: { status?: string; session_id?: string; limit?: number; offset?: number }) => {
+    list: (params?: {
+      status?: string;
+      session_id?: string;
+      limit?: number;
+      offset?: number;
+    }) => {
       const qs = new URLSearchParams();
       if (params?.status) qs.set("status", params.status);
       if (params?.session_id) qs.set("session_id", params.session_id);
@@ -162,11 +179,14 @@ export const api = {
       offset?: number;
     }) => {
       const qs = new URLSearchParams();
-      const csv = (v?: string[]) => (v && v.length > 0 ? v.join(",") : undefined);
+      const csv = (v?: string[]) =>
+        v && v.length > 0 ? v.join(",") : undefined;
       const et = csv(params?.event_type);
       const tn = csv(params?.tool_name);
       const ag = csv(params?.agent_id);
-      const sid = Array.isArray(params?.session_id) ? csv(params?.session_id) : params?.session_id;
+      const sid = Array.isArray(params?.session_id)
+        ? csv(params?.session_id)
+        : params?.session_id;
       if (et) qs.set("event_type", et);
       if (tn) qs.set("tool_name", tn);
       if (ag) qs.set("agent_id", ag);
@@ -184,11 +204,17 @@ export const api = {
         total: number;
       }>(`/events${q ? `?${q}` : ""}`);
     },
-    facets: () => request<{ event_types: string[]; tool_names: string[] }>("/events/facets"),
+    facets: () =>
+      request<{ event_types: string[]; tool_names: string[] }>(
+        "/events/facets",
+      ),
   },
 
   analytics: {
-    get: () => request<Analytics>(`/analytics?tz_offset=${new Date().getTimezoneOffset()}`),
+    get: () =>
+      request<Analytics>(
+        `/analytics?tz_offset=${new Date().getTimezoneOffset()}`,
+      ),
   },
 
   settings: {
@@ -208,13 +234,22 @@ export const api = {
           };
           load_stats: { m5: number; m15: number; h1: number };
         };
-        hooks: { installed: boolean; path: string; hooks: Record<string, boolean> };
+        hooks: {
+          installed: boolean;
+          path: string;
+          hooks: Record<string, boolean>;
+        };
         server: {
           uptime: number;
           node_version: string;
           platform: string;
           ws_connections: number;
-          memory: { rss: number; heapTotal: number; heapUsed: number; external: number };
+          memory: {
+            rss: number;
+            heapTotal: number;
+            heapUsed: number;
+            external: number;
+          };
           cpu_load: number[];
           arch: string;
           total_mem: number;
@@ -238,23 +273,31 @@ export const api = {
         }),
     },
     clearData: () =>
-      request<{ ok: boolean; cleared: Record<string, number> }>("/settings/clear-data", {
-        method: "POST",
-      }),
+      request<{ ok: boolean; cleared: Record<string, number> }>(
+        "/settings/clear-data",
+        {
+          method: "POST",
+        },
+      ),
     reimport: () =>
-      request<{ ok: boolean; imported: number; skipped: number; errors: number }>(
-        "/settings/reimport",
-        { method: "POST" }
-      ),
+      request<{
+        ok: boolean;
+        imported: number;
+        skipped: number;
+        errors: number;
+      }>("/settings/reimport", { method: "POST" }),
     reinstallHooks: () =>
-      request<{ ok: boolean; hooks: { installed: boolean; hooks: Record<string, boolean> } }>(
-        "/settings/reinstall-hooks",
-        { method: "POST" }
-      ),
+      request<{
+        ok: boolean;
+        hooks: { installed: boolean; hooks: Record<string, boolean> };
+      }>("/settings/reinstall-hooks", { method: "POST" }),
     resetPricing: () =>
-      request<{ ok: boolean; pricing: ModelPricing[] }>("/settings/reset-pricing", {
-        method: "POST",
-      }),
+      request<{ ok: boolean; pricing: ModelPricing[] }>(
+        "/settings/reset-pricing",
+        {
+          method: "POST",
+        },
+      ),
     exportData: () => `${BASE}/settings/export`,
     cleanup: (params: { abandon_hours?: number; purge_days?: number }) =>
       request<{
@@ -268,21 +311,33 @@ export const api = {
 
   workflows: {
     get: (status?: string) =>
-      request<WorkflowData>(`/workflows${status && status !== "all" ? `?status=${status}` : ""}`),
+      request<WorkflowData>(
+        `/workflows${status && status !== "all" ? `?status=${status}` : ""}`,
+      ),
     session: (id: string) =>
       request<SessionDrillIn>(`/workflows/session/${encodeURIComponent(id)}`),
     // Workflow-tool runs (issue #167) - fleets ingested from on-disk journals.
-    runs: (params?: { status?: string; session_id?: string; limit?: number; offset?: number }) => {
+    runs: (params?: {
+      status?: string;
+      session_id?: string;
+      limit?: number;
+      offset?: number;
+    }) => {
       const qs = new URLSearchParams();
-      if (params?.status && params.status !== "all") qs.set("status", params.status);
+      if (params?.status && params.status !== "all")
+        qs.set("status", params.status);
       if (params?.session_id) qs.set("session_id", params.session_id);
       if (params?.limit != null) qs.set("limit", String(params.limit));
       if (params?.offset != null) qs.set("offset", String(params.offset));
       const q = qs.toString();
-      return request<WorkflowRunsResponse>(`/workflows/runs${q ? `?${q}` : ""}`);
+      return request<WorkflowRunsResponse>(
+        `/workflows/runs${q ? `?${q}` : ""}`,
+      );
     },
     run: (runId: string) =>
-      request<WorkflowRunDetail>(`/workflows/runs/${encodeURIComponent(runId)}`),
+      request<WorkflowRunDetail>(
+        `/workflows/runs/${encodeURIComponent(runId)}`,
+      ),
   },
 
   pricing: {
@@ -297,10 +352,12 @@ export const api = {
         method: "DELETE",
       }),
     totalCost: () =>
-      request<CostResult>(`/pricing/cost?tz_offset=${new Date().getTimezoneOffset()}`),
+      request<CostResult>(
+        `/pricing/cost?tz_offset=${new Date().getTimezoneOffset()}`,
+      ),
     sessionCost: (sessionId: string) =>
       request<CostResult>(
-        `/pricing/cost/${encodeURIComponent(sessionId)}?tz_offset=${new Date().getTimezoneOffset()}`
+        `/pricing/cost/${encodeURIComponent(sessionId)}?tz_offset=${new Date().getTimezoneOffset()}`,
       ),
   },
 
@@ -327,7 +384,10 @@ export const api = {
     upload: async (files: File[]): Promise<ImportResult> => {
       const form = new FormData();
       for (const f of files) form.append("files", f, f.name);
-      const res = await fetch(`${BASE}/import/upload`, { method: "POST", body: form });
+      const res = await fetch(`${BASE}/import/upload`, {
+        method: "POST",
+        body: form,
+      });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error?.message || `HTTP ${res.status}`);
@@ -339,20 +399,31 @@ export const api = {
   ccConfig: {
     overview: () => request<CcOverview>("/cc-config/overview"),
     skills: (scope?: CcScope) =>
-      request<{ items: CcMdItem[] }>(`/cc-config/skills${scope ? `?scope=${scope}` : ""}`),
+      request<{ items: CcMdItem[] }>(
+        `/cc-config/skills${scope ? `?scope=${scope}` : ""}`,
+      ),
     agents: (scope?: CcScope) =>
-      request<{ items: CcMdItem[] }>(`/cc-config/agents${scope ? `?scope=${scope}` : ""}`),
+      request<{ items: CcMdItem[] }>(
+        `/cc-config/agents${scope ? `?scope=${scope}` : ""}`,
+      ),
     commands: (scope?: CcScope) =>
-      request<{ items: CcMdItem[] }>(`/cc-config/commands${scope ? `?scope=${scope}` : ""}`),
+      request<{ items: CcMdItem[] }>(
+        `/cc-config/commands${scope ? `?scope=${scope}` : ""}`,
+      ),
     outputStyles: (scope?: CcScope) =>
-      request<{ items: CcMdItem[] }>(`/cc-config/output-styles${scope ? `?scope=${scope}` : ""}`),
+      request<{ items: CcMdItem[] }>(
+        `/cc-config/output-styles${scope ? `?scope=${scope}` : ""}`,
+      ),
     plugins: () => request<CcPluginsResponse>("/cc-config/plugins"),
     mcp: () => request<CcMcpResponse>("/cc-config/mcp"),
     hooks: () => request<{ items: CcHookSource[] }>("/cc-config/hooks"),
-    settings: () => request<{ items: CcSettingsSource[] }>("/cc-config/settings"),
+    settings: () =>
+      request<{ items: CcSettingsSource[] }>("/cc-config/settings"),
     memory: () => request<{ items: CcMemoryItem[] }>("/cc-config/memory"),
     file: (absPath: string) =>
-      request<CcFileResponse>(`/cc-config/file?path=${encodeURIComponent(absPath)}`),
+      request<CcFileResponse>(
+        `/cc-config/file?path=${encodeURIComponent(absPath)}`,
+      ),
     write: (args: CcWriteArgs) =>
       request<CcMutationResult>("/cc-config/file", {
         method: "PUT",
@@ -363,7 +434,8 @@ export const api = {
         method: "DELETE",
         body: JSON.stringify(args),
       }),
-    marketplaces: () => request<CcMarketplacesResponse>("/cc-config/marketplaces"),
+    marketplaces: () =>
+      request<CcMarketplacesResponse>("/cc-config/marketplaces"),
     keybindings: () => request<CcKeybindings>("/cc-config/keybindings"),
     statusline: () => request<CcStatusline>("/cc-config/statusline"),
     hookScripts: () => request<CcHookScripts>("/cc-config/hook-scripts"),
@@ -374,8 +446,11 @@ export const api = {
   run: {
     list: () => request<RunListResponse>("/run"),
     history: (limit = 50) =>
-      request<{ items: DashboardRunHistoryItem[] }>(`/run/history?limit=${limit}`),
-    binary: () => request<{ found: boolean; path: string | null }>("/run/binary"),
+      request<{ items: DashboardRunHistoryItem[] }>(
+        `/run/history?limit=${limit}`,
+      ),
+    binary: () =>
+      request<{ found: boolean; path: string | null }>("/run/binary"),
     cwds: () => request<{ items: CwdSuggestion[] }>("/run/cwds"),
     files: (cwd: string, q?: string) => {
       const qs = new URLSearchParams({ cwd });
@@ -383,16 +458,23 @@ export const api = {
       return request<{ items: string[] }>(`/run/files?${qs.toString()}`);
     },
     start: (args: RunStartArgs) =>
-      request<RunHandle>("/run", { method: "POST", body: JSON.stringify(args) }),
+      request<RunHandle>("/run", {
+        method: "POST",
+        body: JSON.stringify(args),
+      }),
     get: (id: string, opts?: { envelopes?: boolean }) =>
-      request<RunHandle>(`/run/${encodeURIComponent(id)}${opts?.envelopes ? "?envelopes=1" : ""}`),
+      request<RunHandle>(
+        `/run/${encodeURIComponent(id)}${opts?.envelopes ? "?envelopes=1" : ""}`,
+      ),
     send: (id: string, text: string) =>
       request<{ messageId: string }>(`/run/${encodeURIComponent(id)}/message`, {
         method: "POST",
         body: JSON.stringify({ text }),
       }),
     kill: (id: string) =>
-      request<{ ok: true }>(`/run/${encodeURIComponent(id)}`, { method: "DELETE" }),
+      request<{ ok: true }>(`/run/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }),
   },
 
   alerts: {
@@ -410,9 +492,12 @@ export const api = {
         offset: number;
       }>(`/alerts${q ? `?${q}` : ""}`);
     },
-    ack: (id: number) => request<{ alert: AlertEvent }>(`/alerts/${id}/ack`, { method: "POST" }),
+    ack: (id: number) =>
+      request<{ alert: AlertEvent }>(`/alerts/${id}/ack`, { method: "POST" }),
     ackAll: () =>
-      request<{ ok: true; acknowledged: number }>("/alerts/ack-all", { method: "POST" }),
+      request<{ ok: true; acknowledged: number }>("/alerts/ack-all", {
+        method: "POST",
+      }),
     rules: {
       list: () => request<{ rules: AlertRule[] }>("/alerts/rules"),
       create: (rule: {
@@ -428,20 +513,28 @@ export const api = {
         }),
       update: (
         id: string,
-        patch: Partial<Pick<AlertRule, "name" | "config" | "enabled" | "cooldown_seconds">>
+        patch: Partial<
+          Pick<AlertRule, "name" | "config" | "enabled" | "cooldown_seconds">
+        >,
       ) =>
-        request<{ rule: AlertRule }>(`/alerts/rules/${encodeURIComponent(id)}`, {
-          method: "PATCH",
-          body: JSON.stringify(patch),
-        }),
+        request<{ rule: AlertRule }>(
+          `/alerts/rules/${encodeURIComponent(id)}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(patch),
+          },
+        ),
       remove: (id: string) =>
-        request<{ ok: true }>(`/alerts/rules/${encodeURIComponent(id)}`, { method: "DELETE" }),
+        request<{ ok: true }>(`/alerts/rules/${encodeURIComponent(id)}`, {
+          method: "DELETE",
+        }),
     },
   },
 
   webhooks: {
     list: () => request<{ targets: WebhookTarget[] }>("/webhooks"),
-    providers: () => request<{ providers: WebhookProvider[] }>("/webhooks/providers"),
+    providers: () =>
+      request<{ providers: WebhookProvider[] }>("/webhooks/providers"),
     create: (target: {
       name: string;
       type: WebhookType;
@@ -466,24 +559,33 @@ export const api = {
         headers?: Record<string, string>;
         config?: Record<string, string>;
         rule_ids?: string[];
-      }
+      },
     ) =>
-      request<{ target: WebhookTarget }>(`/webhooks/${encodeURIComponent(id)}`, {
-        method: "PATCH",
-        body: JSON.stringify(patch),
-      }),
+      request<{ target: WebhookTarget }>(
+        `/webhooks/${encodeURIComponent(id)}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(patch),
+        },
+      ),
     remove: (id: string) =>
-      request<{ ok: true }>(`/webhooks/${encodeURIComponent(id)}`, { method: "DELETE" }),
+      request<{ ok: true }>(`/webhooks/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }),
     test: (id: string) =>
-      request<WebhookTestResult>(`/webhooks/${encodeURIComponent(id)}/test`, { method: "POST" }),
+      request<WebhookTestResult>(`/webhooks/${encodeURIComponent(id)}/test`, {
+        method: "POST",
+      }),
     deliveries: (id: string, params?: { limit?: number; offset?: number }) => {
       const qs = new URLSearchParams();
       if (params?.limit) qs.set("limit", String(params.limit));
       if (params?.offset) qs.set("offset", String(params.offset));
       const q = qs.toString();
-      return request<{ deliveries: WebhookDelivery[]; limit: number; offset: number }>(
-        `/webhooks/${encodeURIComponent(id)}/deliveries${q ? `?${q}` : ""}`
-      );
+      return request<{
+        deliveries: WebhookDelivery[];
+        limit: number;
+        offset: number;
+      }>(`/webhooks/${encodeURIComponent(id)}/deliveries${q ? `?${q}` : ""}`);
     },
   },
 
@@ -491,54 +593,65 @@ export const api = {
     create: (sessionId: string, description: string) =>
       request<{ changeName: string; tasks: { done: boolean; text: string }[] }>(
         `/plan/${encodeURIComponent(sessionId)}`,
-        { method: "POST", body: JSON.stringify({ description }) }
+        { method: "POST", body: JSON.stringify({ description }) },
       ),
     get: (sessionId: string) =>
       request<{ changeName: string; tasks: { done: boolean; text: string }[] }>(
-        `/plan/${encodeURIComponent(sessionId)}`
+        `/plan/${encodeURIComponent(sessionId)}`,
       ),
     toggleTask: (sessionId: string, taskIndex: number, done: boolean) =>
       request<{ changeName: string; tasks: { done: boolean; text: string }[] }>(
         `/plan/${encodeURIComponent(sessionId)}/tasks/${taskIndex}`,
-        { method: "PATCH", body: JSON.stringify({ done }) }
+        { method: "PATCH", body: JSON.stringify({ done }) },
       ),
   },
 
   review: {
-    getConfig: () => request<import("./types").ReviewConfig>("/review/config"),
-    patchConfig: (updates: Partial<import("./types").ReviewConfig>) =>
-      request<import("./types").ReviewConfig>("/review/config", {
+    getConfig: () => request<ReviewConfig>("/review/config"),
+    patchConfig: (updates: Partial<ReviewConfig>) =>
+      request<ReviewConfig>("/review/config", {
         method: "PATCH",
         body: JSON.stringify(updates),
       }),
     trigger: (sessionId: string) =>
-      request<{ model: string; review: string }>(`/review/${encodeURIComponent(sessionId)}`, {
-        method: "POST",
-      }),
-    getLatest: (sessionId: string) =>
-      request<import("./types").ReviewResult>(`/review/${encodeURIComponent(sessionId)}`),
-    getHistory: (sessionId: string) =>
-      request<import("./types").ReviewHistoryResponse>(
-        `/review/${encodeURIComponent(sessionId)}/history`
+      request<{ model: string; review: string }>(
+        `/review/${encodeURIComponent(sessionId)}`,
+        {
+          method: "POST",
+        },
       ),
+    getLatest: (sessionId: string) =>
+      request<ReviewResult>(`/review/${encodeURIComponent(sessionId)}`),
+    getHistory: (
+      sessionId: string,
+      opts?: { offset?: number; limit?: number },
+    ) => {
+      const params = new URLSearchParams({
+        offset: String(opts?.offset ?? 0),
+        limit: String(opts?.limit ?? 20),
+      });
+      return request<ReviewHistoryResponse>(
+        `/review/${encodeURIComponent(sessionId)}/history?${params}`,
+      );
+    },
   },
 };
 
-function requestBackupsHelper(params?: { scope?: "user" | "project"; type?: CcArtifactType }) {
+function requestBackupsHelper(params?: {
+  scope?: "user" | "project";
+  type?: CcArtifactType;
+}) {
   const qs = new URLSearchParams();
   if (params?.scope) qs.set("scope", params.scope);
   if (params?.type) qs.set("type", params.type);
   const q = qs.toString();
-  return request<{ items: CcBackup[] }>(`/cc-config/backups${q ? `?${q}` : ""}`);
+  return request<{ items: CcBackup[] }>(
+    `/cc-config/backups${q ? `?${q}` : ""}`,
+  );
 }
 
 export type CcArtifactType =
-  | "skills"
-  | "agents"
-  | "commands"
-  | "output-styles"
-  | "memory"
-  | "auto-memory";
+  "skills" | "agents" | "commands" | "output-styles" | "memory" | "auto-memory";
 
 export interface CcWriteArgs {
   // "auto-memory" targets a per-project memory file and requires `project`.
@@ -765,8 +878,10 @@ export interface CcHookScripts {
 }
 
 export type RunMode = "headless" | "conversation";
-export type RunStatus = "spawning" | "running" | "completed" | "error" | "killed" | "abandoned";
-export type PermissionMode = "acceptEdits" | "default" | "plan" | "bypassPermissions";
+export type RunStatus =
+  "spawning" | "running" | "completed" | "error" | "killed" | "abandoned";
+export type PermissionMode =
+  "acceptEdits" | "default" | "plan" | "bypassPermissions";
 export type EffortLevel = "" | "low" | "medium" | "high" | "xhigh" | "max";
 
 export interface RunStartArgs {
@@ -862,7 +977,11 @@ export const RUN_EFFORT_CHOICES: EffortChoice[] = [
 
 // Curated model list. "" means "inherit from settings.json" - no --model flag.
 export const RUN_MODEL_CHOICES: ModelChoice[] = [
-  { id: "", label: "Inherit from settings", hint: "Use whatever your settings.json model is" },
+  {
+    id: "",
+    label: "Inherit from settings",
+    hint: "Use whatever your settings.json model is",
+  },
   {
     id: "claude-opus-4-8[1m]",
     label: "Opus 4.8 (1M context)",

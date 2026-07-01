@@ -1,7 +1,7 @@
 # session-monitor Specification
 
 ## Purpose
-TBD - created by archiving change codecortex-local-agent-dashboard. Update Purpose after archive.
+定义 dashboard 对多 session 的实时监控视图：提供 session 列表卡片（状态、工作目录）和单个 session 详情页（工具调用序列、思考流、文件 diff），并保证切换查看的 session 不会影响其他 session 的事件接收。
 ## Requirements
 ### Requirement: Single Session Detail View
 UI SHALL 提供单个 session 的详情视图，实时展示工具调用序列、思考流文本片段、以及文件变更的 diff。

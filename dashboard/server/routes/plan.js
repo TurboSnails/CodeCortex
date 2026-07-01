@@ -10,8 +10,11 @@ const path = require("path");
 const os = require("os");
 const { stmts } = require("../db");
 const { broadcast } = require("../websocket");
-const { toSlug, parseTasks, detectPlanLocation, generateOpenSpecChange } =
-  require("../lib/openspec-plan");
+const {
+  parseTasks,
+  detectPlanLocation,
+  generateOpenSpecChange,
+} = require("../lib/openspec-plan");
 const planWatcher = require("../lib/plan-watcher");
 
 const PLANS_BASE =
@@ -72,18 +75,26 @@ router.post("/:sessionId", (req, res) => {
 
   const existing = stmts.getSessionPlan.get(sessionId);
   if (existing) {
-    return res.status(409).json({ error: "plan already exists for this session" });
+    return res
+      .status(409)
+      .json({ error: "plan already exists for this session" });
   }
 
-  const changeName = toSlug(description) || `plan-${Date.now()}`;
   const tasks = parseTasks(description);
   const { type: planType, changeDir } = detectPlanLocation(
     session.cwd || "",
-    sessionId
+    sessionId,
   );
   generateOpenSpecChange(changeDir, sessionId, description, tasks);
+  const changeName = path.basename(changeDir);
 
-  stmts.insertSessionPlan.run(sessionId, changeName, PLANS_BASE, planType, changeDir);
+  stmts.insertSessionPlan.run(
+    sessionId,
+    changeName,
+    PLANS_BASE,
+    planType,
+    changeDir,
+  );
 
   const taskObjects = tasks.map((t) => ({ done: false, text: t }));
   broadcast("plan_updated", { sessionId, changeName, tasks: taskObjects });
@@ -91,7 +102,9 @@ router.post("/:sessionId", (req, res) => {
   const tasksPath = path.join(changeDir, "tasks.md");
   planWatcher.watch(sessionId, tasksPath);
 
-  return res.status(201).json({ changeName, tasks: taskObjects, planType, changeDir });
+  return res
+    .status(201)
+    .json({ changeName, tasks: taskObjects, planType, changeDir });
 });
 
 // GET /api/plan/:sessionId — read current plan tasks
@@ -119,7 +132,9 @@ router.patch("/:sessionId/tasks/:index", (req, res) => {
   const { done } = req.body || {};
 
   if (!Number.isInteger(taskIndex) || taskIndex < 0) {
-    return res.status(400).json({ error: "index must be a non-negative integer" });
+    return res
+      .status(400)
+      .json({ error: "index must be a non-negative integer" });
   }
   if (typeof done !== "boolean") {
     return res.status(400).json({ error: "done must be a boolean" });
@@ -146,7 +161,9 @@ router.patch("/:sessionId/tasks/:index", (req, res) => {
     tasks: updatedTasks,
   });
 
-  return res.status(200).json({ changeName: plan.change_name, tasks: updatedTasks });
+  return res
+    .status(200)
+    .json({ changeName: plan.change_name, tasks: updatedTasks });
 });
 
 module.exports = router;

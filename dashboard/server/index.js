@@ -19,7 +19,10 @@ if (!process.env.NODE_ENV) process.env.NODE_ENV = "production";
     const key = trimmed.slice(0, eqIdx).trim();
     let val = trimmed.slice(eqIdx + 1).trim();
     // Strip surrounding quotes (single or double)
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
       val = val.slice(1, -1);
     }
     if (!process.env[key]) {
@@ -64,6 +67,7 @@ const alertsRouter = require("./routes/alerts");
 const webhooksRouter = require("./routes/webhooks");
 const planRouter = require("./routes/plan");
 const reviewRouter = require("./routes/review");
+const planWatcher = require("./lib/plan-watcher");
 
 function createApp() {
   const app = express();
@@ -102,7 +106,7 @@ function createApp() {
     swaggerUi.serve,
     swaggerUi.setup(openApiSpec, {
       customSiteTitle: "Agent Dashboard API Docs",
-    })
+    }),
   );
 
   // ReDoc — a read-optimized, three-panel rendering of the same OpenAPI spec
@@ -120,8 +124,8 @@ function createApp() {
         renderRedocHtml(
           "/api/openapi.json",
           "/api/redoc/redoc.standalone.js",
-          "Agent Dashboard API Reference"
-        )
+          "Agent Dashboard API Reference",
+        ),
       );
   });
 
@@ -153,20 +157,30 @@ function startServer(app, port) {
         lastModified: true,
         setHeaders(res, filePath) {
           if (filePath.includes(`${path.sep}assets${path.sep}`)) {
-            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+            res.setHeader(
+              "Cache-Control",
+              "public, max-age=31536000, immutable",
+            );
             return;
           }
           const base = path.basename(filePath);
-          if (base === "index.html" || base === "sw.js" || base === "manifest.json") {
+          if (
+            base === "index.html" ||
+            base === "sw.js" ||
+            base === "manifest.json"
+          ) {
             res.setHeader("Cache-Control", "no-cache, must-revalidate");
             return;
           }
           // Other static files (favicon, og-image, etc.): short revalidation
           // window — long enough to be friendly, short enough to recover from
           // a typo without telling users to hard-refresh.
-          res.setHeader("Cache-Control", "public, max-age=300, must-revalidate");
+          res.setHeader(
+            "Cache-Control",
+            "public, max-age=300, must-revalidate",
+          );
         },
-      })
+      }),
     );
     app.get("*", (_req, res) => {
       res.setHeader("Cache-Control", "no-cache, must-revalidate");
@@ -188,13 +202,15 @@ function startServer(app, port) {
       writeServerInfo(port);
       const mode = isProduction ? "production" : "development";
       const shown = boundLoopback ? "localhost" : host;
-      console.log(`Agent Dashboard server running on http://${shown}:${port} (${mode})`);
+      console.log(
+        `Agent Dashboard server running on http://${shown}:${port} (${mode})`,
+      );
       if (!boundLoopback) {
         console.warn(
           `⚠️  Dashboard bound to ${host} — reachable from the network. ` +
             (getDashboardToken()
               ? "DASHBOARD_TOKEN is set (API + WebSocket require it)."
-              : "Set DASHBOARD_TOKEN to require auth, or it is OPEN to anyone who can reach this port.")
+              : "Set DASHBOARD_TOKEN to require auth, or it is OPEN to anyone who can reach this port."),
         );
       }
       if (!isProduction) {
@@ -226,26 +242,39 @@ function autoImportLegacySessions() {
   try {
     const fs = require("fs");
     const dbModule = require("./db");
-    const markerPath = path.join(path.dirname(dbModule.DB_PATH), ".legacy-import.done");
+    const markerPath = path.join(
+      path.dirname(dbModule.DB_PATH),
+      ".legacy-import.done",
+    );
     if (fs.existsSync(markerPath)) return;
 
-    const { importAllSessions, backfillCompactions } = require("../scripts/import-history");
+    const {
+      importAllSessions,
+      backfillCompactions,
+    } = require("../scripts/import-history");
     importAllSessions(dbModule)
       .then(({ imported, errors }) => {
-        if (imported > 0) console.log(`Imported ${imported} legacy sessions from ~/.claude/`);
-        if (errors > 0) console.log(`${errors} session files had errors during import`);
+        if (imported > 0)
+          console.log(`Imported ${imported} legacy sessions from ~/.claude/`);
+        if (errors > 0)
+          console.log(`${errors} session files had errors during import`);
       })
       .then(() => backfillCompactions(dbModule))
       .then(({ backfilled }) => {
         if (backfilled > 0)
-          console.log(`Backfilled ${backfilled} compaction events from ~/.claude/`);
+          console.log(
+            `Backfilled ${backfilled} compaction events from ~/.claude/`,
+          );
       })
       // Backfill Workflow-tool run journals (issue #167) for all imported
       // sessions. Inner agents emit no hooks, so this on-disk scan is the only
       // way historical workflows surface.
       .then(() => require("./lib/workflow-ingest").ingestAllWorkflows(dbModule))
       .then(({ workflows }) => {
-        if (workflows > 0) console.log(`Backfilled ${workflows} workflow run(s) from ~/.claude/`);
+        if (workflows > 0)
+          console.log(
+            `Backfilled ${workflows} workflow run(s) from ~/.claude/`,
+          );
       })
       // Write the marker only after the import completes, so a crash mid-import
       // retries on the next start instead of being skipped forever.
@@ -325,7 +354,10 @@ function startWorkflowPoll(broadcast) {
   if (!Number.isFinite(POLL_MS) || POLL_MS <= 0) return;
 
   const dbModule = require("./db");
-  const { ingestWorkflowsForSession, workflowsMaxMtime } = require("./lib/workflow-ingest");
+  const {
+    ingestWorkflowsForSession,
+    workflowsMaxMtime,
+  } = require("./lib/workflow-ingest");
   const lastSeen = new Map(); // sessionId → newest workflow-artifact mtime ingested
 
   const timer = setInterval(() => {
@@ -333,7 +365,7 @@ function startWorkflowPoll(broadcast) {
     try {
       active = dbModule.db
         .prepare(
-          "SELECT id, transcript_path AS tp FROM sessions WHERE status = 'active' AND transcript_path IS NOT NULL ORDER BY updated_at DESC LIMIT 50"
+          "SELECT id, transcript_path AS tp FROM sessions WHERE status = 'active' AND transcript_path IS NOT NULL ORDER BY updated_at DESC LIMIT 50",
         )
         .all();
     } catch {
@@ -349,7 +381,10 @@ function startWorkflowPoll(broadcast) {
       }
       if (mtime === 0 || lastSeen.get(row.id) === mtime) continue; // none / unchanged
       lastSeen.set(row.id, mtime);
-      ingestWorkflowsForSession(dbModule, { id: row.id, transcript_path: row.tp })
+      ingestWorkflowsForSession(dbModule, {
+        id: row.id,
+        transcript_path: row.tp,
+      })
         .then((changed) => {
           if (!changed || changed.length === 0) return;
           for (const wf of changed) broadcast("workflow_upserted", wf);
@@ -384,7 +419,7 @@ function probeDashboardHealth(port, timeoutMs = 1500) {
             resolve(false);
           }
         });
-      }
+      },
     );
     req.on("error", () => resolve(false));
     req.on("timeout", () => {
@@ -413,7 +448,7 @@ if (require.main === module) {
     if (alreadyRunning && !isWatchMode) {
       console.log(
         `Agent Dashboard is already running on http://localhost:${PORT} — not starting a ` +
-          `second instance. Open that URL, or stop the other dashboard first.`
+          `second instance. Open that URL, or stop the other dashboard first.`,
       );
       process.exit(0);
       return;
@@ -433,11 +468,18 @@ if (require.main === module) {
       process.exit(1);
     }
     shutdownInProgress = true;
-    console.log(`\n${signal} received — shutting down gracefully… (hit Ctrl+C again to force)`);
+    console.log(
+      `\n${signal} received — shutting down gracefully… (hit Ctrl+C again to force)`,
+    );
     if (httpServer) {
       httpServer.close(() => {
         console.log("HTTP server closed.");
       });
+    }
+    try {
+      planWatcher.unwatchAll();
+    } catch {
+      /* best effort */
     }
     try {
       require("./db").db.close();
@@ -459,14 +501,17 @@ if (require.main === module) {
   // would poison a bind-mounted host ~/.claude and break every host hook, so
   // hooks must be installed on the host (`npm run install-hooks`).
   try {
-    const { installHooks, isInsideContainer } = require("../scripts/install-hooks");
+    const {
+      installHooks,
+      isInsideContainer,
+    } = require("../scripts/install-hooks");
     if (installHooks(true)) {
       console.log("Claude Code hooks auto-configured.");
     } else if (isInsideContainer()) {
       console.log(
         "Claude Code hooks NOT auto-configured: running inside a container. " +
           "Run `npm run install-hooks` on the host so hooks point at a host path and " +
-          "POST to http://localhost:4820 (this container's published port)."
+          "POST to http://localhost:4820 (this container's published port).",
       );
     }
   } catch {
@@ -493,7 +538,10 @@ if (require.main === module) {
   // Sweep interval: 1/4 of the stale threshold, clamped to [60s, 5 min].
   // Frequent enough to catch real abandonments quickly, cheap enough that
   // we're not hammering SQLite for nothing.
-  const SWEEP_INTERVAL_MS = Math.max(60_000, Math.min(300_000, (STALE_MINUTES * 60_000) / 4));
+  const SWEEP_INTERVAL_MS = Math.max(
+    60_000,
+    Math.min(300_000, (STALE_MINUTES * 60_000) / 4),
+  );
 
   const cleanupDb = require("./db");
   const { broadcast } = require("./websocket");
@@ -501,7 +549,10 @@ if (require.main === module) {
   const { transcriptCache } = require("./routes/hooks");
   setInterval(() => {
     // 1. Stale session cleanup — batch agent updates to avoid N+1 queries
-    const stale = cleanupDb.stmts.findStaleSessions.all("__periodic__", STALE_MINUTES);
+    const stale = cleanupDb.stmts.findStaleSessions.all(
+      "__periodic__",
+      STALE_MINUTES,
+    );
     const now = new Date().toISOString();
     if (stale.length > 0) {
       const staleIds = stale.map((s) => s.id);
@@ -511,7 +562,7 @@ if (require.main === module) {
       cleanupDb.db
         .prepare(
           `UPDATE agents SET status = 'completed', ended_at = COALESCE(ended_at, ?), updated_at = ?
-           WHERE session_id IN (${placeholders}) AND status NOT IN ('completed', 'error')`
+           WHERE session_id IN (${placeholders}) AND status NOT IN ('completed', 'error')`,
         )
         .run(now, now, ...staleIds);
 
@@ -545,7 +596,7 @@ if (require.main === module) {
     // O(active sessions) instead of O(events rows).
     const active = cleanupDb.db
       .prepare(
-        "SELECT id AS session_id, transcript_path AS tp FROM sessions WHERE status = 'active' AND transcript_path IS NOT NULL ORDER BY updated_at DESC"
+        "SELECT id AS session_id, transcript_path AS tp FROM sessions WHERE status = 'active' AND transcript_path IS NOT NULL ORDER BY updated_at DESC",
       )
       .all();
     for (const row of active) {
@@ -554,19 +605,24 @@ if (require.main === module) {
         const compactions = transcriptCache.extractCompactions(row.tp);
         if (compactions.length === 0) continue;
         const mainAgentId = `${row.session_id}-main`;
-        const created = importCompactions(cleanupDb, row.session_id, mainAgentId, compactions);
+        const created = importCompactions(
+          cleanupDb,
+          row.session_id,
+          mainAgentId,
+          compactions,
+        );
         if (created > 0) {
           broadcast(
             "agent_created",
             cleanupDb.stmts.getAgent.get(
-              `${row.session_id}-compact-${compactions[compactions.length - 1].uuid}`
-            )
+              `${row.session_id}-compact-${compactions[compactions.length - 1].uuid}`,
+            ),
           );
         }
       } catch (err) {
         console.warn(
           `[SWEEP] Compaction scan failed for session ${row.session_id}:`,
-          err?.message || err
+          err?.message || err,
         );
         continue;
       }
@@ -578,7 +634,10 @@ if (require.main === module) {
     const { ingestWorkflowsForSession } = require("./lib/workflow-ingest");
     for (const row of active) {
       if (!row.tp) continue;
-      ingestWorkflowsForSession(cleanupDb, { id: row.session_id, transcript_path: row.tp })
+      ingestWorkflowsForSession(cleanupDb, {
+        id: row.session_id,
+        transcript_path: row.tp,
+      })
         .then((changed) => {
           if (!changed || changed.length === 0) return;
           for (const wf of changed) broadcast("workflow_upserted", wf);
@@ -588,7 +647,7 @@ if (require.main === module) {
         .catch((err) => {
           console.warn(
             `[SWEEP] Workflow scan failed for session ${row.session_id}:`,
-            err?.message || err
+            err?.message || err,
           );
         });
     }
