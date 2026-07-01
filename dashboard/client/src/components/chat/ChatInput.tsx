@@ -44,7 +44,7 @@ export function ChatInput({
             type="button"
             onClick={onStop}
             disabled={disabled}
-            className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40"
+            className="p-3 md:p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-40"
             aria-label="stop"
           >
             <Square className="w-4 h-4" />
@@ -54,7 +54,7 @@ export function ChatInput({
             type="button"
             onClick={onSend}
             disabled={disabled || !value.trim()}
-            className="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40"
+            className="p-3 md:p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40"
             aria-label="send"
           >
             <Send className="w-4 h-4" />

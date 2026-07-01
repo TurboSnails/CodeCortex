@@ -24,7 +24,7 @@ export function PermissionPrompt({
           type="button"
           onClick={onApprove}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30 px-3 py-1.5 text-xs font-medium disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30 px-3 py-2.5 md:py-1.5 text-xs font-medium disabled:opacity-40 min-h-[44px]"
         >
           <Check className="w-3.5 h-3.5" />
           Approve
@@ -33,7 +33,7 @@ export function PermissionPrompt({
           type="button"
           onClick={onReject}
           disabled={disabled}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-red-500/10 text-red-300 hover:bg-red-500/20 px-3 py-1.5 text-xs font-medium disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-red-500/10 text-red-300 hover:bg-red-500/20 px-3 py-2.5 md:py-1.5 text-xs font-medium disabled:opacity-40 min-h-[44px]"
         >
           <X className="w-3.5 h-3.5" />
           Reject

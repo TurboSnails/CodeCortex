@@ -31,7 +31,7 @@ export function ChatTab({
   const canSend = !!handle?.id && isLive;
 
   return (
-    <div className="flex flex-col h-[600px] rounded-xl border border-border bg-surface-1 overflow-hidden">
+    <div className="flex flex-col rounded-xl border border-border bg-surface-1 overflow-hidden h-[min(70vh,600px)] md:h-[600px]">
       {error && (
         <div className="px-4 py-2.5 border-b border-red-500/20 bg-red-500/10 flex items-center gap-2 text-sm text-red-200">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />

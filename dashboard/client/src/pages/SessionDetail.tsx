@@ -961,7 +961,10 @@ export function SessionDetail() {
       )}
 
       {visitedTabs.has("chat") && (
-        <div hidden={activeTab !== "chat"}>
+        <div
+          hidden={activeTab !== "chat"}
+          className={`min-h-[60vh] ${activeTab === "chat" ? "overflow-hidden md:overflow-visible" : ""}`}
+        >
           {session.cwd && (
             <ChatTab sessionId={session.id} cwd={session.cwd} />
           )}
