@@ -353,6 +353,18 @@ vi.mock("../../lib/api", async (importOriginal) => {
         send: r({ messageId: "m-1" }),
         kill: r({ ok: true }),
       },
+      files: {
+        tree: r({ tree: [] }),
+        content: r({ content: "" }),
+      },
+      git: {
+        status: r({ staged: [], unstaged: [], untracked: [], ahead: 0, behind: 0, branch: "main" }),
+        diff: r({ diff: "" }),
+        stage: r({ ok: true }),
+        unstage: r({ ok: true }),
+        commit: r({ ok: true }),
+        push: r({ ok: true }),
+      },
       alerts: {
         list: r({ alerts: [], total: 0, unacked: 0, limit: 50, offset: 0 }),
         ack: r({ alert: {} }),
