@@ -32,8 +32,8 @@
   - Wired `useRunChat.respondToPermission` to backend endpoint; disabled prompt buttons while busy; added unit test.
 - [x] Task 6: Responsive layout for desktop and mobile (commit 4eb8217, full client suite 280 pass)
   - Review: approved. Minor observation: `overflow-hidden` is on the tab wrapper rather than the page body; practical goal achieved.
-- [x] Task 7: Integration and end-to-end verification (commit 85bb5d6, server tests 485 pass, client tests 281 pass, build passes, E2E smoke passes)
-- [ ] Final whole-branch review
+- [x] Task 7: Integration and end-to-end verification (commit d790a83, server tests 485 pass, client tests 285 pass, build passes, E2E smoke passes)
+- [x] Final whole-branch review and finishing — approved with findings resolved (node-pty optional-only, PermissionPrompt tests, E2E extension, ChatMessageList type narrowing, content_block_stop comment restored).
 
 ## Notes
 
