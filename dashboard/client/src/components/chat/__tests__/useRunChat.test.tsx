@@ -11,6 +11,7 @@ vi.mock("../../../lib/api", () => ({
       start: vi.fn(),
       send: vi.fn(),
       kill: vi.fn(),
+      respondToPermission: vi.fn(),
     },
   },
 }));
@@ -18,6 +19,7 @@ vi.mock("../../../lib/api", () => ({
 const mockStart = vi.mocked(api.run.start);
 const mockSend = vi.mocked(api.run.send);
 const mockKill = vi.mocked(api.run.kill);
+const mockRespondToPermission = vi.mocked(api.run.respondToPermission);
 
 let busCallback: ((msg: unknown) => void) | null = null;
 vi.mock("../../../lib/eventBus", () => ({
@@ -252,6 +254,62 @@ describe("useRunChat", () => {
 
     await waitFor(() => expect(result.current.activePermissionRequest).not.toBeNull());
     expect(result.current.activePermissionRequest?.id).toBe("perm-1");
+  });
+
+  it("calls the permission response API and clears active request", async () => {
+    const handle: RunHandle = {
+      id: "run-1",
+      status: "running",
+      mode: "conversation",
+      cwd: "/tmp",
+      permissionMode: "acceptEdits",
+      model: null,
+      effort: null,
+      prompt: "hello",
+      argv: [],
+      pid: 123,
+      resumeSessionId: null,
+      startedAt: Date.now(),
+      endedAt: null,
+      exitCode: null,
+      signal: null,
+      error: null,
+      sessionId: "sess-1",
+      envelopeCount: 1,
+      stdoutTail: "",
+      stderrTail: "",
+    };
+    mockStart.mockResolvedValueOnce(handle);
+    mockRespondToPermission.mockResolvedValueOnce({ ok: true });
+
+    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+
+    await act(async () => {
+      await result.current.start("hello");
+    });
+
+    const permEnvelope: Envelope = {
+      type: "permission_request",
+      id: "perm-1",
+      tool_name: "Bash",
+      description: "List files",
+    };
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: { id: "run-1", envelope: permEnvelope },
+      });
+    });
+
+    await waitFor(() => expect(result.current.activePermissionRequest).not.toBeNull());
+
+    await act(async () => {
+      await result.current.respondToPermission(true);
+    });
+
+    expect(mockRespondToPermission).toHaveBeenCalledWith("run-1", { requestId: "perm-1", approved: true });
+    expect(result.current.activePermissionRequest).toBeNull();
   });
 });
 

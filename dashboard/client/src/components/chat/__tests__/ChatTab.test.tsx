@@ -8,6 +8,7 @@ vi.mock("../../../lib/api", () => ({
       start: vi.fn(),
       send: vi.fn(),
       kill: vi.fn(),
+      respondToPermission: vi.fn(),
     },
   },
 }));

@@ -51,7 +51,7 @@ export function ChatTab({
           request={activePermissionRequest}
           onApprove={() => respondToPermission(true)}
           onReject={() => respondToPermission(false)}
-          disabled={busy === "send"}
+          disabled={busy !== null}
         />
       )}
 

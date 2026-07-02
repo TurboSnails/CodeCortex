@@ -304,7 +304,7 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
   const [handle, setHandle] = useState<RunHandle | null>(null);
   const [envelopes, setEnvelopes] = useState<Envelope[]>([]);
   const [followUp, setFollowUp] = useState("");
-  const [busy, setBusy] = useState<"start" | "send" | "stop" | null>(null);
+  const [busy, setBusy] = useState<"start" | "send" | "stop" | "permission" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activePermissionRequest, setActivePermissionRequest] =
     useState<PermissionRequestEnvelope | null>(null);
@@ -420,12 +420,23 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
   }, [handle, busy]);
 
   const respondToPermission = useCallback(
-    async (_approved: boolean, _remember?: boolean) => {
-      // Placeholder for Tasks 4-5. PTY spike must succeed before this can work
-      // because Claude CLI does not emit structured permission_request envelopes.
-      setActivePermissionRequest(null);
+    async (approved: boolean, _remember?: boolean) => {
+      if (!handle || !activePermissionRequest || busy) return;
+      setBusy("permission");
+      setError(null);
+      try {
+        await api.run.respondToPermission(handle.id, {
+          requestId: activePermissionRequest.id,
+          approved,
+        });
+        setActivePermissionRequest(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "permission response failed");
+      } finally {
+        setBusy(null);
+      }
     },
-    []
+    [handle, activePermissionRequest, busy]
   );
 
   const isLive = handle?.status === "spawning" || handle?.status === "running";
