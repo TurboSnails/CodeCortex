@@ -26,8 +26,10 @@
   - Fallback `script -q /dev/null /bin/zsh` wrapper also fails with `tcgetattr/ioctl: Operation not supported on socket`.
   - Therefore permission prompt interception cannot be validated here. It may work when the dashboard server runs unsandboxed on the user's machine, but that has not been proven.
   - Decision required before Tasks 4-5.
-- [ ] Task 4: Add backend permission-response endpoint (blocked on PTY spike)
-- [ ] Task 5: Render permission requests as UI buttons (blocked on PTY spike)
+- [x] Task 4: Add backend permission-response endpoint (commit d1bc026, server tests 476 pass)
+  - Implemented PTY-aware transport abstraction with child_process fallback; terminal permission prompt detection; `sendPermissionResponse` injecting `Y\n`/`n\n`; `POST /api/run/:id/permission` route; client API/types.
+- [x] Task 5: Render permission requests as UI buttons (commit 4c6e2e6, client tests 281 pass)
+  - Wired `useRunChat.respondToPermission` to backend endpoint; disabled prompt buttons while busy; added unit test.
 - [x] Task 6: Responsive layout for desktop and mobile (commit 4eb8217, full client suite 280 pass)
   - Review: approved. Minor observation: `overflow-hidden` is on the tab wrapper rather than the page body; practical goal achieved.
 - [ ] Task 7: Integration and end-to-end verification
