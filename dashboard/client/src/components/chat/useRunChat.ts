@@ -142,6 +142,12 @@ export function mergeEnvelope(prev: Envelope[], envelope: Envelope): Envelope[] 
       });
     }
 
+    if (evt.type === "content_block_stop") {
+      // No state change needed: deltas have already accumulated into the
+      // streaming assistant block; this event only signals the end of a block.
+      return prev;
+    }
+
     if (evt.type === "message_stop") {
       const idx = findAssistantByMessageId(prev, evt.message?.id);
       if (idx < 0) return prev;
