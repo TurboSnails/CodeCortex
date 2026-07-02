@@ -7,6 +7,7 @@
 import { useMemo, useState } from "react";
 import { Wrench, Check, X, ShieldAlert } from "lucide-react";
 import type { Envelope, PermissionRequestEnvelope } from "./types";
+import { ToolInputPreview } from "./ToolInputPreview";
 
 interface ToolDetailsProps {
   envelopes: Envelope[];
@@ -125,20 +126,13 @@ export function ToolDetails({
             <ShieldAlert className="w-4 h-4" />
             Permission request
           </div>
-          <div className="text-[12px] text-gray-200 mb-3">{activePermissionRequest.description}</div>
-          {activePermissionRequest.command && (
-            <div className="mb-2">
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Command</div>
-              <pre className="text-[11px] font-mono text-gray-300 bg-surface-2/50 p-1.5 rounded border border-border">
-                {activePermissionRequest.command}
-              </pre>
-            </div>
-          )}
-          {activePermissionRequest.path && (
-            <div className="mb-2">
-              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Path</div>
-              <div className="text-[11px] font-mono text-gray-300">{activePermissionRequest.path}</div>
-            </div>
+          {activePermissionRequest.tool_input != null ? (
+            <ToolInputPreview
+              toolName={activePermissionRequest.tool_name}
+              toolInput={activePermissionRequest.tool_input}
+            />
+          ) : (
+            <div className="text-[12px] text-gray-200 mb-3">{activePermissionRequest.description}</div>
           )}
           <div className="flex gap-2 mt-3">
             <button

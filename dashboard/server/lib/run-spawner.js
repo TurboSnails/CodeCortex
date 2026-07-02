@@ -299,11 +299,13 @@ function scanPermissionPrompt(handle) {
   const match = detectPermissionPrompt(plain);
   if (!match) return;
 
+  const pending = handle.pendingToolUse;
   const envelope = {
     type: "permission_request",
     id: randomUUID(),
-    tool_name: "unknown",
-    description: extractDescription(plain, match.index),
+    tool_name: pending?.name || "unknown",
+    tool_input: pending?.input,
+    description: pending?.name ? undefined : extractDescription(plain, match.index),
   };
   handle.pendingPermissionRequest = envelope;
   pushEnvelope(handle, envelope);
@@ -340,6 +342,21 @@ function attachStreamHandlers(handle) {
         const wasNull = !handle.sessionId;
         handle.sessionId = envelope.session_id;
         if (wasNull) patchRun({ id: handle.id, sessionId: envelope.session_id });
+      }
+      // Track the most recent pending tool_use so permission prompts can carry
+      // structured tool_input instead of scraped terminal text.
+      if (envelope && envelope.type === "tool_use" && typeof envelope.name === "string") {
+        handle.pendingToolUse = { name: envelope.name, input: envelope.input, id: envelope.id };
+      }
+      // Once the tool result arrives, the pending tool is no longer pending.
+      if (
+        envelope &&
+        envelope.type === "tool_result" &&
+        typeof envelope.tool_use_id === "string" &&
+        handle.pendingToolUse &&
+        handle.pendingToolUse.id === envelope.tool_use_id
+      ) {
+        handle.pendingToolUse = null;
       }
       pushEnvelope(handle, envelope);
       broadcast("run_stream", { id: handle.id, envelope });
@@ -492,6 +509,7 @@ function spawnRun(args) {
     rawScanBuffer: "",
     transport,
     pendingPermissionRequest: null,
+    pendingToolUse: null,
   };
   handles.set(id, handle);
   recordRun(handle);
@@ -712,6 +730,7 @@ function __injectChildForTest({ child, mode = "conversation", prompt = "test" })
     rawScanBuffer: "",
     transport,
     pendingPermissionRequest: null,
+    pendingToolUse: null,
   };
   handles.set(id, handle);
   attachStreamHandlers(handle);

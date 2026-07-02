@@ -219,8 +219,24 @@ function readSimpleMdSurface(subdir) {
 }
 
 const readAgents = readSimpleMdSurface("agents");
-const readCommands = readSimpleMdSurface("commands");
 const readOutputStyles = readSimpleMdSurface("output-styles");
+
+function readCommands(opts = {}) {
+  const cmds = readSimpleMdSurface("commands")(opts).map((c) => ({ ...c, source: "command" }));
+  const skills = readSkills(opts).map((s) => ({
+    scope: s.scope,
+    name: s.name,
+    path: s.path,
+    file: s.file,
+    size: s.size,
+    mtime: s.mtime,
+    truncated: s.truncated,
+    frontmatter: s.frontmatter,
+    preview: s.preview,
+    source: "skill",
+  }));
+  return [...cmds, ...skills].sort((a, b) => a.name.localeCompare(b.name));
+}
 
 // ── Plugins ─────────────────────────────────────────────────────────────
 

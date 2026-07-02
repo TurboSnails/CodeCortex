@@ -47,12 +47,12 @@ export function ChatTab({
       .commands("all")
       .then((res) => {
         if (cancelled) return;
-        const fromMd = res.items.map((c) => ({
+        const fromServer = res.items.map((c) => ({
           name: c.name,
           description: c.preview,
-          source: c.scope,
+          source: c.source === "skill" ? ("skill" as const) : (c.scope as "user" | "project"),
         })) as ChatSlashCommand[];
-        setSlashCommands([...fromMd, ...BUILTIN_SLASH_COMMANDS]);
+        setSlashCommands([...fromServer, ...BUILTIN_SLASH_COMMANDS]);
       })
       .catch(() => {
         // leave builtins

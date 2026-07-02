@@ -56,7 +56,10 @@ export interface PermissionRequestEnvelope {
   type: "permission_request";
   id: string;
   tool_name: string;
-  description: string;
+  /** Structured tool input captured from the pending `tool_use` envelope. */
+  tool_input?: unknown;
+  /** Text fallback when no pending `tool_use` was captured. */
+  description?: string;
   command?: string;
   path?: string;
 }

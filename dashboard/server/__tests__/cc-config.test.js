@@ -253,7 +253,8 @@ describe("/api/cc-config", () => {
     assert.equal(body.counts.skills.user, 1);
     assert.equal(body.counts.skills.project, 1);
     assert.equal(body.counts.agents.user, 1);
-    assert.equal(body.counts.commands.user, 1);
+    assert.equal(body.counts.commands.user, 2);
+    assert.equal(body.counts.commands.project, 1);
     assert.equal(body.counts.plugins, 1);
     // 1 project CLAUDE.md + 3 auto-memory files (MEMORY.md, foo.md, bar.md);
     // notes.txt is ignored.
@@ -279,6 +280,29 @@ describe("/api/cc-config", () => {
       `/api/cc-config/skills?scope=user&cwd=${encodeURIComponent(FAKE_PROJECT)}`
     );
     assert.ok(body.items.every((s) => s.scope === "user"));
+  });
+
+  it("commands merges markdown commands and skills with source tags", async () => {
+    const { status, body } = await fetchJson(
+      `/api/cc-config/commands?cwd=${encodeURIComponent(FAKE_PROJECT)}`
+    );
+    assert.equal(status, 200);
+    assert.ok(Array.isArray(body.items));
+
+    const deploy = body.items.find((x) => x.name === "deploy");
+    assert.ok(deploy, "markdown command present");
+    assert.equal(deploy.source, "command");
+    assert.equal(deploy.scope, "user");
+
+    const demoSkill = body.items.find((x) => x.name === "demo-skill");
+    assert.ok(demoSkill, "user skill merged");
+    assert.equal(demoSkill.source, "skill");
+    assert.equal(demoSkill.scope, "user");
+
+    const projSkill = body.items.find((x) => x.name === "proj-skill");
+    assert.ok(projSkill, "project skill merged");
+    assert.equal(projSkill.source, "skill");
+    assert.equal(projSkill.scope, "project");
   });
 
   it("agents parses tools/model frontmatter", async () => {

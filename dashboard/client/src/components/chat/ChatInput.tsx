@@ -6,7 +6,7 @@ import { api } from "../../lib/api";
 export interface ChatSlashCommand {
   name: string;
   description?: string;
-  source: "builtin" | "user" | "project" | "plugin";
+  source: "builtin" | "user" | "project" | "plugin" | "skill";
 }
 
 interface AutocompleteState {
@@ -43,6 +43,23 @@ function scoreSlashMatch(name: string, description: string | undefined, q: strin
     if (d.includes(q)) return 100;
   }
   return 0;
+}
+
+function sourceBadgeClasses(source: ChatSlashCommand["source"]): string {
+  switch (source) {
+    case "skill":
+      return "border-amber-500/40 text-amber-300 bg-amber-500/10";
+    case "builtin":
+      return "border-indigo-500/40 text-indigo-300 bg-indigo-500/10";
+    case "project":
+      return "border-emerald-500/40 text-emerald-300 bg-emerald-500/10";
+    case "user":
+      return "border-sky-500/40 text-sky-300 bg-sky-500/10";
+    case "plugin":
+      return "border-violet-500/40 text-violet-300 bg-violet-500/10";
+    default:
+      return "border-gray-600 text-gray-400";
+  }
 }
 
 function detectAutocomplete(value: string, cursor: number): AutocompleteState | null {
@@ -93,7 +110,7 @@ export function ChatInput({
   const slashItems = useMemo(() => {
     if (!state || state.kind !== "slash") return [] as ChatSlashCommand[];
     const q = state.query.toLowerCase();
-    const sourceOrder = { project: 0, user: 1, plugin: 2, builtin: 3 } as const;
+    const sourceOrder = { project: 0, user: 1, skill: 2, plugin: 3, builtin: 4 } as const;
     if (!q) {
       return [...slashCommands].sort(
         (a, b) => sourceOrder[a.source] - sourceOrder[b.source] || a.name.localeCompare(b.name)
@@ -266,7 +283,7 @@ export function ChatInput({
                   >
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[12px] text-gray-100">/{c.name}</span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-gray-600 text-gray-400">
+                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${sourceBadgeClasses(c.source)}`}>
                         {c.source}
                       </span>
                     </div>

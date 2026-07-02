@@ -241,7 +241,8 @@ export interface RunPermissionRequestPayload {
     type: "permission_request";
     id: string;
     tool_name: string;
-    description: string;
+    tool_input?: unknown;
+    description?: string;
   };
 }
 

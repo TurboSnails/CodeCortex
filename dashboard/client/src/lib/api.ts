@@ -747,6 +747,7 @@ export interface CcMdItem {
   truncated: boolean;
   frontmatter: Record<string, string>;
   preview: string;
+  source?: "command" | "skill";
 }
 
 export interface CcPluginContributions {
