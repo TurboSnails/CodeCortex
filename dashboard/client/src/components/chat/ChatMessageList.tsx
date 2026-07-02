@@ -1,7 +1,34 @@
 import { useRef, useEffect } from "react";
 import { Bot, Wrench } from "lucide-react";
-import type { Envelope } from "./types";
+import type { Envelope, AssistantMessage, UserMessage } from "./types";
 import { MarkdownContent } from "../conversation/MarkdownContent";
+
+function isUserEnvelope(env: Envelope): env is UserMessage {
+  return (env as { type?: string }).type === "user";
+}
+
+function isAssistantEnvelope(env: Envelope): env is AssistantMessage {
+  return (env as { type?: string }).type === "assistant";
+}
+
+function isToolUseEnvelope(env: Envelope): env is { type: "tool_use"; name: string } {
+  return (env as { type?: string }).type === "tool_use" && typeof (env as { name?: string }).name === "string";
+}
+
+function getUserText(env: UserMessage): string {
+  const content = env.message?.content;
+  return typeof content === "string" ? content : "";
+}
+
+function getAssistantText(env: AssistantMessage): string {
+  const content = env.message?.content;
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .filter((b): b is { type: "text"; text: string } => b.type === "text" && typeof (b as { text?: string }).text === "string")
+    .map((b) => b.text)
+    .join("");
+}
 
 export function ChatMessageList({
   envelopes,
@@ -20,45 +47,33 @@ export function ChatMessageList({
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
       {envelopes.map((env, i) => {
-        const t = (env as { type?: string }).type;
-        if (t === "user") {
-          const text =
-            typeof (env as any).message?.content === "string"
-              ? (env as any).message.content
-              : "";
+        if (isUserEnvelope(env)) {
           return (
             <div key={i} className="flex justify-end">
               <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-indigo-600 px-4 py-2.5 text-sm text-white">
-                {text}
+                {getUserText(env)}
               </div>
             </div>
           );
         }
-        if (t === "assistant") {
-          const blocks = (env as any).message?.content || [];
-          const text = Array.isArray(blocks)
-            ? blocks
-                .filter((b: any) => b.type === "text")
-                .map((b: any) => b.text)
-                .join("")
-            : blocks;
+        if (isAssistantEnvelope(env)) {
           return (
             <div key={i} className="flex justify-start gap-3">
               <div className="w-7 h-7 rounded-full bg-surface-3 flex items-center justify-center flex-shrink-0">
                 <Bot className="w-4 h-4 text-gray-400" />
               </div>
               <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-surface-2 px-4 py-2.5 text-sm text-gray-200">
-                <MarkdownContent text={text} />
+                <MarkdownContent text={getAssistantText(env)} />
               </div>
             </div>
           );
         }
-        if (t === "tool_use") {
+        if (isToolUseEnvelope(env)) {
           return (
             <div key={i} className="flex justify-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">
                 <Wrench className="w-3 h-3" />
-                {(env as any).name}
+                {env.name}
               </div>
             </div>
           );
