@@ -475,6 +475,11 @@ export const api = {
       request<{ ok: true }>(`/run/${encodeURIComponent(id)}`, {
         method: "DELETE",
       }),
+    respondToPermission: (id: string, args: PermissionResponseArgs) =>
+      request<{ ok: true }>(`/run/${encodeURIComponent(id)}/permission`, {
+        method: "POST",
+        body: JSON.stringify(args),
+      }),
   },
 
   alerts: {
@@ -892,6 +897,11 @@ export interface RunStartArgs {
   permissionMode?: PermissionMode;
   resumeSessionId?: string;
   effort?: EffortLevel;
+}
+
+export interface PermissionResponseArgs {
+  requestId: string;
+  approved: boolean;
 }
 
 export interface RunHandle {

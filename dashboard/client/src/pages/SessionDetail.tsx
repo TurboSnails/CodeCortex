@@ -72,7 +72,9 @@ import { PlanPanel } from "../components/PlanPanel";
 import { ReviewTrigger } from "../components/ReviewTrigger";
 import { ReviewsTab } from "../components/ReviewsTab";
 
-type DetailTab = "agents" | "conversation" | "timeline" | "reviews";
+import { ChatTab } from "../components/chat/ChatTab";
+
+type DetailTab = "agents" | "conversation" | "chat" | "timeline" | "reviews";
 
 const EVENTS_INITIAL_BATCH = 50;
 const EVENTS_MORE_BATCH = 500;
@@ -653,6 +655,20 @@ export function SessionDetail() {
         </button>
         <button
           onClick={() => {
+            setActiveTab("chat");
+            setTranscriptNotFound(false);
+          }}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "chat"
+              ? "border-violet-500 text-violet-400"
+              : "border-transparent text-gray-500 hover:text-gray-300"
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          {t("detail.chat")}
+        </button>
+        <button
+          onClick={() => {
             setActiveTab("timeline");
             setTranscriptNotFound(false);
           }}
@@ -941,6 +957,17 @@ export function SessionDetail() {
       {visitedTabs.has("conversation") && (
         <div hidden={activeTab !== "conversation"}>
           <ConversationView sessionId={session.id} initialTranscriptId={pendingTranscriptId} />
+        </div>
+      )}
+
+      {visitedTabs.has("chat") && (
+        <div
+          hidden={activeTab !== "chat"}
+          className={`min-h-[60vh] ${activeTab === "chat" ? "overflow-hidden md:overflow-visible" : ""}`}
+        >
+          {session.cwd && (
+            <ChatTab sessionId={session.id} cwd={session.cwd} />
+          )}
         </div>
       )}
 

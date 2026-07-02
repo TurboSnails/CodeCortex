@@ -171,6 +171,68 @@ describe("/api/run", () => {
     assert.equal(body.error.code, "EBADINPUT");
   });
 
+  // ── POST /:id/permission ──────────────────────────────────────────
+
+  it("POST /:id/permission rejects missing requestId", async () => {
+    const { status, body } = await fetchJson("/api/run/x/permission", {
+      method: "POST",
+      body: { approved: true },
+    });
+    assert.equal(status, 400);
+    assert.equal(body.error.code, "EBADREQUEST");
+  });
+
+  it("POST /:id/permission returns 404 for unknown run", async () => {
+    const { status, body } = await fetchJson("/api/run/does-not-exist/permission", {
+      method: "POST",
+      body: { requestId: "perm-1", approved: true },
+    });
+    assert.equal(status, 404);
+    assert.equal(body.error.code, "ENOTFOUND");
+  });
+
+  it("POST /:id/permission injects Y\\n and records response envelope", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    fake.stdout.write("Allow? (Y/n) ");
+    await new Promise((r) => setImmediate(r));
+    const requestId = runs
+      .getRun(handle.id, { includeEnvelopes: true })
+      .envelopes.find((e) => e.type === "permission_request").id;
+
+    const chunks = [];
+    fake.stdin.on("data", (c) => chunks.push(c.toString()));
+
+    const { status, body } = await fetchJson(`/api/run/${handle.id}/permission`, {
+      method: "POST",
+      body: { requestId, approved: true },
+    });
+    await new Promise((r) => setImmediate(r));
+
+    assert.equal(status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(chunks.join(""), "Y\n");
+    const live = runs.getRun(handle.id, { includeEnvelopes: true });
+    const response = live.envelopes.find((e) => e.type === "permission_response");
+    assert.ok(response);
+    assert.equal(response.id, requestId);
+    assert.equal(response.approved, true);
+  });
+
+  it("POST /:id/permission returns 400 when no active permission request", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    await new Promise((r) => setImmediate(r));
+    const { status, body } = await fetchJson(`/api/run/${handle.id}/permission`, {
+      method: "POST",
+      body: { requestId: "perm-1", approved: true },
+    });
+    assert.equal(status, 400);
+    assert.equal(body.error.code, "ENOPROMPT");
+  });
+
   // ── /api/run/cwds suggestions ─────────────────────────────────────
 
   it("GET /cwds returns dashboard + home suggestions with absolute paths", async () => {
@@ -482,6 +544,90 @@ describe("run-spawner extras", () => {
     fake.stdout.write(`{"type":"system","subtype":"init"}\n`);
     await new Promise((r) => setImmediate(r));
     assert.throws(() => runs.sendInput(handle.id, ""), /text is required/);
+  });
+
+  it("detects a terminal permission prompt and exposes it on the handle", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    fake.stdout.write(
+      "[32mClaude Code[0m wants to edit file.txt\nThis will change the file contents.\nAllow? (Y/n) "
+    );
+    await new Promise((r) => setImmediate(r));
+    const live = runs.getRun(handle.id, { includeEnvelopes: true });
+    const perm = live.envelopes.find((e) => e.type === "permission_request");
+    assert.ok(perm, "synthetic permission_request envelope was stored");
+    assert.equal(perm.tool_name, "unknown");
+    assert.match(perm.description, /edit file\.txt/i);
+  });
+
+  it("sendPermissionResponse injects Y\\n when approved", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    fake.stdout.write("Allow? (Y/n) ");
+    await new Promise((r) => setImmediate(r));
+    const requestId = runs.getRun(handle.id, { includeEnvelopes: true }).envelopes.find((e) => e.type === "permission_request").id;
+    const chunks = [];
+    fake.stdin.on("data", (c) => chunks.push(c.toString()));
+    runs.sendPermissionResponse(handle.id, requestId, true);
+    await new Promise((r) => setImmediate(r));
+    assert.equal(chunks.join(""), "Y\n");
+  });
+
+  it("sendPermissionResponse injects n\\n when rejected", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    fake.stdout.write("Allow? (Y/n) ");
+    await new Promise((r) => setImmediate(r));
+    const requestId = runs.getRun(handle.id, { includeEnvelopes: true }).envelopes.find((e) => e.type === "permission_request").id;
+    const chunks = [];
+    fake.stdin.on("data", (c) => chunks.push(c.toString()));
+    runs.sendPermissionResponse(handle.id, requestId, false);
+    await new Promise((r) => setImmediate(r));
+    assert.equal(chunks.join(""), "n\n");
+  });
+
+  it("sendPermissionResponse rejects when there is no active permission request", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    await new Promise((r) => setImmediate(r));
+    assert.throws(() => runs.sendPermissionResponse(handle.id, "perm-1", true), /no active permission request/);
+  });
+
+  it("sendPermissionResponse rejects on headless handles", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "headless" });
+    fake.stdout.write(`{"type":"system","subtype":"init"}\n`);
+    await new Promise((r) => setImmediate(r));
+    assert.throws(() => runs.sendPermissionResponse(handle.id, "perm-1", true), /only conversation mode/);
+  });
+
+  it("sendPermissionResponse rejects empty requestId", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init"}\n`);
+    fake.stdout.write("Allow? (Y/n) ");
+    await new Promise((r) => setImmediate(r));
+    assert.throws(() => runs.sendPermissionResponse(handle.id, "", true), /requestId is required/);
+  });
+
+  it("sendPermissionResponse throws ENOTFOUND for unknown id", () => {
+    assert.throws(() => runs.sendPermissionResponse("nope", "perm-1", true), /not found/);
+  });
+
+  it("sendPermissionResponse throws ENOTRUNNING when handle has already exited", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init"}\n`);
+    fake.stdout.write("Allow? (Y/n) ");
+    await new Promise((r) => setImmediate(r));
+    const requestId = runs.getRun(handle.id, { includeEnvelopes: true }).envelopes.find((e) => e.type === "permission_request").id;
+    fake.emit("exit", 0, null);
+    await new Promise((r) => setImmediate(r));
+    assert.throws(() => runs.sendPermissionResponse(handle.id, requestId, true), /run is (completed|killed|error)/);
   });
 
   it("envelope log is capped at 500 entries", async () => {

@@ -174,6 +174,30 @@ async function smokeReviews() {
   console.log("✓ review pagination through 3 pages");
 }
 
+async function smokeChat() {
+  // We can't spawn the real `claude` binary in CI, but we can verify the
+  // route shape by calling POST /api/run with an invalid prompt and checking
+  // that the server responds with a structured error rather than a crash.
+  const spawnRes = await req("POST", "/api/run", {
+    prompt: "",
+    mode: "conversation",
+    cwd: os.tmpdir(),
+  });
+  if (spawnRes.status !== 400) {
+    throw new Error(`expected 400 for empty prompt, got ${spawnRes.status}`);
+  }
+
+  // Verify the permission response route returns 404 for a non-existent run
+  const permRes = await req("POST", "/api/run/nonexistent/permission", {
+    requestId: "req-1",
+    approved: true,
+  });
+  if (permRes.status !== 404) {
+    throw new Error(`expected 404 for missing run, got ${permRes.status}`);
+  }
+  console.log("✓ chat route shape and permission error handling");
+}
+
 async function teardown() {
   server?.close();
   try {
@@ -190,6 +214,7 @@ async function main() {
     await smokePlan();
     await smokeWatcher();
     await smokeReviews();
+    await smokeChat();
     console.log("\nE2E smoke test passed.");
   } catch (err) {
     console.error("\nE2E smoke test failed:", err.message);
