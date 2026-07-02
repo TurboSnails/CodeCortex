@@ -32,7 +32,7 @@
   - Wired `useRunChat.respondToPermission` to backend endpoint; disabled prompt buttons while busy; added unit test.
 - [x] Task 6: Responsive layout for desktop and mobile (commit 4eb8217, full client suite 280 pass)
   - Review: approved. Minor observation: `overflow-hidden` is on the tab wrapper rather than the page body; practical goal achieved.
-- [ ] Task 7: Integration and end-to-end verification
+- [x] Task 7: Integration and end-to-end verification (commit 85bb5d6, server tests 485 pass, client tests 281 pass, build passes, E2E smoke passes)
 - [ ] Final whole-branch review
 
 ## Notes
