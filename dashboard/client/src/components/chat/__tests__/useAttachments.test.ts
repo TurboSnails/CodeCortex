@@ -99,7 +99,7 @@ describe("useAttachments", () => {
       result.current.onPick({ 0: file, length: 1, item: () => file } as unknown as FileList);
       await Promise.resolve();
     });
-    const id = result.current.items[0].id;
+    const id = result.current.items[0]!.id;
     act(() => result.current.remove(id));
     expect(result.current.items).toEqual([]);
   });
