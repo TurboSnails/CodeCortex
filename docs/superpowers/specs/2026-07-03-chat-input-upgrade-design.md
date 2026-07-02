@@ -230,11 +230,12 @@ All colours live within the existing palette (`surface-1/2/3`, `accent`, `border
 
 ### 5.1 Unit tests (`__tests__/hooks/chat/`)
 
-| Suite | Cases | Pass criteria |
+| Suite | Test count | Pass criteria |
 |---|---|---|
-| `usePromptHistory` | push, dedupe-adjacent, FIFO 501, navigate ↑ at tail, navigate ↓ past end, commit-after-edit | 6/6 green |
-| `useAttachments` | 5MiB boundary, 8-image cap, buildPayload, clear-after-build, paste handler call, drop handler call | 6/6 green |
-| `useVoiceInput` | unavailable fallback, toggle listening, interim callback, final callback, three-error lockout | 5/5 green |
+| `usePromptHistory` | 6 | push, dedupe-adjacent, FIFO 501, navigate ↑ at tail, navigate ↓ past end, commit-after-edit |
+| `useAttachments` | 6 | 5MiB boundary, 8-image cap, buildPayload, clear-after-build, paste handler call, drop handler call |
+| `useVoiceInput` | 5 | unavailable fallback, toggle listening, interim callback, final callback, three-error lockout |
+| **Unit total** | **17** | 17/17 green |
 
 ### 5.2 Component tests (extend `ChatInput.test.tsx` + add per-component)
 
@@ -292,7 +293,7 @@ chat.input.slashHeader   (existing key — only tooltip copy added)
 
 ## 6. Definition of Done
 
-- All 17 unit + component tests green.
+- All 17 unit tests + 14 component tests (totalling 31) green.
 - `npm run test:client` green; reviewer walks snapshot diff.
 - All 10 manual e2e scenarios pass on at least one desktop Chrome and one mobile Safari (or simulator).
 - EN + ZH i18n keys populated.
