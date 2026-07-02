@@ -33,6 +33,9 @@ vi.mock("../../lib/api", () => ({
     run: {
       list: vi.fn(() => Promise.resolve({ items: [] })),
     },
+    ccConfig: {
+      commands: vi.fn(() => Promise.resolve({ items: [] })),
+    },
   },
 }));
 

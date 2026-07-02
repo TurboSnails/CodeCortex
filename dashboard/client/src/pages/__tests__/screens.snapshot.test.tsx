@@ -418,8 +418,10 @@ import { Analytics } from "../Analytics";
 import { Workflows } from "../Workflows";
 import { CcConfig } from "../CcConfig";
 import { Run } from "../Run";
+import { Chat } from "../Chat";
 import { Settings } from "../Settings";
 import { NotFound } from "../NotFound";
+import { api } from "../../lib/api";
 
 // jsdom lacks these browser APIs that chart / responsive components rely on.
 class ObserverStub {
@@ -520,6 +522,12 @@ describe("screen snapshots", () => {
   });
   it("Run", async () => {
     await snapshot(<Run />, "/run");
+  });
+  it("Chat", async () => {
+    vi.mocked(api.run.cwds).mockResolvedValueOnce({
+      items: [{ path: "/tmp/test", kind: "dashboard", label: "Dashboard server" }],
+    });
+    await snapshot(<Chat />, "/chat");
   });
   it("Settings", async () => {
     await snapshot(<Settings />, "/settings");

@@ -6,14 +6,21 @@ export function PermissionPrompt({
   onApprove,
   onReject,
   disabled,
+  variant = "banner",
 }: {
   request: PermissionRequestEnvelope;
   onApprove: () => void;
   onReject: () => void;
   disabled?: boolean;
+  variant?: "banner" | "inline";
 }) {
+  const wrapperClasses =
+    variant === "inline"
+      ? "rounded-xl border border-amber-500/20 bg-amber-500/10 shadow-sm flex flex-col gap-2 px-4 py-3"
+      : "px-4 py-3 border-b border-amber-500/20 bg-amber-500/10 flex flex-col gap-2";
+
   return (
-    <div className="px-4 py-3 border-b border-amber-500/20 bg-amber-500/10 flex flex-col gap-2">
+    <div className={wrapperClasses}>
       <div className="flex items-center gap-2 text-xs text-amber-200 font-medium">
         <ShieldAlert className="w-4 h-4 flex-shrink-0" />
         Permission request

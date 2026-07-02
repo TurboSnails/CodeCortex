@@ -9,6 +9,10 @@ vi.mock("../../../lib/api", () => ({
       send: vi.fn(),
       kill: vi.fn(),
       respondToPermission: vi.fn(),
+      files: vi.fn(),
+    },
+    ccConfig: {
+      commands: vi.fn(() => Promise.resolve({ items: [] })),
     },
   },
 }));

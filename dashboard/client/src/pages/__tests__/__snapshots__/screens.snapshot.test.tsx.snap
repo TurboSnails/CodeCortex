@@ -2931,6 +2931,143 @@ exports[`screen snapshots > Analytics 1`] = `
 </div>
 `;
 
+exports[`screen snapshots > Chat 1`] = `
+<div>
+  <div
+    class="flex flex-col h-[calc(100vh-5rem)] lg:h-[calc(100vh-6rem)]"
+  >
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4"
+    >
+      <div>
+        <h1
+          class="text-2xl font-semibold text-gray-100 flex items-center gap-2"
+        >
+          <svg
+            class="lucide lucide-message-square w-6 h-6"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+          </svg>
+          Chat
+        </h1>
+        <p
+          class="text-sm text-gray-500 mt-1"
+        >
+          Type a message to start a new Claude Code run for this session.
+        </p>
+      </div>
+      <div
+        class="min-w-[16rem]"
+      >
+        <label
+          class="block text-xs font-medium text-gray-400 mb-1.5"
+        >
+          Working directory
+        </label>
+        <select
+          class="input w-full text-sm"
+        >
+          <option
+            value="/tmp/test"
+          >
+            /tmp/test
+          </option>
+        </select>
+      </div>
+    </div>
+    <div
+      class="flex-1 min-h-0"
+    >
+      <div
+        class="flex flex-col rounded-xl border border-border bg-surface-1 overflow-hidden h-full"
+      >
+        <div
+          class="px-4 py-3 border-b border-border bg-surface-2/50 text-xs text-gray-500 flex items-center gap-2"
+        >
+          <svg
+            class="lucide lucide-play w-3.5 h-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <polygon
+              points="6 3 20 12 6 21 6 3"
+            />
+          </svg>
+          Type a message to start a new Claude Code run for this session.
+        </div>
+        <div
+          class="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4"
+        >
+          <div />
+        </div>
+        <div
+          class="border-t border-border bg-surface-1 px-4 py-3"
+        >
+          <div
+            class="relative flex items-end gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2"
+          >
+            <div
+              class="relative flex-1"
+            >
+              <textarea
+                class="w-full min-h-[40px] max-h-32 bg-transparent text-sm text-gray-200 placeholder-gray-600 resize-none outline-none py-2"
+                placeholder="Ask Claude to do something…"
+                rows="1"
+                spellcheck="false"
+              />
+            </div>
+            <button
+              aria-label="send"
+              class="p-3 md:p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40"
+              disabled=""
+              type="button"
+            >
+              <svg
+                class="lucide lucide-send w-4 h-4"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"
+                />
+                <path
+                  d="m21.854 2.147-10.94 10.939"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
 exports[`screen snapshots > Claude Config 1`] = `
 <div>
   <div

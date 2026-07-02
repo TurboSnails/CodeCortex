@@ -18,6 +18,7 @@ import {
   Boxes,
   Play,
   Settings,
+  MessageSquare,
   Wifi,
   WifiOff,
   Github,
@@ -51,6 +52,7 @@ const NAV_KEYS = [
   { to: "/workflows", icon: Workflow, key: "nav:workflows" },
   { to: "/cc-config", icon: Boxes, key: "nav:ccConfig" },
   { to: "/run", icon: Play, key: "nav:run" },
+  { to: "/chat", icon: MessageSquare, key: "nav:chat" },
   { to: "/settings", icon: Settings, key: "nav:settings" },
 ] as const;
 

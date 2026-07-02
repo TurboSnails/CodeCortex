@@ -253,13 +253,12 @@ function createTransport({ argv, cwd, env, mode }) {
 
 // ── Permission prompt interception ───────────────────────────────────────
 
-// Terminal permission prompts from Claude contain one of these markers.
+// Terminal permission prompts from Claude are yes/no choices. Only match
+// those explicit choice markers; broader words like "permission" or "Allow"
+// appear too often in normal tool output and cause false positives.
 const PERMISSION_MARKERS = [
   /\bY\s*\/\s*n\b/i,
   /\byes\s*\/\s*no\b/i,
-  /\bAllow\b/i,
-  /\bApprove\b/i,
-  /\bpermission\b/i,
 ];
 
 function stripAnsi(s) {
@@ -294,9 +293,9 @@ function extractDescription(plain, matchIndex) {
   return desc || "Claude is asking for permission.";
 }
 
-function scanPermissionPrompt(handle, raw) {
+function scanPermissionPrompt(handle) {
   if (handle.pendingPermissionRequest) return;
-  const plain = stripAnsi(raw);
+  const plain = stripAnsi(handle.rawScanBuffer || "");
   const match = detectPermissionPrompt(plain);
   if (!match) return;
 
@@ -354,8 +353,8 @@ function attachStreamHandlers(handle) {
   transport.onData((chunk) => {
     const s = chunk.toString("utf8");
     handle.stdoutBuffer = tail(handle.stdoutBuffer + s, STDOUT_TAIL_BYTES);
-    rawScanBuffer = tail(rawScanBuffer + s, PERMISSION_SCAN_BYTES);
-    scanPermissionPrompt(handle, rawScanBuffer);
+    handle.rawScanBuffer = tail((handle.rawScanBuffer || "") + s, PERMISSION_SCAN_BYTES);
+    scanPermissionPrompt(handle);
     parser.push(stripAnsi(s));
   });
   transport.onError((err) => {
@@ -490,6 +489,7 @@ function spawnRun(args) {
     envelopes: [],
     stdoutBuffer: "",
     stderrBuffer: "",
+    rawScanBuffer: "",
     transport,
     pendingPermissionRequest: null,
   };
@@ -576,6 +576,7 @@ function sendPermissionResponse(id, requestId, approved) {
 
   handle.transport.write(approved ? "Y\n" : "n\n");
   handle.pendingPermissionRequest = null;
+  handle.rawScanBuffer = "";
 
   const responseEnvelope = { type: "permission_response", id: requestId, approved };
   pushEnvelope(handle, responseEnvelope);
@@ -708,6 +709,7 @@ function __injectChildForTest({ child, mode = "conversation", prompt = "test" })
     envelopes: [],
     stdoutBuffer: "",
     stderrBuffer: "",
+    rawScanBuffer: "",
     transport,
     pendingPermissionRequest: null,
   };
