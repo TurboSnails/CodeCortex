@@ -1434,34 +1434,7 @@ useEffect(() => voice.onFinal((final) => {
 }), [voice, value, onChange]);
 ```
 
-- [ ] **Step 5: Replace the inline `SlashList` and `FileMentionList` JSX inside the popover**
-
-Find the block beginning `{state && (` and ending `)}` that renders the popover. Replace the entire popover content with:
-
-```tsx
-{state && (
-  <div className={`absolute z-30 left-0 right-0 bottom-full mb-1 rounded-md border border-border bg-surface-1 shadow-lg shadow-black/40 max-h-60 overflow-auto py-1`}>
-    {state.kind === "slash" ? (
-      <SlashList
-        items={slashItems}
-        activeIndex={active}
-        onSelect={(c) => insertChoice(c)}
-        onHover={setActive}
-      />
-    ) : (
-      <FileMentionList
-        paths={items}
-        activeIndex={active}
-        query={state.query}
-        onSelect={(p) => insertChoice(p)}
-        onHover={setActive}
-      />
-    )}
-  </div>
-)}
-```
-
-- [ ] **Step 6: Rewrite the bottom toolbar layout**
+- [ ] **Step 5: Rewrite the bottom toolbar layout (also replaces inline popover)**
 
 Find the existing `<div className="border-t border-border bg-surface-1 px-4 py-3">…</div>` and replace the entire return of the component with:
 
@@ -1557,7 +1530,7 @@ return (
 );
 ```
 
-- [ ] **Step 7: Add helper state + handlers (`dragging`, `canSendText`, `doSend`)**
+- [ ] **Step 6: Add helper state + handlers (`dragging`, `canSendText`, `doSend`)**
 
 Add inside the component body, near other state:
 
@@ -1596,7 +1569,7 @@ const doSend = () => {
 };
 ```
 
-- [ ] **Step 8: Extend `handleKeyDown` to recall history on empty input**
+- [ ] **Step 7: Extend `handleKeyDown` to recall history on empty input**
 
 Find the existing `handleKeyDown`. At the very top (before any existing branch), add:
 
@@ -1611,21 +1584,21 @@ if (state == null && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
 }
 ```
 
-- [ ] **Step 9: Remove the now-unused `slashItems` `useMemo` reference if still shadowed**
+- [ ] **Step 8: Remove the now-unused `slashItems` `useMemo` reference if still shadowed**
 
 After the refactor, the inline `slashItems` and `items` lookups may still be referenced by the popover. No action needed if `Tasks` 6 extraction kept these names; otherwise keep the existing `useMemo` for `slashItems`.
 
-- [ ] **Step 10: Verify TypeScript compiles**
+- [ ] **Step 9: Verify TypeScript compiles**
 
 Run: `cd dashboard/client && npx tsc --noEmit 2>&1 | head -40`
 Expected: no errors in `ChatInput.tsx`; remaining errors are i18n namespace warnings that Task 11 resolves.
 
-- [ ] **Step 11: Run existing ChatInput tests**
+- [ ] **Step 10: Run existing ChatInput tests**
 
 Run: `cd dashboard/client && npx vitest run src/components/chat/__tests__/ChatInput.test.tsx`
 Expected: all original tests still pass.
 
-- [ ] **Step 12: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
 git add dashboard/client/src/components/chat/ChatInput.tsx
