@@ -1,5 +1,6 @@
 import { ShieldAlert, Check, X } from "lucide-react";
 import type { PermissionRequestEnvelope } from "./types";
+import { ToolInputPreview } from "./ToolInputPreview";
 
 export function PermissionPrompt({
   request,
@@ -19,13 +20,19 @@ export function PermissionPrompt({
       ? "rounded-xl border border-amber-500/20 bg-amber-500/10 shadow-sm flex flex-col gap-2 px-4 py-3"
       : "px-4 py-3 border-b border-amber-500/20 bg-amber-500/10 flex flex-col gap-2";
 
+  const hasToolInput = request.tool_input != null && request.tool_input !== "";
+
   return (
     <div className={wrapperClasses}>
       <div className="flex items-center gap-2 text-xs text-amber-200 font-medium">
         <ShieldAlert className="w-4 h-4 flex-shrink-0" />
         Permission request
       </div>
-      <div className="text-sm text-gray-200">{request.description}</div>
+      {hasToolInput ? (
+        <ToolInputPreview toolName={request.tool_name} toolInput={request.tool_input} />
+      ) : (
+        <div className="text-sm text-gray-200">{request.description}</div>
+      )}
       <div className="flex gap-2 mt-1">
         <button
           type="button"

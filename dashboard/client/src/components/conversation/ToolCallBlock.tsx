@@ -49,7 +49,7 @@ function langFromPath(path: string): string {
 }
 
 /** Build a one-line summary of the tool call to show in the collapsed header. */
-function buildSummary(toolUse: TranscriptContent): string | null {
+export function buildSummary(toolUse: TranscriptContent): string | null {
   const input = toolUse.input;
   if (!input || typeof input !== "object" || "_truncated" in input) return null;
   const obj = input as Record<string, unknown>;
@@ -64,7 +64,7 @@ function buildSummary(toolUse: TranscriptContent): string | null {
 }
 
 /** Render the input pane with tool-aware formatting. */
-function renderInput(toolUse: TranscriptContent) {
+export function renderInput(toolUse: TranscriptContent) {
   const input = toolUse.input;
   if (!input) return null;
 

@@ -31,7 +31,7 @@ export function ChatToastContainer() {
 
     const next: Toast = {
       id: latest.id,
-      kind: latest.source === "git" ? "error" : "error",
+      kind: "error",
       message: latest.message,
     };
     setToast(next);

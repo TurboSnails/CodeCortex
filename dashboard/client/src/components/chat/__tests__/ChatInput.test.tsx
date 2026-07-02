@@ -16,6 +16,7 @@ const COMMANDS: ChatSlashCommand[] = [
   { name: "compact", description: "Compact context", source: "builtin" },
   { name: "config", description: "Open config", source: "builtin" },
   { name: "review", description: "Review changes", source: "project" },
+  { name: "demo-skill", description: "A demo skill", source: "skill" },
 ];
 
 function setup(props: Partial<Parameters<typeof ChatInput>[0]> = {}) {
@@ -92,6 +93,14 @@ describe("ChatInput", () => {
     fireEvent.keyDown(textarea, { key: "ArrowDown" });
     fireEvent.keyDown(textarea, { key: "Enter" });
     expect(onChange).toHaveBeenCalledWith("/config");
+  });
+
+  it("renders skill commands with a distinct badge", () => {
+    setup();
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "/demo", selectionStart: 5 } });
+    expect(screen.getByText("/demo-skill")).toBeInTheDocument();
+    expect(screen.getByText("skill")).toBeInTheDocument();
   });
 
   it("closes the dropdown on Escape", () => {

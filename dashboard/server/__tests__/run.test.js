@@ -561,6 +561,23 @@ describe("run-spawner extras", () => {
     assert.match(perm.description, /edit file\.txt/i);
   });
 
+  it("enriches permission_request with the pending tool_use envelope", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    fake.stdout.write(
+      `{"type":"tool_use","id":"tu1","name":"Edit","input":{"file_path":"file.txt","old_string":"old","new_string":"new"}}\n`
+    );
+    fake.stdout.write("[32mClaude Code[0m wants to edit file.txt\nAllow? (Y/n) ");
+    await new Promise((r) => setImmediate(r));
+    const live = runs.getRun(handle.id, { includeEnvelopes: true });
+    const perm = live.envelopes.find((e) => e.type === "permission_request");
+    assert.ok(perm, "permission_request envelope was stored");
+    assert.equal(perm.tool_name, "Edit");
+    assert.deepEqual(perm.tool_input, { file_path: "file.txt", old_string: "old", new_string: "new" });
+    assert.equal(perm.description, undefined);
+  });
+
   it("sendPermissionResponse injects Y\\n when approved", async () => {
     const fake = makeFakeChild();
     const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });

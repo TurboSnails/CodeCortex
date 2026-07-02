@@ -115,7 +115,7 @@ const schemas = {
   CcConfigMdItem: {
     type: "object",
     description:
-      "A single-file markdown artifact (subagent, slash command, or output style) found under <root>/<subdir>/<name>.md.",
+      "A single-file markdown artifact (subagent, slash command, or output style) found under <root>/<subdir>/<name>.md. When returned from /commands, items may also represent discovered skills with `source: 'skill'`.",
     required: ["scope", "name", "file", "size", "mtime", "truncated", "frontmatter", "preview"],
     properties: {
       scope: {
@@ -123,6 +123,13 @@ const schemas = {
         enum: ["user", "project"],
         description: "Which root this artifact was discovered under.",
         example: "project",
+      },
+      source: {
+        type: "string",
+        enum: ["command", "skill"],
+        description:
+          "Discriminates the item's origin. `command` = a .md file under commands/; `skill` = a skills/<name>/SKILL.md directory surfaced via the commands endpoint. Omitted for agents and output styles.",
+        example: "command",
       },
       name: {
         type: "string",
@@ -1328,14 +1335,14 @@ const paths = {
   "/api/cc-config/commands": {
     get: {
       tags: ["CcConfig"],
-      summary: "List slash commands",
+      summary: "List slash commands and skills",
       description:
-        "Read-only. Lists slash-command definitions (<root>/commands/*.md) under the user and/or project roots, with parsed frontmatter and a 320-char preview. Truncated above 256 KiB; degrades to empty on errors.",
+        "Read-only. Lists slash-command definitions (<root>/commands/*.md) AND skill directories (<root>/skills/<name>/SKILL.md) under the user and/or project roots, with parsed frontmatter and a 320-char preview. Commands have `source: 'command'`; skills have `source: 'skill'`. Truncated above 256 KiB; degrades to empty on errors.",
       operationId: "ccConfigGetCommands",
       parameters: [scopeParam, cwdParam],
       responses: {
         200: {
-          description: "Commands list.",
+          description: "Commands and skills list.",
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/CcConfigCommandsResponse" },
@@ -1343,6 +1350,7 @@ const paths = {
                 items: [
                   {
                     scope: "user",
+                    source: "command",
                     name: "commit",
                     file: "/Users/son/.claude/commands/commit.md",
                     size: 800,
@@ -1350,6 +1358,18 @@ const paths = {
                     truncated: false,
                     frontmatter: { description: "Create a commit" },
                     preview: "Commit the staged changes with a descriptive message...",
+                  },
+                  {
+                    scope: "user",
+                    source: "skill",
+                    name: "code-reviewer",
+                    path: "/Users/son/.claude/skills/code-reviewer",
+                    file: "/Users/son/.claude/skills/code-reviewer/SKILL.md",
+                    size: 2048,
+                    mtime: 1718900000000,
+                    truncated: false,
+                    frontmatter: { name: "code-reviewer", description: "Reviews diffs" },
+                    preview: "Use this skill to review pull requests...",
                   },
                 ],
               },
