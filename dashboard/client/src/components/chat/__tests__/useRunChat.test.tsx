@@ -123,7 +123,7 @@ describe("useRunChat", () => {
       await result.current.send("do more");
     });
 
-    expect(mockSend).toHaveBeenCalledWith("run-1", "do more");
+    expect(mockSend).toHaveBeenCalledWith("run-1", "do more", []);
     expect(result.current.followUp).toBe("");
   });
 
