@@ -317,6 +317,22 @@ router.post("/:id/message", (req, res) => {
   }
 });
 
+router.post("/:id/permission", (req, res) => {
+  const body = req.body || {};
+  const requestId = typeof body.requestId === "string" ? body.requestId : "";
+  const approved = body.approved === true;
+  if (!requestId) {
+    return res.status(400).json({ error: { code: "EBADREQUEST", message: "requestId is required" } });
+  }
+  try {
+    const result = runs.sendPermissionResponse(req.params.id, requestId, approved);
+    return res.json(result);
+  } catch (err) {
+    const status = err.code === "ENOTFOUND" ? 404 : 400;
+    return res.status(status).json({ error: { code: err.code, message: err.message } });
+  }
+});
+
 router.get("/:id", (req, res) => {
   // ?envelopes=1 includes the in-memory envelope history so the UI can
   // re-attach to an active run started elsewhere and see what it missed.

@@ -235,6 +235,23 @@ export interface UpdateStatusPayload {
   fetch_error?: string;
 }
 
+export interface RunPermissionRequestPayload {
+  id: string;
+  envelope: {
+    type: "permission_request";
+    id: string;
+    tool_name: string;
+    description: string;
+  };
+}
+
+export interface RunPermissionResponsePayload {
+  id: string;
+  requestId: string;
+  approved: boolean;
+  at: number;
+}
+
 export interface RunStreamPayload {
   id: string;
   envelope: unknown;
@@ -404,6 +421,8 @@ export interface WSMessage {
     | "run_stream"
     | "run_status"
     | "run_input_ack"
+    | "run_permission_request"
+    | "run_permission_response"
     | "cc_config_changed"
     | "alert_triggered"
     | "alert_updated"
@@ -420,6 +439,8 @@ export interface WSMessage {
     | RunStreamPayload
     | RunStatusPayload
     | RunInputAckPayload
+    | RunPermissionRequestPayload
+    | RunPermissionResponsePayload
     | CcConfigChangedPayload
     | AlertEvent
     | WorkflowRun
