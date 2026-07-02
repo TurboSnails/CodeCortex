@@ -120,9 +120,9 @@ describe("ChatInput", () => {
     fireEvent.change(textarea, { target: { value: "@src", selectionStart: 4 } });
     vi.advanceTimersByTime(200);
     await waitFor(() => {
-      expect(screen.getByText("src/App.tsx")).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "src/App.tsx" })).toBeInTheDocument();
     });
-    expect(screen.getByText("src/index.css")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "src/index.css" })).toBeInTheDocument();
   });
 
   it("inserts the selected file on Enter", async () => {
@@ -134,7 +134,7 @@ describe("ChatInput", () => {
     fireEvent.change(textarea, { target: { value: "@App", selectionStart: 4 } });
     vi.advanceTimersByTime(200);
     await waitFor(() => {
-      expect(screen.getByText("src/App.tsx")).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "src/App.tsx" })).toBeInTheDocument();
     });
     fireEvent.keyDown(textarea, { key: "Enter" });
     expect(onChange).toHaveBeenCalledWith("@src/App.tsx");
