@@ -171,6 +171,68 @@ describe("/api/run", () => {
     assert.equal(body.error.code, "EBADINPUT");
   });
 
+  // ── POST /:id/permission ──────────────────────────────────────────
+
+  it("POST /:id/permission rejects missing requestId", async () => {
+    const { status, body } = await fetchJson("/api/run/x/permission", {
+      method: "POST",
+      body: { approved: true },
+    });
+    assert.equal(status, 400);
+    assert.equal(body.error.code, "EBADREQUEST");
+  });
+
+  it("POST /:id/permission returns 404 for unknown run", async () => {
+    const { status, body } = await fetchJson("/api/run/does-not-exist/permission", {
+      method: "POST",
+      body: { requestId: "perm-1", approved: true },
+    });
+    assert.equal(status, 404);
+    assert.equal(body.error.code, "ENOTFOUND");
+  });
+
+  it("POST /:id/permission injects Y\\n and records response envelope", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    fake.stdout.write("Allow? (Y/n) ");
+    await new Promise((r) => setImmediate(r));
+    const requestId = runs
+      .getRun(handle.id, { includeEnvelopes: true })
+      .envelopes.find((e) => e.type === "permission_request").id;
+
+    const chunks = [];
+    fake.stdin.on("data", (c) => chunks.push(c.toString()));
+
+    const { status, body } = await fetchJson(`/api/run/${handle.id}/permission`, {
+      method: "POST",
+      body: { requestId, approved: true },
+    });
+    await new Promise((r) => setImmediate(r));
+
+    assert.equal(status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(chunks.join(""), "Y\n");
+    const live = runs.getRun(handle.id, { includeEnvelopes: true });
+    const response = live.envelopes.find((e) => e.type === "permission_response");
+    assert.ok(response);
+    assert.equal(response.id, requestId);
+    assert.equal(response.approved, true);
+  });
+
+  it("POST /:id/permission returns 400 when no active permission request", async () => {
+    const fake = makeFakeChild();
+    const handle = runs.__injectChildForTest({ child: fake, mode: "conversation" });
+    fake.stdout.write(`{"type":"system","subtype":"init","session_id":"s1"}\n`);
+    await new Promise((r) => setImmediate(r));
+    const { status, body } = await fetchJson(`/api/run/${handle.id}/permission`, {
+      method: "POST",
+      body: { requestId: "perm-1", approved: true },
+    });
+    assert.equal(status, 400);
+    assert.equal(body.error.code, "ENOPROMPT");
+  });
+
   // ── /api/run/cwds suggestions ─────────────────────────────────────
 
   it("GET /cwds returns dashboard + home suggestions with absolute paths", async () => {

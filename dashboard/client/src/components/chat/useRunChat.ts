@@ -36,7 +36,7 @@ export interface UseRunChatReturn {
   handle: RunHandle | null;
   envelopes: Envelope[];
   displayEnvelopes: Envelope[];
-  busy: "start" | "send" | "stop" | null;
+  busy: "start" | "send" | "stop" | "permission" | null;
   error: string | null;
   followUp: string;
   setFollowUp: (v: string) => void;
