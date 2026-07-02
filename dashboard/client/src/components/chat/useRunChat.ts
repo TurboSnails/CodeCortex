@@ -30,6 +30,7 @@ export interface UseRunChatOptions {
   cwd: string;
   initialMode?: RunMode;
   initialPermissionMode?: PermissionMode;
+  initialModel?: string;
 }
 
 export interface UseRunChatReturn {
@@ -381,6 +382,7 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
           prompt,
           mode: opts?.resumeSessionId ? "conversation" : (options.initialMode ?? "conversation"),
           cwd: options.cwd,
+          model: options.initialModel,
           permissionMode: options.initialPermissionMode ?? "acceptEdits",
           resumeSessionId: opts?.resumeSessionId,
         });

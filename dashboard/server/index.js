@@ -67,6 +67,8 @@ const alertsRouter = require("./routes/alerts");
 const webhooksRouter = require("./routes/webhooks");
 const planRouter = require("./routes/plan");
 const reviewRouter = require("./routes/review");
+const filesRouter = require("./routes/files");
+const gitRouter = require("./routes/git");
 const planWatcher = require("./lib/plan-watcher");
 
 function createApp() {
@@ -98,6 +100,8 @@ function createApp() {
   app.use("/api/webhooks", webhooksRouter);
   app.use("/api/plan", planRouter);
   app.use("/api/review", reviewRouter);
+  app.use("/api/files", filesRouter);
+  app.use("/api/git", gitRouter);
   app.get("/api/openapi.json", (_req, res) => {
     res.json(openApiSpec);
   });

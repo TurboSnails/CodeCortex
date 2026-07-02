@@ -482,6 +482,48 @@ export const api = {
       }),
   },
 
+  files: {
+    tree: (cwd: string, depth = 3) =>
+      request<FileTreeResponse>(`/files/tree?cwd=${encodeURIComponent(cwd)}&depth=${depth}`),
+    content: (cwd: string, filePath: string) =>
+      request<FileContentResponse>(
+        `/files/content?cwd=${encodeURIComponent(cwd)}&path=${encodeURIComponent(filePath)}`,
+      ),
+  },
+
+  git: {
+    status: (cwd: string) =>
+      request<GitStatusResponse>("/git/status", {
+        method: "POST",
+        body: JSON.stringify({ cwd }),
+      }),
+    diff: (cwd: string, file?: string, staged = false) =>
+      request<GitDiffResponse>("/git/diff", {
+        method: "POST",
+        body: JSON.stringify({ cwd, file, staged }),
+      }),
+    stage: (cwd: string, file?: string) =>
+      request<GitSimpleResponse>("/git/stage", {
+        method: "POST",
+        body: JSON.stringify({ cwd, file }),
+      }),
+    unstage: (cwd: string, file?: string) =>
+      request<GitSimpleResponse>("/git/unstage", {
+        method: "POST",
+        body: JSON.stringify({ cwd, file }),
+      }),
+    commit: (cwd: string, message: string) =>
+      request<GitSimpleResponse>("/git/commit", {
+        method: "POST",
+        body: JSON.stringify({ cwd, message }),
+      }),
+    push: (cwd: string, confirmed = false) =>
+      request<GitSimpleResponse>("/git/push", {
+        method: "POST",
+        body: JSON.stringify({ cwd, confirmed }),
+      }),
+  },
+
   alerts: {
     list: (params?: { unacked?: boolean; limit?: number; offset?: number }) => {
       const qs = new URLSearchParams();
@@ -1020,3 +1062,53 @@ export interface ImportResult {
   entries_extracted?: number;
   entries_skipped?: number;
 }
+
+export interface FileTreeNode {
+  name: string;
+  path: string;
+  type: "file" | "directory";
+  children?: FileTreeNode[];
+  error?: string;
+}
+
+export interface FileTreeResponse {
+  cwd: string;
+  depth: number;
+  tree: FileTreeNode[];
+}
+
+export interface FileContentResponse {
+  path: string;
+  content: string;
+}
+
+export interface GitStatusEntry {
+  status: string;
+  file: string;
+}
+
+export interface GitStatusResponse {
+  cwd: string;
+  branch: string | null;
+  staged: GitStatusEntry[];
+  unstaged: GitStatusEntry[];
+  untracked: string[];
+}
+
+export interface GitDiffResponse {
+  cwd: string;
+  file?: string;
+  staged: boolean;
+  diff: string;
+}
+
+export interface GitSimpleResponse {
+  cwd: string;
+  file?: string;
+  staged?: boolean;
+  unstaged?: boolean;
+  message?: string;
+  pushed?: boolean;
+  output?: string;
+}
+
