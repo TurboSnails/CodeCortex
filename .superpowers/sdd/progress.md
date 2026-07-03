@@ -1,40 +1,52 @@
-# Subagent-Driven Development Progress Ledger
+# SDD Progress — Chat Input Upgrade
 
-## Branch
+**Branch:** `feat/chat-input-upgrade`
+**BranchBase:** `cba7044` (parent of branch creation; cleanup commits `76b7ec5` & `cba7044` are ancestors)
+**Plan:** `docs/superpowers/plans/2026-07-03-chat-input-upgrade.md`
+**Spec:** `docs/superpowers/specs/2026-07-03-chat-input-upgrade-design.md`
 
-`worktree-interactive-claude-code-chat` in `.claude/worktrees/interactive-claude-code-chat`
+Pre-SDD state:
+- Working tree had unrelated `package-lock.json` mods + untracked `.vscode/`. Stashed as `dry-run: package-lock mods + .vscode (stash 2026-07-03 pre-SDD)`. Recover with `git stash pop` after merge.
 
-## Pre-flight
+Task ledger — append one line per clean task:
 
-- [x] Worktree created and dependencies installed
-- [x] Baseline tests pass (server tests pass; client tests 266 passed)
-- [x] Permission envelope spike completed: Claude Code CLI does NOT emit structured `permission_request` envelopes in `stream-json` mode
-- [x] Plan updated with spike results and PTY follow-up spike requirement before Tasks 4–5
+```
+Task 1: complete (commits cba7044..2a32598, review clean, tsc independently re-verified)
+Task 2: complete (commits 2a32598..317f68b + plan amendment db6be27, review APPROVED; both deviations justified)
+Task 3: complete (commits 317f68b..927cea4, review APPROVED; concern about brief's mock-cast under noUncheckedIndexedAccess fixed with one-char `!`)
+Task 4: complete (commits 927cea4..774f469, review APPROVED with 1 minor; test-stub deviation (in-place window mutation + afterEach cleanup) justified — brief's globalThis.window override breaks jsdom prototype chain and leaks across tests)
+Task 5: complete (commits 774f469..ee36c42, review APPROVED with 0 issues; tsc clean)
+Task 6: complete (commits ee36c42..78004f9, re-review APPROVED with 0 issues; initial reviewer NEEDS_FIXES on missing trailing newlines, fix subagent added them in 78004f9)
+Task 7: complete (commits 78004f9..d9cb266 + fix 83f103d; review APPROVED with 2 minors; T7-minor-1 fixed pre-emptively before Task 9)
+Task 8: complete (commits 83f103d..efdff89, review APPROVED with 1 informational minor)
+Task 9: complete (commits efdff89..42a58ac, review APPROVED with 1 minor; 4 deviations from brief all justified)
+Task 10: complete (commits 42a58ac..3df716d, review APPROVED with 0 issues; 72/72 chat tests pass)
+Task 11: complete (commits 3df716d..3c35a2d, review APPROVED with 0 issues; adapted to repo's per-namespace i18n structure)
+Task 12: complete (commits 3c35a2d..e50ad0c, review APPROVED with 0 issues; expected Chat snapshot failure deferred to Task 14)
+Task 13: complete (commits e50ad0c..5738828, review APPROVED with 3 minor test-coverage nits)
+Task 14: complete (commits 5738828..497d6fd, review APPROVED with 0 issues; snapshot baselines refreshed non-blindly with mobile baseline)
+Task 15: complete (commits 497d6fd..02a695c, review APPROVED with 2 minor informational; 354/354 tests green, tsc exit 0, lint declared not-run, E1–E10 deferred to reviewer per brief)
+```
 
-## Tasks
+## Minor findings carried forward (filled after Task reviews)
 
-- [x] Task 1: Extract shared envelope types and `useRunChat` hook (commit 558d6da, 8/8 new tests pass, full client suite 274 pass)
-  - Review: approved.
-  - Minor findings to address before final merge: add tests for `useTypewriterEnvelopes` streaming drip, `mergeEnvelope` `message_stop`/`assistant` replacement, and `run_status`/`run_input_ack` handling; clean up verbose `as unknown as` casts in tests; restore comment explaining `content_block_stop` no-op.
-- [x] Task 2: Build `ChatTab` UI components (commit 0582713, 5/5 new tests pass, full client suite 279 pass)
-  - Review: approved. Minor findings: add type-narrowing helpers to reduce `any` casts in ChatMessageList; consider a comment explaining the suppressed thinking indicator during permission requests.
-- [x] Task 3: Integrate `ChatTab` into `SessionDetail` (commit 967451a, 1/1 new tests pass, full client suite 280 pass)
-  - Review: approved. I addressed the review findings before committing: removed unused imports in the new test, added `events.list` mock to eliminate console error noise, and reverted accidentally committed `package-lock.json` and vitest cache file.
-- [x] PTY spike: Evaluate `node-pty` for intercepting Claude permission prompts
-  - **Result: BLOCKED by sandbox.**
-  - `node-pty` installs successfully, but `pty.spawn()` fails with `posix_spawnp failed` in this environment.
-  - Fallback `script -q /dev/null /bin/zsh` wrapper also fails with `tcgetattr/ioctl: Operation not supported on socket`.
-  - Therefore permission prompt interception cannot be validated here. It may work when the dashboard server runs unsandboxed on the user's machine, but that has not been proven.
-  - Decision required before Tasks 4-5.
-- [x] Task 4: Add backend permission-response endpoint (commit d1bc026, server tests 476 pass)
-  - Implemented PTY-aware transport abstraction with child_process fallback; terminal permission prompt detection; `sendPermissionResponse` injecting `Y\n`/`n\n`; `POST /api/run/:id/permission` route; client API/types.
-- [x] Task 5: Render permission requests as UI buttons (commit 4c6e2e6, client tests 281 pass)
-  - Wired `useRunChat.respondToPermission` to backend endpoint; disabled prompt buttons while busy; added unit test.
-- [x] Task 6: Responsive layout for desktop and mobile (commit 4eb8217, full client suite 280 pass)
-  - Review: approved. Minor observation: `overflow-hidden` is on the tab wrapper rather than the page body; practical goal achieved.
-- [x] Task 7: Integration and end-to-end verification (commit d790a83, server tests 485 pass, client tests 285 pass, build passes, E2E smoke passes)
-- [x] Final whole-branch review and finishing — approved with findings resolved (node-pty optional-only, PermissionPrompt tests, E2E extension, ChatMessageList type narrowing, content_block_stop comment restored).
+- T3-minor-1: `useAttachments.test.ts` and the new hook files lack a trailing newline at EOF — task review noted as a project-preference nit. Confirm at final review.
+- T3-minor-2: `useAttachments.ts` lines referenced by the implementer carry a `\ No newline at end of file` marker; same root cause as above.
+- T3-minor-3: brief deviation list (the `!` non-null assertion) was a justified fix; already merged in `927cea4` — no follow-up needed.
+- T4-minor-1: `useVoiceInput.ts` + test file both lack trailing newline at EOF (same pattern as T3-minor-1/2). Final review should run a single `sed -i -e '$a\\' $file` sweep on the new files to normalize, or accept as project preference.
+- T7-minor-1: FIXED in commit `83f103d` — `InputHintBar.tsx` now uses inline English defaults for all six hint keys. No follow-up needed.
+- T7-minor-2: `VoiceButton` accepts a `disabled` prop and forwards it to the button element. The brief did not require this; harmless addition, no follow-up needed.
+- T8-minor-1: wire-shape divergence — when `useRunChat.send` is called with a string, the hook passes `attachments: []` (explicit) to `api.run.send`, whereas legacy 2-arg callers pass `undefined`. Both wire-bodies are accepted by the gateway (no backend regression); no action required. Informational only.
+- T9-minor-1: FIXED in `b1e5307` (consecutive-error counter) and partially improved in `94671b9` (useVoiceInput API now accepts `onRecognition` callback for cleaner test injection; ChatInput voice hookup still discards unsubscribe — left as deferred cleanup).
 
-## Notes
+## Final review outstanding
 
-- Critical blocker discovered during pre-requisite: no structured permission envelopes in stream-json. PTY spike required.
+- **Final whole-branch review: APPROVED with 2 important + 12 minor findings** (see `.superpowers/sdd/final-review.md`).
+- **Final fix wave: 5 commits, all green, no unresolved minors.**
+  - `94671b9` — fix(chat-input): remove test back-channel from useVoiceInput
+  - `b128caf` — fix(chat-input): surface attachment limit errors via ChatToast
+  - `b1e5307` — fix(chat-input): useVoiceInput 3-error lockout now counts consecutive errors
+  - `8547069` — chore(chat-input): add trailing newlines to 6 chat-input files
+  - `0448a9b` — fix(chat-input): wrap SessionDetail ChatTab in ChatWorkspaceProvider (regression fix after Important #2)
+- **Final cross-cutting state (HEAD `0448a9b`):** 38 test files / 354 tests passing; `tsc --noEmit` exit 0; lint not configured (declared per `dashboard/CLAUDE.md`); manual e2e E1–E10 still deferred to human reviewer.
+- **Status: READY FOR PR.** Open the PR; reviewer runs the 10 manual e2e scenarios in real Chrome and mobile Safari (or simulator), then merges.
