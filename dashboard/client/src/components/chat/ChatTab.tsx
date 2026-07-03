@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, Play } from "lucide-react";
 import { api } from "../../lib/api";
@@ -8,7 +8,7 @@ import { ChatInput, type ChatSlashCommand } from "./ChatInput";
 import { useChatWorkspaceActions } from "./ChatWorkspaceContext";
 import { ChatModeSelector } from "./ChatModeSelector";
 import { WorkflowProgress } from "./WorkflowProgress";
-import { useWorkflowMarkers } from "./useWorkflowMarkers";
+import { useWorkflowMarkers, type WorkflowMarker } from "./useWorkflowMarkers";
 import {
   getNextCommand,
   getPlaceholder,
@@ -60,6 +60,7 @@ export function ChatTab({
   const [slashCommands, setSlashCommands] = useState<ChatSlashCommand[]>(BUILTIN_SLASH_COMMANDS);
   const [mode, setMode] = useState<ChatMode>("normal");
   const [workflow, setWorkflow] = useState<WorkflowState>({ kind: "idle" });
+  const lastHandledMarker = useRef<WorkflowMarker | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +108,8 @@ export function ChatTab({
 
   useEffect(() => {
     if (!marker || workflow.kind !== "running") return;
+    if (lastHandledMarker.current === marker) return;
+    lastHandledMarker.current = marker;
 
     if (marker.kind === "error") {
       setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: marker.message });
@@ -133,7 +136,14 @@ export function ChatTab({
       }
       const timer = setTimeout(() => {
         const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
-        send(nextCommand).catch(() => {});
+        send(nextCommand).catch((err: unknown) => {
+          setWorkflow({
+            kind: "error",
+            mode: workflow.mode,
+            stepId: workflow.stepId,
+            message: err instanceof Error ? err.message : "auto-advance failed",
+          });
+        });
         setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId, autoContinue: true });
       }, 600);
       return () => {
@@ -185,6 +195,13 @@ export function ChatTab({
         </div>
       )}
 
+      {workflow.kind === "error" && (
+        <div className="px-4 py-2.5 border-b border-red-500/20 bg-red-500/10 flex items-center gap-2 text-sm text-red-200">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          {workflow.message}
+        </div>
+      )}
+
       {!handle && (
         <div className="px-4 py-3 border-b border-border bg-surface-2/50 text-xs text-gray-500 flex items-center gap-2">
           <Play className="w-3.5 h-3.5" />
@@ -206,7 +223,7 @@ export function ChatTab({
         }}
         disabled={workflow.kind === "running"}
       />
-      {workflow.kind !== "idle" && workflow.kind !== "done" && (
+      {workflow.kind !== "idle" && workflow.kind !== "done" && workflow.kind !== "error" && (
         <WorkflowProgress
           mode={workflow.mode}
           currentStepId={workflow.stepId}

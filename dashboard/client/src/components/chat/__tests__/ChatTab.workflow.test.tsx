@@ -1,0 +1,224 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { ChatTab } from "../ChatTab";
+import { ChatWorkspaceProvider } from "../ChatWorkspaceContext";
+import { api } from "../../../lib/api";
+import type { RunHandle } from "../../../lib/api";
+import type { Envelope } from "../types";
+
+vi.mock("../../../lib/api", () => ({
+  api: {
+    run: {
+      start: vi.fn(),
+      send: vi.fn(),
+      kill: vi.fn(),
+      respondToPermission: vi.fn(),
+      files: vi.fn(),
+    },
+    ccConfig: {
+      commands: vi.fn(() => Promise.resolve({ items: [] })),
+    },
+  },
+}));
+
+let busCallback: ((msg: unknown) => void) | null = null;
+vi.mock("../../../lib/eventBus", () => ({
+  eventBus: {
+    subscribe: vi.fn((cb: (msg: unknown) => void) => {
+      busCallback = cb;
+      return () => {
+        busCallback = null;
+      };
+    }),
+    connected: true,
+    onConnection: vi.fn(() => () => {}),
+  },
+}));
+
+const mockStart = vi.mocked(api.run.start);
+const mockSend = vi.mocked(api.run.send);
+const mockKill = vi.mocked(api.run.kill);
+
+function renderChatTab(props = { sessionId: "sess-1", cwd: "/tmp" }) {
+  return render(
+    <ChatWorkspaceProvider>
+      <ChatTab {...props} />
+    </ChatWorkspaceProvider>
+  );
+}
+
+function makeHandle(status: RunHandle["status"] = "running"): RunHandle {
+  return {
+    id: "run-1",
+    pid: 123,
+    mode: "conversation",
+    cwd: "/tmp",
+    model: null,
+    permissionMode: "acceptEdits",
+    effort: null,
+    prompt: "hello",
+    argv: [],
+    resumeSessionId: null,
+    status,
+    startedAt: Date.now(),
+    endedAt: null,
+    exitCode: null,
+    signal: null,
+    error: null,
+    sessionId: "sess-1",
+    envelopeCount: 1,
+    stdoutTail: "",
+    stderrTail: "",
+  };
+}
+
+function publishEnvelope(handleId: string, envelope: Envelope) {
+  act(() => {
+    busCallback?.({
+      type: "run_stream",
+      data: { id: handleId, envelope },
+    });
+  });
+}
+
+describe("ChatTab workflow mode", () => {
+  beforeEach(() => {
+    busCallback = null;
+    vi.clearAllMocks();
+  });
+
+  it("injects the first step command when sending in a non-normal mode", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "add login" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() =>
+      expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore add login" }))
+    );
+    expect(screen.getByText("explore")).toBeInTheDocument();
+  });
+
+  it("auto-advances to the next step on a CONTINUE marker", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "build feature" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() => expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore build feature" })));
+    expect(screen.getByText("explore")).toBeInTheDocument();
+    await waitFor(() => expect(busCallback).not.toBeNull());
+
+    publishEnvelope("run-1", {
+      type: "assistant",
+      message: { content: [{ type: "text", text: "ok <!-- __WORKFLOW:CONTINUE__ -->" }] },
+    });
+
+    await waitFor(
+      () => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []),
+      { timeout: 1500 }
+    );
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("propose")).toBeInTheDocument();
+  });
+
+  it("pauses the workflow on a PAUSE marker and lets the user resume", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "plan api" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() => expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore plan api" })));
+    await waitFor(() => expect(busCallback).not.toBeNull());
+
+    publishEnvelope("run-1", {
+      type: "assistant",
+      message: { content: [{ type: "text", text: "waiting <!-- __WORKFLOW:PAUSE__ -->" }] },
+    });
+
+    await waitFor(() => expect(screen.getByText("explore")).toBeInTheDocument());
+    expect(mockSend).not.toHaveBeenCalled();
+
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "continue" } });
+    fireEvent.keyDown(textarea, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "continue", []));
+  });
+
+  it("finishes the workflow on a DONE marker", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "finish" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() => expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore finish" })));
+    expect(screen.getByLabelText("Cancel workflow")).toBeInTheDocument();
+    await waitFor(() => expect(busCallback).not.toBeNull());
+
+    publishEnvelope("run-1", {
+      type: "assistant",
+      message: { content: [{ type: "text", text: "all done <!-- __WORKFLOW:DONE__ -->" }] },
+    });
+
+    await waitFor(() => expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument());
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it("stops and shows an error on an ERROR marker", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "boom" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() => expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore boom" })));
+    await waitFor(() => expect(busCallback).not.toBeNull());
+
+    publishEnvelope("run-1", {
+      type: "assistant",
+      message: { content: [{ type: "text", text: "failed <!-- __WORKFLOW:ERROR:bad step -->" }] },
+    });
+
+    await waitFor(() => expect(screen.getByText("bad step")).toBeInTheDocument());
+    expect(mockSend).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument();
+  });
+
+  it("stops the workflow when cancel is clicked", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockKill.mockResolvedValueOnce({ ok: true });
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "cancel me" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() => expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore cancel me" })));
+    expect(screen.getByLabelText("Cancel workflow")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Cancel workflow"));
+
+    await waitFor(() => expect(mockKill).toHaveBeenCalledWith("run-1"));
+    expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument();
+  });
+});
