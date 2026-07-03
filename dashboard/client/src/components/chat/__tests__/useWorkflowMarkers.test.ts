@@ -28,7 +28,7 @@ describe("extractWorkflowMarkers", () => {
   });
 
   it("extracts ERROR with message", () => {
-    const text = "Failed.\n<!-- __WORKFLOW:ERROR:missing spec -->";
+    const text = "Failed.\n<!-- __WORKFLOW:ERROR:missing spec__ -->";
     const result = extractWorkflowMarkers(text);
     expect(result.cleaned).toBe("Failed.\n");
     expect(result.marker).toEqual({ kind: "error", message: "missing spec" });
@@ -36,6 +36,27 @@ describe("extractWorkflowMarkers", () => {
 
   it("returns null when no marker", () => {
     const text = "Just a normal reply.";
+    const result = extractWorkflowMarkers(text);
+    expect(result.cleaned).toBe(text);
+    expect(result.marker).toBeNull();
+  });
+
+  it("returns null for a marker missing the trailing __", () => {
+    const text = "Bad marker\n<!-- __WORKFLOW:CONTINUE -->";
+    const result = extractWorkflowMarkers(text);
+    expect(result.cleaned).toBe(text);
+    expect(result.marker).toBeNull();
+  });
+
+  it("returns null for an ERROR marker with message missing the trailing __", () => {
+    const text = "Bad error marker\n<!-- __WORKFLOW:ERROR:missing spec -->";
+    const result = extractWorkflowMarkers(text);
+    expect(result.cleaned).toBe(text);
+    expect(result.marker).toBeNull();
+  });
+
+  it("returns null for a marker missing the leading __", () => {
+    const text = "Bad marker\n<!-- WORKFLOW:CONTINUE__ -->";
     const result = extractWorkflowMarkers(text);
     expect(result.cleaned).toBe(text);
     expect(result.marker).toBeNull();

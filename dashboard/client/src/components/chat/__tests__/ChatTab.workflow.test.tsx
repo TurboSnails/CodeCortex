@@ -195,7 +195,7 @@ describe("ChatTab workflow mode", () => {
 
     publishEnvelope("run-1", {
       type: "assistant",
-      message: { content: [{ type: "text", text: "failed <!-- __WORKFLOW:ERROR:bad step -->" }] },
+      message: { content: [{ type: "text", text: "failed <!-- __WORKFLOW:ERROR:bad step__ -->" }] },
     });
 
     await waitFor(() => expect(screen.getByText("bad step")).toBeInTheDocument());
@@ -408,5 +408,34 @@ describe("ChatTab workflow mode", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("pauses the workflow by default when a complete assistant reply has no marker and lets the user resume", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "plan api" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() => expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore plan api" })));
+    await waitFor(() => expect(busCallback).not.toBeNull());
+
+    publishEnvelope("run-1", {
+      type: "assistant",
+      message: { content: [{ type: "text", text: "I need more details about the API." }] },
+    });
+
+    expect(mockSend).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByText(/当前步骤需要你的输入/)).toBeInTheDocument());
+    expect(screen.getByText("explore")).toBeInTheDocument();
+
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "use REST" } });
+    fireEvent.keyDown(textarea, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "use REST", []));
   });
 });

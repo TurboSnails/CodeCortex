@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, Play } from "lucide-react";
 import { api } from "../../lib/api";
@@ -16,6 +16,16 @@ import {
   type ChatMode,
 } from "./workflowConfig";
 import type { SendPayload } from "../../lib/types";
+
+function ErrorBanner({ children, actions }: { children: ReactNode; actions?: ReactNode }) {
+  return (
+    <div className="px-4 py-2.5 border-b border-red-500/20 bg-red-500/10 flex items-center gap-2 text-sm text-red-200">
+      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+      <span className="flex-1">{children}</span>
+      {actions}
+    </div>
+  );
+}
 
 const BUILTIN_SLASH_COMMANDS: ChatSlashCommand[] = [
   { name: "help", description: "List available commands", source: "builtin" },
@@ -241,7 +251,7 @@ export function ChatTab({
     }
   };
 
-  const handleCancel = () => {
+  const cancelWorkflow = () => {
     if (autoAdvanceTimeout.current) {
       clearTimeout(autoAdvanceTimeout.current);
       autoAdvanceTimeout.current = null;
@@ -260,31 +270,32 @@ export function ChatTab({
       }`}
     >
       {error && workflow.kind !== "error" && (
-        <div className="px-4 py-2.5 border-b border-red-500/20 bg-red-500/10 flex items-center gap-2 text-sm text-red-200">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          {error}
-        </div>
+        <ErrorBanner>{error}</ErrorBanner>
       )}
 
       {workflow.kind === "error" && (
-        <div className="px-4 py-2.5 border-b border-red-500/20 bg-red-500/10 flex items-center gap-2 text-sm text-red-200">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span className="flex-1">{workflow.message}</span>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium"
-          >
-            Retry
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium"
-          >
-            Cancel
-          </button>
-        </div>
+        <ErrorBanner
+          actions={
+            <>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium"
+              >
+                Retry
+              </button>
+              <button
+                type="button"
+                onClick={cancelWorkflow}
+                className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium"
+              >
+                Cancel
+              </button>
+            </>
+          }
+        >
+          {workflow.message}
+        </ErrorBanner>
       )}
 
       {!handle && (
@@ -301,34 +312,16 @@ export function ChatTab({
             // TODO(i18n): hardcoded Chinese confirmation per brief; replace with i18n key when available.
             const ok = window.confirm("当前工作流尚未完成，切换模式将取消进度。是否继续？");
             if (!ok) return;
-            if (autoAdvanceTimeout.current) {
-              clearTimeout(autoAdvanceTimeout.current);
-              autoAdvanceTimeout.current = null;
-            }
-            setPendingAutoAdvance(null);
-            setIsAutoAdvancePending(false);
-            void stop();
-            setWorkflow({ kind: "idle" });
+            cancelWorkflow();
           }
           setMode(next);
         }}
-        disabled={workflow.kind === "running"}
       />
       {workflow.kind !== "idle" && workflow.kind !== "done" && workflow.kind !== "error" && (
         <WorkflowProgress
           mode={workflow.mode}
           currentStepId={workflow.stepId}
-          onCancel={() => {
-            if (autoAdvanceTimeout.current) {
-              clearTimeout(autoAdvanceTimeout.current);
-              autoAdvanceTimeout.current = null;
-            }
-            setPendingAutoAdvance(null);
-            setIsAutoAdvancePending(false);
-            void stop();
-            setWorkflow({ kind: "idle" });
-            setMode("normal");
-          }}
+          onCancel={cancelWorkflow}
         />
       )}
 

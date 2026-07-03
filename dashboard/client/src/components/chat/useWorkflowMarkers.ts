@@ -8,7 +8,7 @@ export type WorkflowMarker =
   | { kind: "done" }
   | { kind: "error"; message: string };
 
-const MARKER_RE = /<!--\s*__WORKFLOW:(CONTINUE|PAUSE|DONE|ERROR)(?::([^>]*?))?(__)?\s*-->/gi;
+const MARKER_RE = /<!--\s*__WORKFLOW:(CONTINUE|PAUSE|DONE|ERROR)(?::([^>]*?))?__\s*-->/gi;
 
 export function extractWorkflowMarkers(text: string): {
   cleaned: string;
