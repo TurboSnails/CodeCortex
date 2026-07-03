@@ -200,11 +200,11 @@ function ChatWorkspace() {
 
   const handleFileSelect = useCallback(
     (path: string, type: "file" | "directory") => {
-      if (type === "directory") {
-        actions.toggleExpandPath(path);
-      } else {
+      if (type === "file") {
         actions.openFilePreview(path);
       }
+      // For directories: FileTree's onClick now handles expand/collapse
+      // via onToggle only. We do nothing here to avoid a double-toggle.
     },
     [actions]
   );
