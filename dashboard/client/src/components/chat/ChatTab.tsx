@@ -5,6 +5,7 @@ import { api } from "../../lib/api";
 import { useRunChat } from "./useRunChat";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatInput, type ChatSlashCommand } from "./ChatInput";
+import { useChatWorkspaceActions } from "./ChatWorkspaceContext";
 
 const BUILTIN_SLASH_COMMANDS: ChatSlashCommand[] = [
   { name: "help", description: "List available commands", source: "builtin" },
@@ -39,6 +40,7 @@ export function ChatTab({
   className?: string;
 }) {
   const { t } = useTranslation("sessions");
+  const workspaceActions = useChatWorkspaceActions();
   const [slashCommands, setSlashCommands] = useState<ChatSlashCommand[]>(BUILTIN_SLASH_COMMANDS);
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export function ChatTab({
         onChange={setFollowUp}
         onSend={onSend}
         onSendWithPayload={onSendWithPayload}
-        onError={(msg) => console.warn(msg)}
+        onError={(msg) => workspaceActions.addProblem({ source: "chat-attachments", message: msg })}
         onStop={stop}
         disabled={busy === "start" || busy === "send" || busy === "stop"}
         isLive={isLive}
