@@ -35,28 +35,50 @@ export function useWorkflowMarkers(envelopes: Envelope[]): {
   cleanedEnvelopes: Envelope[];
 } {
   return useMemo(() => {
+    // The spec treats a complete assistant reply with no marker as PAUSE,
+    // so we only consider the latest assistant envelope.
+    let latestAssistantIndex = -1;
+    envelopes.forEach((env, index) => {
+      if (isAssistantEnvelope(env)) latestAssistantIndex = index;
+    });
+
     let latestMarker: WorkflowMarker | null = null;
-    const cleanedEnvelopes = envelopes.map((env) => {
+    const cleanedEnvelopes = envelopes.map((env, index) => {
       if (!isAssistantEnvelope(env)) return env;
+
+      const isLatestAssistant = index === latestAssistantIndex;
       const content = env.message?.content;
+
       if (typeof content === "string") {
         const { cleaned, marker } = extractWorkflowMarkers(content);
-        if (marker) latestMarker = marker;
+        if (isLatestAssistant) {
+          latestMarker = marker ?? { kind: "pause" };
+        }
         return { ...env, message: { ...env.message, content: cleaned } };
       }
+
       if (Array.isArray(content)) {
+        let envelopeMarker: WorkflowMarker | null = null;
         const nextContent = content.map((block) => {
           if (block.type === "text" && typeof (block as { text?: string }).text === "string") {
             const { cleaned, marker } = extractWorkflowMarkers((block as { text: string }).text);
-            if (marker) latestMarker = marker;
+            if (marker) envelopeMarker = marker;
             return { ...block, text: cleaned };
           }
           return block;
         });
+        if (isLatestAssistant) {
+          latestMarker = envelopeMarker ?? { kind: "pause" };
+        }
         return { ...env, message: { ...env.message, content: nextContent } };
+      }
+
+      if (isLatestAssistant) {
+        latestMarker = { kind: "pause" };
       }
       return env;
     });
+
     return { marker: latestMarker, cleanedEnvelopes };
   }, [envelopes]);
 }

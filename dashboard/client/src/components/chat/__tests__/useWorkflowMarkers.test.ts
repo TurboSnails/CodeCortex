@@ -71,4 +71,30 @@ describe("useWorkflowMarkers", () => {
     expect(result.current.marker).toBeNull();
     expect(result.current.cleanedEnvelopes).toEqual(envelopes);
   });
+
+  it("defaults to pause when the latest assistant envelope has no marker", () => {
+    const envelopes: Envelope[] = [
+      { type: "assistant", message: { content: "Just a normal reply." } },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    expect(result.current.marker).toEqual({ kind: "pause" });
+  });
+
+  it("ignores a previous marker when the latest assistant envelope has no marker", () => {
+    const envelopes: Envelope[] = [
+      { type: "assistant", message: { content: "Step 1\n<!-- __WORKFLOW:DONE__ -->" } },
+      { type: "assistant", message: { content: "Step 2 with no marker." } },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    expect(result.current.marker).toEqual({ kind: "pause" });
+  });
+
+  it("returns null when there are no assistant envelopes", () => {
+    const envelopes: Envelope[] = [
+      { type: "user", message: { content: "hello" } },
+      { type: "result", result: "ok" },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    expect(result.current.marker).toBeNull();
+  });
 });
