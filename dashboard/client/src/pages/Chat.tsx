@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MessageSquare } from "lucide-react";
+import { Menu, MessageSquare } from "lucide-react";
 import { api } from "../lib/api";
 import type { CwdSuggestion } from "../lib/api";
 import { ChatTab } from "../components/chat/ChatTab";
@@ -28,6 +28,7 @@ function ChatWorkspace() {
   const { t } = useTranslation(["sessions", "run"]);
   const { state } = useChatWorkspace();
   const actions = useChatWorkspaceActions();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const sessionId = useMemo(() => {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -334,6 +335,18 @@ function ChatWorkspace() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] lg:h-[calc(100vh-6rem)] overflow-hidden">
+      <div className="md:hidden flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-surface-1">
+        <button
+          type="button"
+          aria-label={mobileSidebarOpen ? "Hide sidebar" : "Show sidebar"}
+          onClick={() => setMobileSidebarOpen((v) => !v)}
+          className="p-2 rounded-lg hover:bg-surface-3"
+        >
+          <Menu className="w-4 h-4 text-gray-200" />
+        </button>
+        <span className="text-xs text-gray-400 truncate">{cwd || ""}</span>
+        <span className="text-[10px] text-gray-500 uppercase tracking-wider">/chat</span>
+      </div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 flex-shrink-0">
         <div>
           <h1 className="text-2xl font-semibold text-gray-100 flex items-center gap-2">
@@ -361,17 +374,18 @@ function ChatWorkspace() {
       </div>
 
       <div className="flex-1 min-h-0 flex border border-border rounded-xl overflow-hidden bg-surface-1">
-        <ActivityBar active={state.leftSidebar.activeView} onChange={actions.setLeftView} />
-
-        <ResizablePanel
-          side="left"
-          visible={state.leftSidebar.visible}
-          defaultWidth={240}
-          onToggle={actions.toggleLeftSidebar}
-          header={leftHeader}
-        >
-          {leftContent}
-        </ResizablePanel>
+        <div className={mobileSidebarOpen ? "block md:contents" : "hidden md:contents"}>
+          <ActivityBar active={state.leftSidebar.activeView} onChange={(v) => { actions.setLeftView(v); setMobileSidebarOpen(false); }} />
+          <ResizablePanel
+            side="left"
+            visible={state.leftSidebar.visible}
+            defaultWidth={240}
+            onToggle={actions.toggleLeftSidebar}
+            header={leftHeader}
+          >
+            {leftContent}
+          </ResizablePanel>
+        </div>
 
         <div className="flex-1 min-w-0 flex flex-col">
           {error && (
@@ -387,7 +401,7 @@ function ChatWorkspace() {
           </div>
 
           {state.bottomPanel.visible && (
-            <div className="h-48 border-t border-border flex-shrink-0">
+            <div className="hidden md:block h-48 border-t border-border flex-shrink-0">
               <BottomPanel envelopes={displayEnvelopes} />
             </div>
           )}
