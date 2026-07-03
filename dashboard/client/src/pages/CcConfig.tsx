@@ -193,6 +193,11 @@ export function CcConfig() {
   const { t } = useTranslation("ccConfig");
   const [tab, setTab] = useState<TabKey>("overview");
   const [scope, setScope] = useState<CcScope>("all");
+  // Project cwd: the server's process.cwd() is the dashboard subdir
+  // (where package.json lives), not the user's project, so we always
+  // send cwd as ?cwd= to the cc-config endpoints.
+  const [cwd, setCwd] = useState<string>("");
+  const [cwds, setCwds] = useState<string[]>([]);
   const [data, setData] = useState<PageState>(EMPTY_STATE);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -215,6 +220,31 @@ export function CcConfig() {
     return () => clearTimeout(id);
   }, [toast]);
 
+  // Populate cwd suggestions. We do not auto-pick a default — the user must
+  // choose a project so the page does not silently show empty results from
+  // the dashboard/.claude (which usually does not exist). On the /chat page
+  // the cwds are also used for run start; here we just need a list to
+  // pick from.
+  useEffect(() => {
+    let cancelled = false;
+    api.run
+      .cwds()
+      .then((res) => {
+        if (cancelled) return;
+        const paths = (res.items || []).map((it) => it.path);
+        setCwds(paths);
+        if (paths.length > 0) {
+          setCwd((current) => current || paths[0] || "");
+        }
+      })
+      .catch(() => {
+        // best-effort; user can still type a path manually
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -235,18 +265,18 @@ export function CcConfig() {
         statusline,
         hookScripts,
       ] = await Promise.all([
-        api.ccConfig.overview(),
-        api.ccConfig.skills(scope),
-        api.ccConfig.agents(scope),
-        api.ccConfig.commands(scope),
-        api.ccConfig.outputStyles(scope),
+        api.ccConfig.overview(cwd),
+        api.ccConfig.skills(scope, cwd),
+        api.ccConfig.agents(scope, cwd),
+        api.ccConfig.commands(scope, cwd),
+        api.ccConfig.outputStyles(scope, cwd),
         api.ccConfig.plugins(),
         api.ccConfig.marketplaces(),
         api.ccConfig.mcp(),
-        api.ccConfig.hooks(),
+        api.ccConfig.hooks(cwd),
         api.ccConfig.keybindings(),
-        api.ccConfig.settings(),
-        api.ccConfig.memory(),
+        api.ccConfig.settings(cwd),
+        api.ccConfig.memory(cwd),
         api.ccConfig.statusline(),
         api.ccConfig.hookScripts(),
       ]);
@@ -273,7 +303,7 @@ export function CcConfig() {
     } finally {
       setLoading(false);
     }
-  }, [scope]);
+  }, [scope, cwd]);
 
   useEffect(() => {
     void fetchAll();
@@ -306,7 +336,7 @@ export function CcConfig() {
   const openViewer = useCallback(async (path: string) => {
     setViewer({ path, data: null, error: null });
     try {
-      const file = await api.ccConfig.file(path);
+      const file = await api.ccConfig.file(path, cwd);
       setViewer({ path, data: file, error: null });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "unknown error";
@@ -401,6 +431,7 @@ export function CcConfig() {
         name: args.name,
         content: args.content,
         project: args.project,
+        cwd,
       });
       setEditor(null);
       setToast({
@@ -411,7 +442,7 @@ export function CcConfig() {
       });
       void fetchAll();
     },
-    [fetchAll, t]
+    [cwd, fetchAll, t]
   );
 
   const handleDelete = useCallback(async () => {
@@ -422,6 +453,7 @@ export function CcConfig() {
         type: confirmDelete.type,
         name: confirmDelete.name,
         project: confirmDelete.project,
+        cwd,
       });
       setConfirmDelete(null);
       setToast({
@@ -434,7 +466,7 @@ export function CcConfig() {
       setConfirmDelete(null);
       setToast({ kind: "error", message: t("edit.deleteError", { message: msg }) });
     }
-  }, [confirmDelete, fetchAll, t]);
+  }, [confirmDelete, cwd, fetchAll, t]);
 
   return (
     <div className="space-y-5">
@@ -454,6 +486,35 @@ export function CcConfig() {
           <span>{t("loadError", { message: error })}</span>
         </div>
       )}
+
+      <div className="flex items-center gap-2 px-1 py-1">
+        <span className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+          {t("common.cwd", "Project cwd")}
+        </span>
+        <select
+          value={cwd}
+          onChange={(e) => setCwd(e.target.value)}
+          className="input text-xs min-w-[16rem]"
+        >
+          {cwds.length === 0 && !cwd && (
+            <option value="">{t("common.cwdLoading", "loading…")}</option>
+          )}
+          {cwds.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+          {cwd && !cwds.includes(cwd) && <option value={cwd}>{cwd}</option>}
+        </select>
+        <input
+          aria-label={t("common.cwdCustom", "Custom project cwd")}
+          value={cwd}
+          onChange={(e) => setCwd(e.target.value)}
+          placeholder={t("common.cwdCustomPlaceholder", "/abs/path/to/project")}
+          className="input text-xs font-mono flex-1 min-w-[20rem]"
+          spellCheck={false}
+        />
+      </div>
 
       <Tabs current={tab} onSelect={setTab} counts={data.overview?.counts} />
 
