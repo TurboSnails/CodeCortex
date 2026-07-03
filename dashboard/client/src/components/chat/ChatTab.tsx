@@ -45,8 +45,12 @@ export function ChatTab({
 
   useEffect(() => {
     let cancelled = false;
+    // Pass cwd so the server resolves the project `.claude/` relative to the
+    // chat's working directory. Without this, the server falls back to its
+    // own process.cwd() — which is `dashboard/` when `npm run dev` is run
+    // from the dashboard subdir, so project-level skills/commands disappear.
     api.ccConfig
-      .commands("all")
+      .commands("all", cwd)
       .then((res) => {
         if (cancelled) return;
         const fromServer = res.items.map((c) => ({
@@ -62,7 +66,7 @@ export function ChatTab({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [cwd]);
 
   const {
     handle,
