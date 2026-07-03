@@ -42,7 +42,11 @@ function TreeNode({
 
   const handleClick = () => {
     if (isDir) {
+      // Expand/collapse is owned by the parent's toggle handler; do not
+      // also call onSelect (the parent would toggle again and the net
+      // effect is a no-op). For files, forward to onSelect.
       onToggle(node.path);
+      return;
     }
     onSelect(node.path, node.type);
   };
