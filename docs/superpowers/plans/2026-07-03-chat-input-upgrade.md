@@ -268,12 +268,27 @@ export function usePromptHistory(): PromptHistoryApi {
     const next = Math.max(0, Math.min(len, cursorRef.current + dir));
     if (next === cursorRef.current) {
       if (dir === 1) return null;
-      return entries[next - 1] ?? null;
+      return entries[next] ?? null;
     }
     cursorRef.current = next;
     if (next === 0) return null;
-    return entries[next - 1] ?? null;
+    return entries[next] ?? null;
   }, [entries]);
+
+  // NOTE (2026-07-03 amend): cursor semantics are "past-the-last index" so
+  // pushing entries.length means cursor sits at `len`. After `navigate(-1)`
+  // from cursor=len we land at cursor=len-1, which should return the *newest*
+  // entry (the one we just typed). The verify-once tests in Step 1's `it(...)`
+  // block pin this semantic — Test 4 ("navigate(-1) returns newest from tail")
+  // asserts `recalled === "y"` after `push("x"); push("y")`. To match both the
+  // tests and the user-facing behavior (CC Pocket-style history recall), the
+  // two return sites above must read `entries[next]` (not `entries[next - 1]`)
+  // because cursor `next` IS the index of the entry to surface:
+  //   cursor=2 → "y"
+  //   cursor=1 → "x"
+  //   cursor=0 → null (boundary)
+  // Implementation corrected in commit 317f68b; this note preserves the
+  // rationale for any future implementer reviewing the plan.
 
   const commit = useCallback((text: string) => {
     const trimmed = text.trim();

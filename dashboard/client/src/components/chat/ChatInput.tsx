@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Send, Square, Slash as SlashIcon, AtSign, FileCode } from "lucide-react";
+import { Send, Square } from "lucide-react";
 import { api } from "../../lib/api";
+import { usePromptHistory } from "../../hooks/chat/usePromptHistory";
+import { useAttachments } from "../../hooks/chat/useAttachments";
+import { useVoiceInput } from "../../hooks/chat/useVoiceInput";
+import { animations, icons } from "./input/icons";
+import { SlashList } from "./input/SlashList";
+import { FileMentionList } from "./input/FileMentionList";
+import { AttachmentStrip } from "./input/AttachmentStrip";
+import { VoiceButton } from "./input/VoiceButton";
+import { InputHintBar } from "./input/InputHintBar";
 
 export interface ChatSlashCommand {
   name: string;
@@ -45,23 +54,6 @@ function scoreSlashMatch(name: string, description: string | undefined, q: strin
   return 0;
 }
 
-function sourceBadgeClasses(source: ChatSlashCommand["source"]): string {
-  switch (source) {
-    case "skill":
-      return "border-amber-500/40 text-amber-300 bg-amber-500/10";
-    case "builtin":
-      return "border-indigo-500/40 text-indigo-300 bg-indigo-500/10";
-    case "project":
-      return "border-emerald-500/40 text-emerald-300 bg-emerald-500/10";
-    case "user":
-      return "border-sky-500/40 text-sky-300 bg-sky-500/10";
-    case "plugin":
-      return "border-violet-500/40 text-violet-300 bg-violet-500/10";
-    default:
-      return "border-gray-600 text-gray-400";
-  }
-}
-
 function detectAutocomplete(value: string, cursor: number): AutocompleteState | null {
   let start = cursor;
   while (start > 0) {
@@ -89,6 +81,8 @@ export function ChatInput({
   placeholder,
   slashCommands = [],
   fileCwd,
+  onSendWithPayload,
+  onError,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -99,6 +93,8 @@ export function ChatInput({
   placeholder?: string;
   slashCommands?: ChatSlashCommand[];
   fileCwd?: string;
+  onSendWithPayload?: (payload: import("../../lib/types").SendPayload) => Promise<void> | void;
+  onError?: (message: string) => void;
 }) {
   const { t } = useTranslation(["run", "sessions"]);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -106,6 +102,40 @@ export function ChatInput({
   const [active, setActive] = useState(0);
   const [fileSuggestions, setFileSuggestions] = useState<string[]>([]);
   const fileFetchRef = useRef<{ q: string; t: number } | null>(null);
+
+  const history = usePromptHistory();
+  const attachments = useAttachments({ onError });
+  const voice = useVoiceInput();
+  const [pulseHint, setPulseHint] = useState(false);
+
+  useEffect(() => {
+    setPulseHint(true);
+    const t = setTimeout(() => setPulseHint(false), 1800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [interimVisible, setInterimVisible] = useState(false);
+  useEffect(() => voice.onInterim(() => setInterimVisible(true)), [voice]);
+  useEffect(() => voice.onFinal((final) => {
+    setInterimVisible(false);
+    onChange(value ? `${value} ${final}` : final);
+  }), [voice, value, onChange]);
+
+  const [dragging, setDragging] = useState(false);
+  const canSendText = !!value.trim() || attachments.items.length > 0;
+
+  const doSend = () => {
+    if (!canSendText) return;
+    const payload = attachments.buildPayload(value);
+    if (onSendWithPayload) {
+      void onSendWithPayload({ text: payload.text, attachments: payload.attachments });
+    } else {
+      onChange(payload.text);
+      onSend();
+    }
+    history.push(payload.text || "(image)");
+  };
 
   const slashItems = useMemo(() => {
     if (!state || state.kind !== "slash") return [] as ChatSlashCommand[];
@@ -180,6 +210,14 @@ export function ChatInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (state == null && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+      const next = history.navigate(e.key === "ArrowUp" ? -1 : 1);
+      if (next != null) {
+        e.preventDefault();
+        onChange(next);
+      }
+      return;
+    }
     if (state && items.length > 0) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -211,12 +249,12 @@ export function ChatInput({
     }
     if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
       e.preventDefault();
-      onSend();
+      doSend();
       return;
     }
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
-      onSend();
+      doSend();
     }
   };
 
@@ -235,13 +273,26 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-border bg-surface-1 px-4 py-3">
-      <div className="relative flex items-end gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2">
+    <div className="border-t border-border bg-surface-1 px-3 md:px-4 py-2 md:py-3">
+      <div className={`relative flex items-end gap-2 rounded-xl border bg-surface-2 px-3 py-2 transition-colors ${dragging ? `border-accent border-dashed bg-accent/5 ${animations.dropzoneActive}` : "border-border"}`}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => { setDragging(false); attachments.onDrop(e); }}
+      >
         <div className="relative flex-1">
+          <AttachmentStrip items={attachments.items} onRemove={attachments.remove} />
           <textarea
             ref={taRef}
             value={value}
-            onChange={handleChange}
+            onChange={(e) => {
+              handleChange(e);
+              const ta = e.target as HTMLTextAreaElement & { files?: FileList | null };
+              if (ta.files && ta.files.length) attachments.onPick(ta.files);
+            }}
+            onPaste={(e) => {
+              handleChange(e as unknown as React.ChangeEvent<HTMLTextAreaElement>);
+              attachments.onPaste(e as unknown as ClipboardEvent);
+            }}
             onKeyDown={handleKeyDown}
             onSelect={handleSelect}
             disabled={disabled}
@@ -250,70 +301,35 @@ export function ChatInput({
             className="w-full min-h-[40px] max-h-32 bg-transparent text-sm text-gray-200 placeholder-gray-600 resize-none outline-none py-2"
             placeholder={placeholder || "Ask Claude…"}
           />
+          {interimVisible && voice.interimText && (
+            <div className="absolute right-2 top-2 text-[10px] text-gray-500 italic max-w-[40%] truncate" role="status" aria-live="polite">
+              {voice.interimText}
+            </div>
+          )}
           {state && (
-            <div className="absolute z-30 left-0 right-0 bottom-full mb-1 rounded-md border border-border bg-surface-1 shadow-lg shadow-black/40 max-h-60 overflow-auto py-1">
-              <div className="px-3 py-1.5 border-b border-border text-[10px] font-semibold uppercase tracking-wider text-gray-500 inline-flex items-center gap-1.5">
-                {state.kind === "slash" ? (
-                  <>
-                    <SlashIcon className="w-3 h-3" />
-                    {t("run:autocomplete.slashHint")}
-                  </>
-                ) : (
-                  <>
-                    <AtSign className="w-3 h-3" />
-                    {t("run:autocomplete.fileHint")}
-                  </>
-                )}
-              </div>
-              {items.length === 0 ? (
-                <div className="px-3 py-2 text-[11px] text-gray-500">
-                  {t("run:autocomplete.noMatches")}
-                </div>
-              ) : state.kind === "slash" ? (
-                (items as ChatSlashCommand[]).map((c, idx) => (
-                  <button
-                    key={`${c.source}:${c.name}`}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => insertChoice(c)}
-                    onMouseEnter={() => setActive(idx)}
-                    className={`w-full text-left px-3 py-1.5 transition-colors ${
-                      idx === active ? "bg-accent/15" : "hover:bg-surface-3"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[12px] text-gray-100">/{c.name}</span>
-                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${sourceBadgeClasses(c.source)}`}>
-                        {c.source}
-                      </span>
-                    </div>
-                    {c.description && (
-                      <div className="text-[10.5px] text-gray-500 truncate mt-0.5">
-                        {c.description}
-                      </div>
-                    )}
-                  </button>
-                ))
+            <div className={`absolute z-30 left-0 right-0 bottom-full mb-1 rounded-md border border-border bg-surface-1 shadow-lg shadow-black/40 max-h-60 overflow-auto py-1`}>
+              {state.kind === "slash" ? (
+                <SlashList
+                  items={slashItems}
+                  activeIndex={active}
+                  onSelect={(c) => insertChoice(c)}
+                  onHover={setActive}
+                />
               ) : (
-                (items as string[]).map((p, idx) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => insertChoice(p)}
-                    onMouseEnter={() => setActive(idx)}
-                    className={`w-full text-left px-3 py-1.5 transition-colors flex items-center gap-2 ${
-                      idx === active ? "bg-accent/15" : "hover:bg-surface-3"
-                    }`}
-                  >
-                    <FileCode className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                    <span className="font-mono text-[11px] text-gray-200 truncate">{p}</span>
-                  </button>
-                ))
+                <FileMentionList
+                  paths={fileSuggestions}
+                  activeIndex={active}
+                  query={state.query}
+                  onSelect={(p) => insertChoice(p)}
+                  onHover={setActive}
+                />
               )}
             </div>
           )}
         </div>
+
+        <VoiceButton voice={voice} disabled={disabled} />
+
         {isLive ? (
           <button
             type="button"
@@ -327,8 +343,8 @@ export function ChatInput({
         ) : (
           <button
             type="button"
-            onClick={onSend}
-            disabled={disabled || !value.trim()}
+            onClick={() => doSend()}
+            disabled={disabled || !canSendText}
             className="p-3 md:p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40"
             aria-label="send"
           >
@@ -336,6 +352,13 @@ export function ChatInput({
           </button>
         )}
       </div>
+      <InputHintBar />
+      {pulseHint && value.trim() === "" && history.size > 0 && (
+        <div role="status" aria-live="polite" className={`absolute right-3 bottom-16 text-[10px] text-accent/70 inline-flex items-center gap-1 ${animations.recallPulse}`}>
+          <icons.arrowUp className="w-3 h-3" />
+          {t("chat-input:history.recallPulse", "Press ↑ to recall previous prompts")}
+        </div>
+      )}
     </div>
   );
 }

@@ -20,7 +20,7 @@ const ITEMS: { view: LeftSidebarView; icon: typeof FolderTree; label: string }[]
 
 export function ActivityBar({ active, onChange }: ActivityBarProps) {
   return (
-    <div className="w-12 flex flex-col items-center py-2 border-r border-border bg-surface-1 flex-shrink-0">
+    <div className="hidden md:flex w-12 flex-col items-center py-2 border-r border-border bg-surface-1 flex-shrink-0">
       {ITEMS.map(({ view, icon: Icon, label }) => {
         const isActive = active === view;
         return (

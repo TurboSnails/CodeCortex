@@ -14,6 +14,7 @@ import type {
   RunInputAckPayload,
   RunStatusPayload,
   RunStreamPayload,
+  SendPayload,
   WSMessage,
 } from "../../lib/types";
 import type {
@@ -42,7 +43,7 @@ export interface UseRunChatReturn {
   followUp: string;
   setFollowUp: (v: string) => void;
   start: (prompt: string, opts?: { resumeSessionId?: string }) => Promise<void>;
-  send: (text: string) => Promise<void>;
+  send: (input: string | SendPayload) => Promise<void>;
   stop: () => Promise<void>;
   activePermissionRequest: PermissionRequestEnvelope | null;
   respondToPermission: (approved: boolean, remember?: boolean) => Promise<void>;
@@ -398,13 +399,18 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
   );
 
   const send = useCallback(
-    async (text: string) => {
-      if (!handle || !text.trim() || busy) return;
+    async (input: string | SendPayload) => {
+      if (!handle || busy) return;
+      const payload: SendPayload =
+        typeof input === "string"
+          ? { text: input.trim(), attachments: [] }
+          : input;
+      if (!payload.text && payload.attachments.length === 0) return;
       setBusy("send");
       setError(null);
       setActivePermissionRequest(null);
       try {
-        await api.run.send(handle.id, text);
+        await api.run.send(handle.id, payload.text, payload.attachments);
         setFollowUp("");
       } catch (err) {
         setError(err instanceof Error ? err.message : "send failed");

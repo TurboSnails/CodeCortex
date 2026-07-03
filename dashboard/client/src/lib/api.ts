@@ -9,6 +9,7 @@ import type {
   AlertEvent,
   AlertRule,
   Analytics,
+  Attachment,
   CostResult,
   DashboardEvent,
   ModelPricing,
@@ -466,10 +467,10 @@ export const api = {
       request<RunHandle>(
         `/run/${encodeURIComponent(id)}${opts?.envelopes ? "?envelopes=1" : ""}`,
       ),
-    send: (id: string, text: string) =>
+    send: (id: string, text: string, attachments?: Attachment[]) =>
       request<{ messageId: string }>(`/run/${encodeURIComponent(id)}/message`, {
         method: "POST",
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, attachments }),
       }),
     kill: (id: string) =>
       request<{ ok: true }>(`/run/${encodeURIComponent(id)}`, {

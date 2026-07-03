@@ -889,3 +889,17 @@ export interface ReviewReadyPayload {
   review: string;
   createdAt?: string;
 }
+
+export interface Attachment {
+  id: string;
+  kind: "image";
+  dataUrl: string;
+  mimeType: string;
+  name: string;
+  sizeBytes: number;
+}
+
+export interface SendPayload {
+  text: string;
+  attachments: Attachment[];
+}

@@ -5,6 +5,7 @@ import { api } from "../../lib/api";
 import { useRunChat } from "./useRunChat";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatInput, type ChatSlashCommand } from "./ChatInput";
+import { useChatWorkspaceActions } from "./ChatWorkspaceContext";
 
 const BUILTIN_SLASH_COMMANDS: ChatSlashCommand[] = [
   { name: "help", description: "List available commands", source: "builtin" },
@@ -39,6 +40,7 @@ export function ChatTab({
   className?: string;
 }) {
   const { t } = useTranslation("sessions");
+  const workspaceActions = useChatWorkspaceActions();
   const [slashCommands, setSlashCommands] = useState<ChatSlashCommand[]>(BUILTIN_SLASH_COMMANDS);
 
   useEffect(() => {
@@ -82,8 +84,15 @@ export function ChatTab({
   const onSend = () => {
     const text = followUp.trim();
     if (!text) return;
-    if (canSend) send(text);
+    if (canSend) send({ text, attachments: [] });
     else start(text);
+  };
+
+  const onSendWithPayload = async (payload: import("../../lib/types").SendPayload) => {
+    const hasContent = !!payload.text || payload.attachments.length > 0;
+    if (!hasContent) return;
+    if (canSend) await send(payload);
+    else await start(payload.text);
   };
 
   return (
@@ -119,6 +128,8 @@ export function ChatTab({
         value={followUp}
         onChange={setFollowUp}
         onSend={onSend}
+        onSendWithPayload={onSendWithPayload}
+        onError={(msg) => workspaceActions.addProblem({ source: "chat-attachments", message: msg })}
         onStop={stop}
         disabled={busy === "start" || busy === "send" || busy === "stop"}
         isLive={isLive}

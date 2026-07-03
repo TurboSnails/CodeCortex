@@ -1,0 +1,22 @@
+{
+  "hint": {
+    "send": "发送",
+    "newline": "换行",
+    "forceSend": "强制发送",
+    "commands": "命令",
+    "files": "文件",
+    "recall": "调用历史"
+  },
+  "history.recallPulse": "按 ↑ 调用历史提示",
+  "attachments": {
+    "remove": "移除图片",
+    "limit": "单张图片最大 5MiB",
+    "dropHere": "拖入图片"
+  },
+  "voice": {
+    "start": "开始听写",
+    "stop": "停止听写",
+    "unavailable": "浏览器不支持语音"
+  },
+  "slashHeader": "斜杠命令"
+}
