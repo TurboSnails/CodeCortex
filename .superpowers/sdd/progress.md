@@ -73,12 +73,13 @@ Task 7: complete (commits 312883b..d508fb9, review APPROVED with 3 minors; marke
 Task 8: complete (commits d508fb9..e4b404f, review APPROVED with 2 minors; plugin files patched outside repo, README committed)
 Task 9: deferred to human reviewer (manual end-to-end flows require real Claude Code runs)
 Task 10: complete (tsc 0 errors, client tests 390/390 pass, server tests 497/497 pass, production build succeeds)
-Final review fix wave: complete (commits cb4bc4b..1516151, addresses Important findings: normal-mode marker stripping, workflow step hint, error retry/cancel)
+Final review fix wave 1: complete (commits cb4bc4b..1516151, addresses normal-mode marker stripping, workflow step hint, error retry/cancel)
+Final review fix wave 2: complete (commits 58a2d05..3268238, addresses duplicate error banner, retry payload preservation, disable input during auto-advance)
 ```
 
 ## Final review outstanding
 
-- **Final whole-branch review:** First pass returned Important findings; fix wave applied. Re-review pending.
+- **Final whole-branch review:** First pass returned Important findings; two fix waves applied. Second re-review pending.
 - **Manual end-to-end tests (Task 9):** Deferred to human reviewer.
 
 ## Minor findings carried forward (chat workflow mode selector)
