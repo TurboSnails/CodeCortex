@@ -71,7 +71,15 @@ Task 4: complete (commits a3eefbf..efe91ee, review APPROVED with minor notes)
 Task 5: complete (commits efe91ee..312883b, review APPROVED with 4 minors; 600 ms delay restored and fake-timer leak fixed in final fix commit)
 Task 7: complete (commits 312883b..d508fb9, review APPROVED with 3 minors; marker instructions appended verbatim)
 Task 8: complete (commits d508fb9..e4b404f, review APPROVED with 2 minors; plugin files patched outside repo, README committed)
+Task 9: deferred to human reviewer (manual end-to-end flows require real Claude Code runs)
+Task 10: complete (tsc 0 errors, client tests 390/390 pass, server tests 497/497 pass, production build succeeds)
+Final review fix wave: complete (commits cb4bc4b..1516151, addresses Important findings: normal-mode marker stripping, workflow step hint, error retry/cancel)
 ```
+
+## Final review outstanding
+
+- **Final whole-branch review:** First pass returned Important findings; fix wave applied. Re-review pending.
+- **Manual end-to-end tests (Task 9):** Deferred to human reviewer.
 
 ## Minor findings carried forward (chat workflow mode selector)
 
