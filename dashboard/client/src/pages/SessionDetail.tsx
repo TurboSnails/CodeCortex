@@ -73,6 +73,7 @@ import { ReviewTrigger } from "../components/ReviewTrigger";
 import { ReviewsTab } from "../components/ReviewsTab";
 
 import { ChatTab } from "../components/chat/ChatTab";
+import { ChatWorkspaceProvider } from "../components/chat/ChatWorkspaceContext";
 
 type DetailTab = "agents" | "conversation" | "chat" | "timeline" | "reviews";
 
@@ -966,7 +967,9 @@ export function SessionDetail() {
           className={`min-h-[60vh] ${activeTab === "chat" ? "overflow-hidden md:overflow-visible" : ""}`}
         >
           {session.cwd && (
-            <ChatTab sessionId={session.id} cwd={session.cwd} />
+            <ChatWorkspaceProvider>
+              <ChatTab sessionId={session.id} cwd={session.cwd} />
+            </ChatWorkspaceProvider>
           )}
         </div>
       )}
