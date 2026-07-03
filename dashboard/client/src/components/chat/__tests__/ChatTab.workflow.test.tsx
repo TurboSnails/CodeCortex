@@ -247,89 +247,92 @@ describe("ChatTab workflow mode", () => {
 
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
-    renderChatTab();
+    try {
+      renderChatTab();
 
-    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "stream feature" } });
-    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+      fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: "stream feature" } });
+      fireEvent.click(screen.getByRole("button", { name: /send/i }));
 
-    await waitFor(() =>
-      expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore stream feature" }))
-    );
-    await waitFor(() => expect(busCallback).not.toBeNull());
+      await waitFor(() =>
+        expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore stream feature" }))
+      );
+      await waitFor(() => expect(busCallback).not.toBeNull());
 
-    const streamText =
-      "ok <!-- __WORKFLOW:CONTINUE__ --> and here is a lot more text that keeps the typewriter running for several frames after the marker is already visible";
+      const streamText =
+        "ok <!-- __WORKFLOW:CONTINUE__ --> and here is a lot more text that keeps the typewriter running for several frames after the marker is already visible";
 
-    act(() => {
-      busCallback?.({
-        type: "run_stream",
-        data: {
-          id: "run-1",
-          envelope: { type: "stream_event", event: { type: "message_start", message: { id: "m1" } } } as Envelope,
-        },
+      act(() => {
+        busCallback?.({
+          type: "run_stream",
+          data: {
+            id: "run-1",
+            envelope: { type: "stream_event", event: { type: "message_start", message: { id: "m1" } } } as Envelope,
+          },
+        });
       });
-    });
 
-    act(() => {
-      busCallback?.({
-        type: "run_stream",
-        data: {
-          id: "run-1",
-          envelope: {
-            type: "stream_event",
-            event: {
-              type: "content_block_start",
-              index: 0,
-              message: { id: "m1" },
-              content_block: { type: "text" },
-            },
-          } as Envelope,
-        },
+      act(() => {
+        busCallback?.({
+          type: "run_stream",
+          data: {
+            id: "run-1",
+            envelope: {
+              type: "stream_event",
+              event: {
+                type: "content_block_start",
+                index: 0,
+                message: { id: "m1" },
+                content_block: { type: "text" },
+              },
+            } as Envelope,
+          },
+        });
       });
-    });
 
-    act(() => {
-      busCallback?.({
-        type: "run_stream",
-        data: {
-          id: "run-1",
-          envelope: {
-            type: "stream_event",
-            event: {
-              type: "content_block_delta",
-              index: 0,
-              message: { id: "m1" },
-              delta: { type: "text_delta", text: streamText },
-            },
-          } as Envelope,
-        },
+      act(() => {
+        busCallback?.({
+          type: "run_stream",
+          data: {
+            id: "run-1",
+            envelope: {
+              type: "stream_event",
+              event: {
+                type: "content_block_delta",
+                index: 0,
+                message: { id: "m1" },
+                delta: { type: "text_delta", text: streamText },
+              },
+            } as Envelope,
+          },
+        });
       });
-    });
 
-    act(() => {
-      busCallback?.({
-        type: "run_stream",
-        data: {
-          id: "run-1",
-          envelope: {
-            type: "stream_event",
-            event: { type: "message_stop", message: { id: "m1" } },
-          } as Envelope,
-        },
+      act(() => {
+        busCallback?.({
+          type: "run_stream",
+          data: {
+            id: "run-1",
+            envelope: {
+              type: "stream_event",
+              event: { type: "message_stop", message: { id: "m1" } },
+            } as Envelope,
+          },
+        });
       });
-    });
 
-    // Let the typewriter drip out the remaining text; even though displayEnvelopes
-    // changes on every animation frame, the latestAssistantKey guard must prevent
-    // duplicate auto-advance sends.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(500);
-    });
+      // Let the typewriter drip out the remaining text and then let the 600 ms
+      // auto-advance delay elapse. Even though displayEnvelopes changes on every
+      // animation frame, the latestAssistantKey guard must prevent duplicate
+      // auto-advance sends.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(700);
+      });
 
-    await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []));
-    expect(mockSend).toHaveBeenCalledTimes(1);
-
-    vi.useRealTimers();
+      await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []));
+      expect(mockSend).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -61,6 +61,7 @@ export function ChatTab({
   const [mode, setMode] = useState<ChatMode>("normal");
   const [workflow, setWorkflow] = useState<WorkflowState>({ kind: "idle" });
   const lastHandledKey = useRef<number | null>(null);
+  const autoAdvanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +113,7 @@ export function ChatTab({
   useEffect(() => {
     if (!error || workflow.kind !== "running") return;
     setWorkflow({ kind: "idle" });
-  }, [error, workflow]);
+  }, [error, workflow.kind]);
 
   useEffect(() => {
     if (workflow.kind === "idle") {
@@ -147,17 +148,32 @@ export function ChatTab({
         return;
       }
       const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
-      send(nextCommand).catch((err: unknown) => {
-        setWorkflow({
-          kind: "error",
-          mode: workflow.mode,
-          stepId: workflow.stepId,
-          message: err instanceof Error ? err.message : "auto-advance failed",
+      autoAdvanceTimeout.current = setTimeout(() => {
+        autoAdvanceTimeout.current = null;
+        send(nextCommand).catch((err: unknown) => {
+          setWorkflow({
+            kind: "error",
+            mode: workflow.mode,
+            stepId: workflow.stepId,
+            message: err instanceof Error ? err.message : "auto-advance failed",
+          });
         });
-      });
-      setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId });
+        setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId });
+      }, 600);
     }
-  }, [marker, workflow, send, isComplete, latestAssistantKey]);
+
+    return () => {
+      if (autoAdvanceTimeout.current) {
+        clearTimeout(autoAdvanceTimeout.current);
+        autoAdvanceTimeout.current = null;
+      }
+    };
+    // `marker` is intentionally omitted: it is derived from the same envelopes
+    // that produce `isComplete` and `latestAssistantKey`, but its object identity
+    // changes on every typewriter tick. We only need to act when a complete
+    // assistant reply arrives, which is captured by the key/complete deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflow, send, isComplete, latestAssistantKey]);
 
   const onSend = () => {
     const text = followUp.trim();
