@@ -154,3 +154,8 @@ This skill supports the "actions on a change" model:
 
 - **Can be invoked anytime**: Before all artifacts are done (if tasks exist), after partial implementation, interleaved with other actions
 - **Allows artifact updates**: If implementation reveals design issues, suggest updating artifacts - not phase-locked, work fluidly
+
+When you have finished applying the change, output exactly one workflow marker at the very end of your reply:
+
+- On success: `<!-- __WORKFLOW:CONTINUE__ -->`
+- On failure: `<!-- __WORKFLOW:ERROR:brief reason -->`

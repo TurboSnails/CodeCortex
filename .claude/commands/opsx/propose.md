@@ -104,3 +104,8 @@ After completing all artifacts, summarize:
 - If context is critically unclear, ask the user - but prefer making reasonable decisions to keep momentum
 - If a change with that name already exists, ask if user wants to continue it or create a new one
 - Verify each artifact file exists after writing before proceeding to next
+
+When you have finished generating the proposal artifacts, output exactly one workflow marker at the very end of your reply:
+
+- On success: `<!-- __WORKFLOW:CONTINUE__ -->`
+- On failure: `<!-- __WORKFLOW:ERROR:brief reason -->`

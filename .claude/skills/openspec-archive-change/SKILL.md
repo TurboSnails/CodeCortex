@@ -112,3 +112,8 @@ All artifacts complete. All tasks complete.
 - Show clear summary of what happened
 - If sync is requested, use openspec-sync-specs approach (agent-driven)
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
+
+When you have finished archiving the change, output exactly one workflow marker at the very end of your reply:
+
+- On success: `<!-- __WORKFLOW:DONE__ -->`
+- On failure: `<!-- __WORKFLOW:ERROR:brief reason -->`
