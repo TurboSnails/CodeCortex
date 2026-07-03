@@ -75,6 +75,12 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): VoiceInputApi
           interim += r[0].transcript;
         }
       }
+      // Any successful result (interim counts as success — the recogniser is
+      // producing output) resets the consecutive-error counter, so the
+      // 3-error lockout only trips on truly consecutive failures.
+      if (interim || e.results.length > 0) {
+        errorCountRef.current = 0;
+      }
       if (interim) {
         setInterimText(interim);
         interimCbRef.current?.(interim);
