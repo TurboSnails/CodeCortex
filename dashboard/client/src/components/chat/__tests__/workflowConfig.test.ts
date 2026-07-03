@@ -27,4 +27,10 @@ describe("workflowConfig", () => {
     expect(getNextCommand("openspec", "archive")).toBeNull();
     expect(getNextCommand("superpower", "brainstorm")).toBe("/write-plan");
   });
+
+  it("returns a placeholder string for every mode", () => {
+    CHAT_MODES.forEach((mode) => {
+      expect(typeof getPlaceholder(mode.id)).toBe("string");
+    });
+  });
 });

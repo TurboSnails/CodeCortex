@@ -91,8 +91,8 @@ describe("useWorkflowMarkers", () => {
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "continue" });
     const blocks = (result.current.cleanedEnvelopes[0] as { message?: { content?: { type: string; text?: string }[] } }).message?.content;
-    expect(blocks?.[0].text).toBe("");
-    expect(blocks?.[1].text).toBe("Keep going\n");
+    expect(blocks?.[0]?.text).toBe("");
+    expect(blocks?.[1]?.text).toBe("Keep going\n");
   });
 
   it("passes non-assistant envelopes through unchanged", () => {

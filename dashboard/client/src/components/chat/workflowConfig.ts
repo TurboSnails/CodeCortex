@@ -46,7 +46,9 @@ export function getNextCommand(mode: ChatMode, currentStepId: string): string | 
   const steps = getWorkflowSteps(mode);
   const idx = steps.findIndex((s) => s.id === currentStepId);
   if (idx < 0 || idx >= steps.length - 1) return null;
-  return steps[idx + 1].command;
+  const next = steps[idx + 1];
+  if (!next) return null;
+  return next.command;
 }
 
 export function getPlaceholder(mode: ChatMode): string {
