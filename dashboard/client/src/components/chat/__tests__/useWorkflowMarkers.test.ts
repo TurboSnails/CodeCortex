@@ -3,12 +3,28 @@ import { describe, it, expect } from "vitest";
 import { extractWorkflowMarkers, useWorkflowMarkers } from "../useWorkflowMarkers";
 import type { Envelope } from "../types";
 
+const WORKFLOW_MODE = "openspec" as const;
+
 describe("extractWorkflowMarkers", () => {
   it("extracts CONTINUE and strips the marker", () => {
     const text = "Done exploring.\n<!-- __WORKFLOW:CONTINUE__ -->";
     const result = extractWorkflowMarkers(text);
     expect(result.cleaned).toBe("Done exploring.\n");
     expect(result.marker).toEqual({ kind: "continue" });
+  });
+
+  it("extracts PAUSE and strips the marker", () => {
+    const text = "Taking a break.\n<!-- __WORKFLOW:PAUSE__ -->";
+    const result = extractWorkflowMarkers(text);
+    expect(result.cleaned).toBe("Taking a break.\n");
+    expect(result.marker).toEqual({ kind: "pause" });
+  });
+
+  it("extracts DONE and strips the marker", () => {
+    const text = "All finished.\n<!-- __WORKFLOW:DONE__ -->";
+    const result = extractWorkflowMarkers(text);
+    expect(result.cleaned).toBe("All finished.\n");
+    expect(result.marker).toEqual({ kind: "done" });
   });
 
   it("extracts ERROR with message", () => {
@@ -33,6 +49,20 @@ describe("extractWorkflowMarkers", () => {
 });
 
 describe("useWorkflowMarkers", () => {
+  it("in normal mode, does not strip markers and returns marker null", () => {
+    const envelopes: Envelope[] = [
+      {
+        type: "assistant",
+        message: { content: "Step 1\n<!-- __WORKFLOW:PAUSE__ -->" },
+      },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, "normal"));
+    expect(result.current.marker).toBeNull();
+    const cleaned = (result.current.cleanedEnvelopes[0] as { message?: { content?: string } }).message?.content;
+    expect(cleaned).toBe("Step 1\n<!-- __WORKFLOW:PAUSE__ -->");
+    expect(result.current.cleanedEnvelopes).toBe(envelopes);
+  });
+
   it("handles string content and strips markers", () => {
     const envelopes: Envelope[] = [
       {
@@ -40,7 +70,7 @@ describe("useWorkflowMarkers", () => {
         message: { content: "Step 1\n<!-- __WORKFLOW:PAUSE__ -->" },
       },
     ];
-    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "pause" });
     const cleaned = (result.current.cleanedEnvelopes[0] as { message?: { content?: string } }).message?.content;
     expect(cleaned).toBe("Step 1\n");
@@ -58,7 +88,7 @@ describe("useWorkflowMarkers", () => {
         },
       },
     ];
-    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "continue" });
     const blocks = (result.current.cleanedEnvelopes[0] as { message?: { content?: { type: string; text?: string }[] } }).message?.content;
     expect(blocks?.[0].text).toBe("");
@@ -67,7 +97,7 @@ describe("useWorkflowMarkers", () => {
 
   it("passes non-assistant envelopes through unchanged", () => {
     const envelopes: Envelope[] = [{ type: "user", message: { content: "hello" } }];
-    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toBeNull();
     expect(result.current.cleanedEnvelopes).toEqual(envelopes);
   });
@@ -76,7 +106,7 @@ describe("useWorkflowMarkers", () => {
     const envelopes: Envelope[] = [
       { type: "assistant", message: { content: "Just a normal reply." } },
     ];
-    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "pause" });
   });
 
@@ -85,7 +115,7 @@ describe("useWorkflowMarkers", () => {
       { type: "assistant", message: { content: "Step 1\n<!-- __WORKFLOW:DONE__ -->" } },
       { type: "assistant", message: { content: "Step 2 with no marker." } },
     ];
-    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "pause" });
   });
 
@@ -94,7 +124,7 @@ describe("useWorkflowMarkers", () => {
       { type: "user", message: { content: "hello" } },
       { type: "result", result: "ok" },
     ];
-    const { result } = renderHook(() => useWorkflowMarkers(envelopes));
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toBeNull();
   });
 });

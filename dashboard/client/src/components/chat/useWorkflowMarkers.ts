@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { AssistantMessage, Envelope } from "./types";
+import type { ChatMode } from "./workflowConfig";
 
 export type WorkflowMarker =
   | { kind: "continue" }
@@ -30,11 +31,18 @@ function isAssistantEnvelope(env: Envelope): env is AssistantMessage {
   return (env as { type?: string }).type === "assistant";
 }
 
-export function useWorkflowMarkers(envelopes: Envelope[]): {
+export function useWorkflowMarkers(
+  envelopes: Envelope[],
+  mode: ChatMode
+): {
   marker: WorkflowMarker | null;
   cleanedEnvelopes: Envelope[];
 } {
   return useMemo(() => {
+    if (mode === "normal") {
+      return { marker: null, cleanedEnvelopes: envelopes };
+    }
+
     // The spec treats a complete assistant reply with no marker as PAUSE,
     // so we only consider the latest assistant envelope.
     let latestAssistantIndex = -1;
@@ -80,5 +88,5 @@ export function useWorkflowMarkers(envelopes: Envelope[]): {
     });
 
     return { marker: latestMarker, cleanedEnvelopes };
-  }, [envelopes]);
+  }, [envelopes, mode]);
 }
