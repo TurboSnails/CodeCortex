@@ -1,0 +1,22 @@
+{
+  "hint": {
+    "send": "Send",
+    "newline": "Newline",
+    "forceSend": "Force send",
+    "commands": "Commands",
+    "files": "Files",
+    "recall": "Recall history"
+  },
+  "history.recallPulse": "Press ↑ to recall previous prompts",
+  "attachments": {
+    "remove": "Remove image",
+    "limit": "Max 5MiB per image",
+    "dropHere": "Drop images here"
+  },
+  "voice": {
+    "start": "Start dictation",
+    "stop": "Stop dictation",
+    "unavailable": "Voice not supported"
+  },
+  "slashHeader": "Slash commands"
+}

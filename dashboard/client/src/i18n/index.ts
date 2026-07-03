@@ -47,6 +47,8 @@ import ccConfig_vi from "./locales/vi/ccConfig.json";
 import run_en from "./locales/en/run.json";
 import run_zh from "./locales/zh/run.json";
 import run_vi from "./locales/vi/run.json";
+import chatInput_en from "./locales/en/chat-input.json";
+import chatInput_zh from "./locales/zh/chat-input.json";
 import alerts_en from "./locales/en/alerts.json";
 import alerts_zh from "./locales/zh/alerts.json";
 import alerts_vi from "./locales/vi/alerts.json";
@@ -75,6 +77,7 @@ i18n
         run: run_en,
         alerts: alerts_en,
         splash: splash_en,
+        "chat-input": chatInput_en,
       },
       zh: {
         common: common_zh,
@@ -92,6 +95,7 @@ i18n
         run: run_zh,
         alerts: alerts_zh,
         splash: splash_zh,
+        "chat-input": chatInput_zh,
       },
       vi: {
         common: common_vi,
@@ -130,6 +134,7 @@ i18n
       "run",
       "alerts",
       "splash",
+      "chat-input",
     ],
     defaultNS: "common",
     interpolation: { escapeValue: false },
