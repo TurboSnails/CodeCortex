@@ -8,7 +8,7 @@ import { ChatInput, type ChatSlashCommand } from "./ChatInput";
 import { useChatWorkspaceActions } from "./ChatWorkspaceContext";
 import { ChatModeSelector } from "./ChatModeSelector";
 import { WorkflowProgress } from "./WorkflowProgress";
-import { useWorkflowMarkers, type WorkflowMarker } from "./useWorkflowMarkers";
+import { useWorkflowMarkers } from "./useWorkflowMarkers";
 import {
   getNextCommand,
   getPlaceholder,
@@ -60,7 +60,7 @@ export function ChatTab({
   const [slashCommands, setSlashCommands] = useState<ChatSlashCommand[]>(BUILTIN_SLASH_COMMANDS);
   const [mode, setMode] = useState<ChatMode>("normal");
   const [workflow, setWorkflow] = useState<WorkflowState>({ kind: "idle" });
-  const lastHandledMarker = useRef<WorkflowMarker | null>(null);
+  const lastHandledKey = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,14 +102,26 @@ export function ChatTab({
     isLive,
   } = useRunChat({ sessionId, cwd });
 
-  const { marker, cleanedEnvelopes, isComplete } = useWorkflowMarkers(displayEnvelopes, mode);
+  const { marker, cleanedEnvelopes, isComplete, latestAssistantKey } = useWorkflowMarkers(displayEnvelopes, mode);
 
   const canSend = !!handle?.id && isLive;
 
+  // If an API call (start/send) fails while a workflow is running, return the
+  // workflow to idle. The useRunChat error banner already surfaces the message,
+  // so we avoid duplicating it with a workflow error banner.
   useEffect(() => {
+    if (!error || workflow.kind !== "running") return;
+    setWorkflow({ kind: "idle" });
+  }, [error, workflow]);
+
+  useEffect(() => {
+    if (workflow.kind === "idle") {
+      lastHandledKey.current = null;
+      return;
+    }
     if (!marker || workflow.kind !== "running" || !isComplete) return;
-    if (lastHandledMarker.current === marker) return;
-    lastHandledMarker.current = marker;
+    if (lastHandledKey.current === latestAssistantKey) return;
+    lastHandledKey.current = latestAssistantKey;
 
     if (marker.kind === "error") {
       setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: marker.message });
@@ -145,7 +157,7 @@ export function ChatTab({
       });
       setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId });
     }
-  }, [marker, workflow, send, isComplete]);
+  }, [marker, workflow, send, isComplete, latestAssistantKey]);
 
   const onSend = () => {
     const text = followUp.trim();

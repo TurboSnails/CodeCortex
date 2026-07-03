@@ -59,6 +59,7 @@ describe("useWorkflowMarkers", () => {
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, "normal"));
     expect(result.current.marker).toBeNull();
     expect(result.current.isComplete).toBe(true);
+    expect(result.current.latestAssistantKey).toBeNull();
     const cleaned = (result.current.cleanedEnvelopes[0] as { message?: { content?: string } }).message?.content;
     expect(cleaned).toBe("Step 1\n<!-- __WORKFLOW:PAUSE__ -->");
     expect(result.current.cleanedEnvelopes).toBe(envelopes);
@@ -73,6 +74,7 @@ describe("useWorkflowMarkers", () => {
     ];
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "pause" });
+    expect(result.current.latestAssistantKey).toBe(0);
     const cleaned = (result.current.cleanedEnvelopes[0] as { message?: { content?: string } }).message?.content;
     expect(cleaned).toBe("Step 1\n");
   });
@@ -100,6 +102,7 @@ describe("useWorkflowMarkers", () => {
     const envelopes: Envelope[] = [{ type: "user", message: { content: "hello" } }];
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toBeNull();
+    expect(result.current.latestAssistantKey).toBeNull();
     expect(result.current.cleanedEnvelopes).toEqual(envelopes);
   });
 
@@ -109,6 +112,7 @@ describe("useWorkflowMarkers", () => {
     ];
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "pause" });
+    expect(result.current.latestAssistantKey).toBe(0);
   });
 
   it("ignores a previous marker when the latest assistant envelope has no marker", () => {
@@ -118,6 +122,7 @@ describe("useWorkflowMarkers", () => {
     ];
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.marker).toEqual({ kind: "pause" });
+    expect(result.current.latestAssistantKey).toBe(1);
   });
 
   it("returns isComplete true for a complete assistant envelope", () => {
@@ -143,6 +148,17 @@ describe("useWorkflowMarkers", () => {
     ];
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
     expect(result.current.isComplete).toBe(true);
+  });
+
+  it("returns the index of the latest assistant envelope as latestAssistantKey", () => {
+    const envelopes: Envelope[] = [
+      { type: "user", message: { content: "hello" } },
+      { type: "assistant", message: { content: "Step 1\n<!-- __WORKFLOW:CONTINUE__ -->" } },
+      { type: "assistant", message: { content: "Step 2\n<!-- __WORKFLOW:DONE__ -->" } },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
+    expect(result.current.latestAssistantKey).toBe(2);
+    expect(result.current.marker).toEqual({ kind: "done" });
   });
 
   it("returns isComplete false when there are no assistant envelopes", () => {

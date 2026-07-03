@@ -38,10 +38,11 @@ export function useWorkflowMarkers(
   marker: WorkflowMarker | null;
   cleanedEnvelopes: Envelope[];
   isComplete: boolean;
+  latestAssistantKey: number | null;
 } {
   return useMemo(() => {
     if (mode === "normal") {
-      return { marker: null, cleanedEnvelopes: envelopes, isComplete: true };
+      return { marker: null, cleanedEnvelopes: envelopes, isComplete: true, latestAssistantKey: null };
     }
 
     // The spec treats a complete assistant reply with no marker as PAUSE,
@@ -93,6 +94,8 @@ export function useWorkflowMarkers(
     const latestAssistantMessage = latestAssistant?.message as { _streaming?: boolean } | undefined;
     const isComplete = latestAssistant != null && latestAssistantMessage?._streaming !== true;
 
-    return { marker: latestMarker, cleanedEnvelopes, isComplete };
+    const latestAssistantKey = latestAssistantIndex >= 0 ? latestAssistantIndex : null;
+
+    return { marker: latestMarker, cleanedEnvelopes, isComplete, latestAssistantKey };
   }, [envelopes, mode]);
 }

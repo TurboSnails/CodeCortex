@@ -221,4 +221,115 @@ describe("ChatTab workflow mode", () => {
     await waitFor(() => expect(mockKill).toHaveBeenCalledWith("run-1"));
     expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument();
   });
+
+  it("returns the workflow to idle when the first-workflow start fails", async () => {
+    mockStart.mockRejectedValueOnce(new Error("backend down"));
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "fail me" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() =>
+      expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore fail me" }))
+    );
+    // The useRunChat error banner surfaces the failure; the workflow must not
+    // remain in the running state (no progress banner should be shown).
+    await waitFor(() => expect(screen.getByText("backend down")).toBeInTheDocument());
+    expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument();
+    expect(mockSend).not.toHaveBeenCalled();
+  });
+
+  it("auto-advances exactly once after a streamed message with a CONTINUE marker ends", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "stream feature" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() =>
+      expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore stream feature" }))
+    );
+    await waitFor(() => expect(busCallback).not.toBeNull());
+
+    const streamText =
+      "ok <!-- __WORKFLOW:CONTINUE__ --> and here is a lot more text that keeps the typewriter running for several frames after the marker is already visible";
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: { type: "stream_event", event: { type: "message_start", message: { id: "m1" } } } as Envelope,
+        },
+      });
+    });
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: {
+            type: "stream_event",
+            event: {
+              type: "content_block_start",
+              index: 0,
+              message: { id: "m1" },
+              content_block: { type: "text" },
+            },
+          } as Envelope,
+        },
+      });
+    });
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: {
+            type: "stream_event",
+            event: {
+              type: "content_block_delta",
+              index: 0,
+              message: { id: "m1" },
+              delta: { type: "text_delta", text: streamText },
+            },
+          } as Envelope,
+        },
+      });
+    });
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: {
+            type: "stream_event",
+            event: { type: "message_stop", message: { id: "m1" } },
+          } as Envelope,
+        },
+      });
+    });
+
+    // Let the typewriter drip out the remaining text; even though displayEnvelopes
+    // changes on every animation frame, the latestAssistantKey guard must prevent
+    // duplicate auto-advance sends.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+
+    await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []));
+    expect(mockSend).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
 });
