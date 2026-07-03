@@ -222,7 +222,7 @@ describe("ChatTab workflow mode", () => {
     expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument();
   });
 
-  it("returns the workflow to idle when the first-workflow start fails", async () => {
+  it("enters an error state with Retry/Cancel when the first-workflow start fails", async () => {
     mockStart.mockRejectedValueOnce(new Error("backend down"));
 
     renderChatTab();
@@ -234,9 +234,11 @@ describe("ChatTab workflow mode", () => {
     await waitFor(() =>
       expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore fail me" }))
     );
-    // The useRunChat error banner surfaces the failure; the workflow must not
-    // remain in the running state (no progress banner should be shown).
-    await waitFor(() => expect(screen.getByText("backend down")).toBeInTheDocument());
+    // The useRunChat error banner surfaces the failure; the workflow error banner
+    // offers Retry / Cancel and the progress banner is not shown.
+    await waitFor(() => expect(screen.getAllByText("backend down").length).toBeGreaterThanOrEqual(1));
+    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
     expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument();
     expect(mockSend).not.toHaveBeenCalled();
   });

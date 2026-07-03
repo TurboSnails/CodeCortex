@@ -49,7 +49,7 @@ describe("extractWorkflowMarkers", () => {
 });
 
 describe("useWorkflowMarkers", () => {
-  it("in normal mode, does not strip markers, returns marker null, and isComplete true", () => {
+  it("in normal mode, strips markers, returns marker null, and preserves isComplete/latestAssistantKey", () => {
     const envelopes: Envelope[] = [
       {
         type: "assistant",
@@ -61,8 +61,7 @@ describe("useWorkflowMarkers", () => {
     expect(result.current.isComplete).toBe(true);
     expect(result.current.latestAssistantKey).toBeNull();
     const cleaned = (result.current.cleanedEnvelopes[0] as { message?: { content?: string } }).message?.content;
-    expect(cleaned).toBe("Step 1\n<!-- __WORKFLOW:PAUSE__ -->");
-    expect(result.current.cleanedEnvelopes).toBe(envelopes);
+    expect(cleaned).toBe("Step 1\n");
   });
 
   it("handles string content and strips markers", () => {

@@ -41,10 +41,6 @@ export function useWorkflowMarkers(
   latestAssistantKey: number | null;
 } {
   return useMemo(() => {
-    if (mode === "normal") {
-      return { marker: null, cleanedEnvelopes: envelopes, isComplete: true, latestAssistantKey: null };
-    }
-
     // The spec treats a complete assistant reply with no marker as PAUSE,
     // so we only consider the latest assistant envelope.
     let latestAssistantIndex = -1;
@@ -61,7 +57,7 @@ export function useWorkflowMarkers(
 
       if (typeof content === "string") {
         const { cleaned, marker } = extractWorkflowMarkers(content);
-        if (isLatestAssistant) {
+        if (isLatestAssistant && mode !== "normal") {
           latestMarker = marker ?? { kind: "pause" };
         }
         return { ...env, message: { ...env.message, content: cleaned } };
@@ -77,17 +73,21 @@ export function useWorkflowMarkers(
           }
           return block;
         });
-        if (isLatestAssistant) {
+        if (isLatestAssistant && mode !== "normal") {
           latestMarker = envelopeMarker ?? { kind: "pause" };
         }
         return { ...env, message: { ...env.message, content: nextContent } };
       }
 
-      if (isLatestAssistant) {
+      if (isLatestAssistant && mode !== "normal") {
         latestMarker = { kind: "pause" };
       }
       return env;
     });
+
+    if (mode === "normal") {
+      return { marker: null, cleanedEnvelopes, isComplete: true, latestAssistantKey: null };
+    }
 
     const latestAssistant =
       latestAssistantIndex >= 0 ? (envelopes[latestAssistantIndex] as AssistantMessage) : null;

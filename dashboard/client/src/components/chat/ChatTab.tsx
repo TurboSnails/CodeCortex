@@ -62,6 +62,9 @@ export function ChatTab({
   const [workflow, setWorkflow] = useState<WorkflowState>({ kind: "idle" });
   const lastHandledKey = useRef<number | null>(null);
   const autoAdvanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingAutoAdvance, setPendingAutoAdvance] = useState<{ command: string; stepId: string } | null>(null);
+  const lastWorkflowInputRef = useRef<string>("");
+  const lastWorkflowActionRef = useRef<"start" | "send" | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,12 +110,12 @@ export function ChatTab({
 
   const canSend = !!handle?.id && isLive;
 
-  // If an API call (start/send) fails while a workflow is running, return the
-  // workflow to idle. The useRunChat error banner already surfaces the message,
-  // so we avoid duplicating it with a workflow error banner.
+  // If an API call (start/send) fails while a workflow is running, transition to
+  // an error state so the user can retry or cancel. The useRunChat error banner
+  // still surfaces the message above this one.
   useEffect(() => {
     if (!error || workflow.kind !== "running") return;
-    setWorkflow({ kind: "idle" });
+    setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: error });
   }, [error, workflow.kind]);
 
   useEffect(() => {
@@ -148,15 +151,13 @@ export function ChatTab({
         return;
       }
       const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
+      setPendingAutoAdvance({ command: nextCommand, stepId: nextStepId });
       autoAdvanceTimeout.current = setTimeout(() => {
         autoAdvanceTimeout.current = null;
-        send(nextCommand).catch((err: unknown) => {
-          setWorkflow({
-            kind: "error",
-            mode: workflow.mode,
-            stepId: workflow.stepId,
-            message: err instanceof Error ? err.message : "auto-advance failed",
-          });
+        setPendingAutoAdvance(null);
+        lastWorkflowActionRef.current = "send";
+        send(nextCommand).catch(() => {
+          // Error is surfaced via useRunChat.error and handled by the error effect above.
         });
         setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId });
       }, 600);
@@ -167,6 +168,7 @@ export function ChatTab({
         clearTimeout(autoAdvanceTimeout.current);
         autoAdvanceTimeout.current = null;
       }
+      setPendingAutoAdvance(null);
     };
     // `marker` is intentionally omitted: it is derived from the same envelopes
     // that produce `isComplete` and `latestAssistantKey`, but its object identity
@@ -193,12 +195,16 @@ export function ChatTab({
       // TODO: start() only accepts a string prompt, so attachments from the
       // first workflow send are dropped. Extend start() to accept a SendPayload
       // when we want full attachment support here.
+      lastWorkflowInputRef.current = payload.text;
+      lastWorkflowActionRef.current = "start";
       setWorkflow({ kind: "running", mode, stepId: firstStep.id });
       await start(combined);
       return;
     }
 
     if (workflow.kind === "paused") {
+      lastWorkflowInputRef.current = payload.text;
+      lastWorkflowActionRef.current = "send";
       setWorkflow((w) => (w.kind === "paused" ? { ...w, kind: "running" } : w));
       await send(payload);
       return;
@@ -206,6 +212,29 @@ export function ChatTab({
 
     if (canSend) await send(payload);
     else await start(payload.text);
+  };
+
+  const handleRetry = async () => {
+    if (workflow.kind !== "error") return;
+    setWorkflow({ kind: "running", mode: workflow.mode, stepId: workflow.stepId });
+    if (lastWorkflowActionRef.current === "start") {
+      const step = getWorkflowSteps(workflow.mode).find((s) => s.id === workflow.stepId);
+      if (!step) return;
+      const combined = `${step.command} ${lastWorkflowInputRef.current}`.trim();
+      lastWorkflowActionRef.current = "start";
+      await start(combined);
+    } else {
+      const step = getWorkflowSteps(workflow.mode).find((s) => s.id === workflow.stepId);
+      if (!step) return;
+      lastWorkflowActionRef.current = "send";
+      await send(step.command);
+    }
+  };
+
+  const handleCancel = () => {
+    void stop();
+    setWorkflow({ kind: "idle" });
+    setMode("normal");
   };
 
   return (
@@ -224,7 +253,21 @@ export function ChatTab({
       {workflow.kind === "error" && (
         <div className="px-4 py-2.5 border-b border-red-500/20 bg-red-500/10 flex items-center gap-2 text-sm text-red-200">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          {workflow.message}
+          <span className="flex-1">{workflow.message}</span>
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium"
+          >
+            Retry
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-100 text-xs font-medium"
+          >
+            Cancel
+          </button>
         </div>
       )}
 
@@ -259,6 +302,20 @@ export function ChatTab({
             setMode("normal");
           }}
         />
+      )}
+
+      {workflow.kind === "paused" && (
+        <div className="px-4 py-2 border-b border-amber-500/20 bg-amber-500/10 text-xs text-amber-200">
+          {/* TODO(i18n): hardcoded Chinese string per brief; replace with i18n key when available. */}
+          当前步骤需要你的输入，请继续描述需求或回答问题。
+        </div>
+      )}
+
+      {workflow.kind === "running" && pendingAutoAdvance && (
+        <div className="px-4 py-2 border-b border-blue-500/20 bg-blue-500/10 text-xs text-blue-200">
+          {/* TODO(i18n): hardcoded Chinese string per brief; replace with i18n key when available. */}
+          当前步骤已完成，下一步将自动执行 {pendingAutoAdvance.command}。
+        </div>
       )}
 
       <ChatMessageList
