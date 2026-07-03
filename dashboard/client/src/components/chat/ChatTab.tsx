@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, Play } from "lucide-react";
 import { api } from "../../lib/api";
@@ -6,6 +6,15 @@ import { useRunChat } from "./useRunChat";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatInput, type ChatSlashCommand } from "./ChatInput";
 import { useChatWorkspaceActions } from "./ChatWorkspaceContext";
+import { ChatModeSelector } from "./ChatModeSelector";
+import { WorkflowProgress } from "./WorkflowProgress";
+import { useWorkflowMarkers } from "./useWorkflowMarkers";
+import {
+  getNextCommand,
+  getPlaceholder,
+  getWorkflowSteps,
+  type ChatMode,
+} from "./workflowConfig";
 
 const BUILTIN_SLASH_COMMANDS: ChatSlashCommand[] = [
   { name: "help", description: "List available commands", source: "builtin" },
@@ -30,6 +39,13 @@ const BUILTIN_SLASH_COMMANDS: ChatSlashCommand[] = [
   { name: "output-style", description: "Change output style", source: "builtin" },
 ];
 
+type WorkflowState =
+  | { kind: "idle" }
+  | { kind: "running"; mode: ChatMode; stepId: string; autoContinue: boolean }
+  | { kind: "paused"; mode: ChatMode; stepId: string; reason: string }
+  | { kind: "error"; mode: ChatMode; stepId: string; message: string }
+  | { kind: "done"; mode: ChatMode };
+
 export function ChatTab({
   sessionId,
   cwd,
@@ -42,6 +58,8 @@ export function ChatTab({
   const { t } = useTranslation("sessions");
   const workspaceActions = useChatWorkspaceActions();
   const [slashCommands, setSlashCommands] = useState<ChatSlashCommand[]>(BUILTIN_SLASH_COMMANDS);
+  const [mode, setMode] = useState<ChatMode>("normal");
+  const [workflow, setWorkflow] = useState<WorkflowState>({ kind: "idle" });
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +101,50 @@ export function ChatTab({
     isLive,
   } = useRunChat({ sessionId, cwd });
 
+  const { marker, cleanedEnvelopes } = useWorkflowMarkers(displayEnvelopes, mode);
+
   const canSend = !!handle?.id && isLive;
+
+  const autoAdvanceRef = useRef(false);
+
+  useEffect(() => {
+    if (!marker || workflow.kind !== "running") return;
+
+    if (marker.kind === "error") {
+      setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: marker.message });
+      return;
+    }
+
+    if (marker.kind === "done") {
+      setWorkflow({ kind: "done", mode: workflow.mode });
+      setMode("normal");
+      return;
+    }
+
+    if (marker.kind === "pause") {
+      setWorkflow({ kind: "paused", mode: workflow.mode, stepId: workflow.stepId, reason: "Waiting for user input" });
+      return;
+    }
+
+    if (marker.kind === "continue") {
+      const nextCommand = getNextCommand(workflow.mode, workflow.stepId);
+      if (!nextCommand) {
+        setWorkflow({ kind: "done", mode: workflow.mode });
+        setMode("normal");
+        return;
+      }
+      autoAdvanceRef.current = true;
+      const timer = setTimeout(() => {
+        if (!autoAdvanceRef.current) return;
+        const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
+        send(nextCommand).catch(() => {});
+        setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId, autoContinue: true });
+      }, 600);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [marker, workflow.kind, workflow.mode, workflow.stepId, send]);
 
   const onSend = () => {
     const text = followUp.trim();
@@ -95,6 +156,22 @@ export function ChatTab({
   const onSendWithPayload = async (payload: import("../../lib/types").SendPayload) => {
     const hasContent = !!payload.text || payload.attachments.length > 0;
     if (!hasContent) return;
+
+    if (workflow.kind === "idle" && mode !== "normal") {
+      const firstStep = getWorkflowSteps(mode)[0];
+      if (!firstStep) return;
+      const combined = `${firstStep.command} ${payload.text}`.trim();
+      setWorkflow({ kind: "running", mode, stepId: firstStep.id, autoContinue: true });
+      await start(combined);
+      return;
+    }
+
+    if (workflow.kind === "paused") {
+      setWorkflow((w) => (w.kind === "paused" ? { ...w, kind: "running", autoContinue: true } : w));
+      await send(payload);
+      return;
+    }
+
     if (canSend) await send(payload);
     else await start(payload.text);
   };
@@ -119,8 +196,33 @@ export function ChatTab({
         </div>
       )}
 
+      <ChatModeSelector
+        mode={mode}
+        onChange={(next) => {
+          if (workflow.kind !== "idle") {
+            const ok = window.confirm("当前工作流尚未完成，切换模式将取消进度。是否继续？");
+            if (!ok) return;
+            void stop();
+            setWorkflow({ kind: "idle" });
+          }
+          setMode(next);
+        }}
+        disabled={workflow.kind === "running"}
+      />
+      {workflow.kind !== "idle" && workflow.kind !== "done" && (
+        <WorkflowProgress
+          mode={workflow.mode}
+          currentStepId={workflow.stepId}
+          onCancel={() => {
+            void stop();
+            setWorkflow({ kind: "idle" });
+            setMode("normal");
+          }}
+        />
+      )}
+
       <ChatMessageList
-        envelopes={displayEnvelopes}
+        envelopes={cleanedEnvelopes}
         isLive={isLive && !activePermissionRequest}
         activePermissionRequest={activePermissionRequest}
         onApprovePermission={() => respondToPermission(true)}
@@ -137,7 +239,7 @@ export function ChatTab({
         onStop={stop}
         disabled={busy === "start" || busy === "send" || busy === "stop"}
         isLive={isLive}
-        placeholder={canSend ? t("chat.followUpPlaceholder") : t("chat.startPlaceholder")}
+        placeholder={getPlaceholder(mode)}
         slashCommands={slashCommands}
         fileCwd={cwd}
       />

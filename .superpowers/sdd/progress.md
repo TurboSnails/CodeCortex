@@ -50,3 +50,21 @@ Task 15: complete (commits 497d6fd..02a695c, review APPROVED with 2 minor inform
   - `0448a9b` — fix(chat-input): wrap SessionDetail ChatTab in ChatWorkspaceProvider (regression fix after Important #2)
 - **Final cross-cutting state (HEAD `0448a9b`):** 38 test files / 354 tests passing; `tsc --noEmit` exit 0; lint not configured (declared per `dashboard/CLAUDE.md`); manual e2e E1–E10 still deferred to human reviewer.
 - **Status: READY FOR PR.** Open the PR; reviewer runs the 10 manual e2e scenarios in real Chrome and mobile Safari (or simulator), then merges.
+
+---
+
+# SDD Progress — Chat Workflow Mode Selector
+
+**Branch:** `master`
+**BranchBase:** `a308a2c` (commit before SDD execution begins)
+**Plan:** `docs/superpowers/plans/2026-07-04-chat-workflow-modes.md`
+**Spec:** `docs/superpowers/specs/2026-07-04-chat-workflow-modes-design.md`
+
+Task ledger — append one line per clean task:
+
+```
+Task 0: complete (commits a308a2c..dd70842, review clean)
+Task 1: complete (commits dd70842..0a41d0f, review APPROVED after 2 fix rounds)
+Task 2: complete (commits 0a41d0f..9ef4be4, review clean)
+Task 3: complete (commits 9ef4be4..a3eefbf, review APPROVED with minor radio-group a11y notes)
+Task 4: complete (commits a3eefbf..efe91ee, review APPROVED with minor notes)
