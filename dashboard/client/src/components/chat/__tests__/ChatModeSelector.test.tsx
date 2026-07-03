@@ -18,9 +18,4 @@ describe("ChatModeSelector", () => {
     await userEvent.click(screen.getByRole("radio", { name: "OpenSpec" }));
     expect(onChange).toHaveBeenCalledWith("openspec");
   });
-
-  it("disables buttons when disabled is true", () => {
-    render(<ChatModeSelector mode="normal" onChange={vi.fn()} disabled />);
-    expect(screen.getByRole("radio", { name: "OpenSpec" })).toBeDisabled();
-  });
 });

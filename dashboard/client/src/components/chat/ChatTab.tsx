@@ -120,6 +120,9 @@ export function ChatTab({
 
   const { marker, cleanedEnvelopes, isComplete, latestAssistantKey } = useWorkflowMarkers(displayEnvelopes, mode);
 
+  const activePermissionRequestRef = useRef(activePermissionRequest);
+  activePermissionRequestRef.current = activePermissionRequest;
+
   const canSend = !!handle?.id && isLive;
 
   // If an API call (start/send) fails while a workflow is running, transition to
@@ -141,12 +144,14 @@ export function ChatTab({
 
     if (marker.kind === "error") {
       setIsAutoAdvancePending(false);
+      setPendingAutoAdvance(null);
       setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: marker.message });
       return;
     }
 
     if (marker.kind === "done") {
       setIsAutoAdvancePending(false);
+      setPendingAutoAdvance(null);
       setWorkflow({ kind: "done", mode: workflow.mode });
       setMode("normal");
       return;
@@ -154,6 +159,7 @@ export function ChatTab({
 
     if (marker.kind === "pause") {
       setIsAutoAdvancePending(false);
+      setPendingAutoAdvance(null);
       setWorkflow({ kind: "paused", mode: workflow.mode, stepId: workflow.stepId, reason: "Waiting for user input" });
       return;
     }
@@ -171,6 +177,10 @@ export function ChatTab({
       setIsAutoAdvancePending(true);
       autoAdvanceTimeout.current = setTimeout(() => {
         autoAdvanceTimeout.current = null;
+        if (activePermissionRequestRef.current) {
+          setWorkflow({ kind: "paused", mode: workflow.mode, stepId: workflow.stepId, reason: "Waiting for permission approval" });
+          return;
+        }
         setPendingAutoAdvance(null);
         setIsAutoAdvancePending(false);
         lastWorkflowActionRef.current = "send";
@@ -186,9 +196,9 @@ export function ChatTab({
       if (autoAdvanceTimeout.current) {
         clearTimeout(autoAdvanceTimeout.current);
         autoAdvanceTimeout.current = null;
+        setPendingAutoAdvance(null);
+        setIsAutoAdvancePending(false);
       }
-      setPendingAutoAdvance(null);
-      setIsAutoAdvancePending(false);
     };
     // `marker` is intentionally omitted: it is derived from the same envelopes
     // that produce `isComplete` and `latestAssistantKey`, but its object identity
@@ -197,11 +207,29 @@ export function ChatTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workflow, send, isComplete, latestAssistantKey]);
 
+  // Resume a workflow auto-advance that was paused by an active permission request.
+  useEffect(() => {
+    if (!pendingAutoAdvance) return;
+    if (workflow.kind !== "paused" || workflow.reason !== "Waiting for permission approval") return;
+    if (activePermissionRequest) return;
+
+    const { command, stepId } = pendingAutoAdvance;
+    setPendingAutoAdvance(null);
+    setIsAutoAdvancePending(false);
+    lastWorkflowActionRef.current = "send";
+    lastWorkflowPayloadRef.current = { text: command, attachments: [] };
+    send(command).catch(() => {
+      // Error is surfaced via useRunChat.error and handled by the error effect above.
+    });
+    setWorkflow({ kind: "running", mode, stepId });
+    // `workflow` is needed so the effect runs when the paused state is entered.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePermissionRequest, pendingAutoAdvance, workflow, send, mode]);
+
   const onSend = () => {
     const text = followUp.trim();
     if (!text) return;
-    if (canSend) send({ text, attachments: [] });
-    else start(text);
+    void onSendWithPayload({ text, attachments: [] });
   };
 
   const onSendWithPayload = async (payload: import("../../lib/types").SendPayload) => {

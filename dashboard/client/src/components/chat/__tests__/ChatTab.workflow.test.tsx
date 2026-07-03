@@ -38,6 +38,7 @@ vi.mock("../../../lib/eventBus", () => ({
 const mockStart = vi.mocked(api.run.start);
 const mockSend = vi.mocked(api.run.send);
 const mockKill = vi.mocked(api.run.kill);
+const mockRespondToPermission = vi.mocked(api.run.respondToPermission);
 
 function renderChatTab(props = { sessionId: "sess-1", cwd: "/tmp" }) {
   return render(
@@ -405,6 +406,56 @@ describe("ChatTab workflow mode", () => {
       });
 
       await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("pauses auto-advance while a permission request is active and resumes after approval", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
+    mockRespondToPermission.mockResolvedValueOnce({ ok: true });
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderChatTab();
+
+      fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: "build feature" } });
+      fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+      await waitFor(() =>
+        expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore build feature" }))
+      );
+      await waitFor(() => expect(busCallback).not.toBeNull());
+
+      publishEnvelope("run-1", {
+        type: "assistant",
+        message: { content: [{ type: "text", text: "ok <!-- __WORKFLOW:CONTINUE__ -->" }] },
+      });
+
+      // Permission request arrives before the 600 ms auto-advance timer fires.
+      publishEnvelope("run-1", {
+        type: "permission_request",
+        id: "perm-1",
+        tool_name: "Bash",
+        description: "Allow bash command?",
+      });
+
+      const approveButtons = screen.getAllByRole("button", { name: /approve/i });
+      expect(approveButtons[0]).toBeInTheDocument();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(700);
+      });
+
+      expect(mockSend).not.toHaveBeenCalled();
+
+      fireEvent.click(approveButtons[0]!);
+
+      await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []));
+      expect(mockSend).toHaveBeenCalledTimes(1);
+      expect(screen.getByText("propose")).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }

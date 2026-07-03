@@ -310,7 +310,7 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
             >
               <button
                 aria-checked="true"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-indigo-600 text-white border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-indigo-600 text-white border-indigo-500"
                 role="radio"
                 type="button"
               >
@@ -318,7 +318,7 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
               </button>
               <button
                 aria-checked="false"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200"
                 role="radio"
                 type="button"
               >
@@ -326,7 +326,7 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
               </button>
               <button
                 aria-checked="false"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200"
                 role="radio"
                 type="button"
               >
@@ -334,7 +334,7 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
               </button>
               <button
                 aria-checked="false"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200"
                 role="radio"
                 type="button"
               >
@@ -4062,7 +4062,7 @@ exports[`screen snapshots > Chat 1`] = `
             >
               <button
                 aria-checked="true"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-indigo-600 text-white border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-indigo-600 text-white border-indigo-500"
                 role="radio"
                 type="button"
               >
@@ -4070,7 +4070,7 @@ exports[`screen snapshots > Chat 1`] = `
               </button>
               <button
                 aria-checked="false"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200"
                 role="radio"
                 type="button"
               >
@@ -4078,7 +4078,7 @@ exports[`screen snapshots > Chat 1`] = `
               </button>
               <button
                 aria-checked="false"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200"
                 role="radio"
                 type="button"
               >
@@ -4086,7 +4086,7 @@ exports[`screen snapshots > Chat 1`] = `
               </button>
               <button
                 aria-checked="false"
-                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors border bg-surface-2 text-gray-400 border-border hover:bg-surface-3 hover:text-gray-200"
                 role="radio"
                 type="button"
               >

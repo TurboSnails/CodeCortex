@@ -75,16 +75,17 @@ Task 9: deferred to human reviewer (manual end-to-end flows require real Claude 
 Task 10: complete (tsc 0 errors, client tests 390/390 pass, server tests 497/497 pass, production build succeeds)
 Final review fix wave 1: complete (commits cb4bc4b..1516151, addresses normal-mode marker stripping, workflow step hint, error retry/cancel)
 Final review fix wave 2: complete (commits 58a2d05..3268238, addresses duplicate error banner, retry payload preservation, disable input during auto-advance)
+Final review fix wave 3: complete (commit a663ddf, addresses mode-switch confirmation, strict marker regex, no-marker default-to-PAUSE integration test)
 ```
 
 ## Final review outstanding
 
-- **Final whole-branch review:** First pass returned Important findings; two fix waves applied. Second re-review pending.
+- **Final whole-branch review:** First pass returned Important findings; three fix waves applied. Final re-review pending.
 - **Manual end-to-end tests (Task 9):** Deferred to human reviewer.
 
 ## Minor findings carried forward (chat workflow mode selector)
 
-- T5-minor-1: Missing integration test for no-marker default-to-PAUSE in `ChatTab.workflow.test.tsx`. Hook-level coverage exists; deferred to final review.
+- T5-minor-1: FIXED — missing integration test for no-marker default-to-PAUSE in `ChatTab.workflow.test.tsx` was added in final review fix wave 3.
 - T5-minor-2: `react-hooks/exhaustive-deps` disable in `ChatTab.tsx` marker effect is intentional because `marker` identity changes each typewriter tick. Documented in code; consider a ref-based comparison if refactor later.
-- T5-minor-3: Duplicated error banner markup between `useRunChat` error and workflow error. Could extract a small `ErrorBanner` component at final review.
+- T5-minor-3: FIXED — duplicated error banner markup was extracted into a small `ErrorBanner` component in `ChatTab.tsx` during final review fix wave 1/2.
 - T5-minor-4: Hardcoded Chinese mode-switch confirmation matches the brief and has a `// TODO(i18n)` comment.
