@@ -488,3 +488,81 @@ Result: **43 test files passed, 390 tests passed**.
 ```
 1516151 fix(chat): final review fixes for workflow mode selector
 ```
+
+---
+
+## Second Final Whole-Branch Review Fix-Up
+
+Date: 2026-07-04
+
+Addressed the three Important findings from the second final whole-branch review of the chat workflow mode selector.
+
+Branch: `fix/chat-workflow-review-findings`
+
+### Changes Made
+
+#### 1. Suppress duplicate error banners
+
+File: `dashboard/client/src/components/chat/ChatTab.tsx`
+
+- Changed the generic `useRunChat` error banner condition from `{error && (...)}` to `{error && workflow.kind !== "error" && (...)}`.
+- When `start()` or `send()` fails, only the workflow error banner (with Retry/Cancel) is shown; the generic banner is hidden.
+
+#### 2. Preserve full SendPayload for retry
+
+File: `dashboard/client/src/components/chat/ChatTab.tsx`
+
+- Replaced `lastWorkflowInputRef` (which stored only the user's text) with `lastWorkflowPayloadRef` storing the full `SendPayload`.
+- Captures the payload before each workflow action:
+  - First-workflow `start(combined)` stores `{ text: combined, attachments: [] }`.
+  - Paused-workflow `send(payload)` stores the original `payload`.
+  - Auto-advance `send(nextCommand)` stores `{ text: nextCommand, attachments: [] }`.
+- `handleRetry` uses the stored payload:
+  - For `start` failures, re-runs `start(lastWorkflowPayloadRef.current.text)`.
+  - For `send` failures, re-runs `send(lastWorkflowPayloadRef.current)`.
+  - Falls back to `send(currentStep.command)` if no payload is stored.
+
+#### 3. Disable user input during auto-advance
+
+File: `dashboard/client/src/components/chat/ChatTab.tsx`
+
+- Added `isAutoAdvancePending` state, set `true` when the 600 ms `CONTINUE` timer is scheduled and `false` when it fires or is cleaned up.
+- Also cleared on transitions to `error`, `done`, `paused`, or `idle` (cancel / mode switch).
+- Passed the pending state to `ChatInput.disabled`:
+  ```tsx
+  disabled={busy === "start" || busy === "send" || busy === "stop" || isAutoAdvancePending}
+  ```
+
+#### 4. Test updates
+
+- `dashboard/client/src/components/chat/__tests__/ChatTab.workflow.test.tsx`
+  - Updated the first-workflow start-failure test to assert exactly one error banner is rendered (generic banner suppressed).
+  - Added a test that retries a paused user follow-up and verifies the original follow-up text is re-sent.
+  - Added a test that verifies `ChatInput` is disabled after a `CONTINUE` marker and before the 600 ms timer fires.
+
+### Files Changed
+
+- `dashboard/client/src/components/chat/ChatTab.tsx`
+- `dashboard/client/src/components/chat/__tests__/ChatTab.workflow.test.tsx`
+
+### Verification
+
+```bash
+cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/CodeCortex/dashboard/client
+npx tsc --noEmit
+```
+
+Result: **0 errors**.
+
+```bash
+cd /Users/hassan/Documents/workspace/aiFile/CodeCortex/CodeCortex/dashboard
+npm run test:client
+```
+
+Result: **43 test files passed, 392 tests passed**.
+
+### Commit
+
+```
+5162231 fix(chat): suppress duplicate error banner, preserve retry payload, disable input during auto-advance
+```
