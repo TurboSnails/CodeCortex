@@ -548,3 +548,28 @@ describe("screen snapshots", () => {
     await snapshot(<NotFound />, "/nope");
   });
 });
+
+describe("chat mobile snapshot", () => {
+  it("renders hamburger header at 375px", async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = (q: string) =>
+      ({ matches: q.includes("max-width"), media: q, addListener: () => {}, removeListener: () => {} } as any);
+    const originalInnerWidth = Object.getOwnPropertyDescriptor(window, "innerWidth");
+    Object.defineProperty(window, "innerWidth", { value: 375, configurable: true });
+
+    vi.mocked(api.run.cwds).mockResolvedValueOnce({
+      items: [{ path: "/tmp/test", kind: "dashboard", label: "Dashboard server" }],
+    });
+
+    try {
+      await snapshot(<Chat />, "/chat");
+    } finally {
+      window.matchMedia = originalMatchMedia;
+      if (originalInnerWidth) {
+        Object.defineProperty(window, "innerWidth", originalInnerWidth);
+      } else {
+        delete (window as unknown as Record<string, unknown>).innerWidth;
+      }
+    }
+  });
+});
