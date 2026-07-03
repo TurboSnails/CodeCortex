@@ -41,7 +41,7 @@ const BUILTIN_SLASH_COMMANDS: ChatSlashCommand[] = [
 
 type WorkflowState =
   | { kind: "idle" }
-  | { kind: "running"; mode: ChatMode; stepId: string; autoContinue: boolean }
+  | { kind: "running"; mode: ChatMode; stepId: string }
   | { kind: "paused"; mode: ChatMode; stepId: string; reason: string }
   | { kind: "error"; mode: ChatMode; stepId: string; message: string }
   | { kind: "done"; mode: ChatMode };
@@ -102,12 +102,12 @@ export function ChatTab({
     isLive,
   } = useRunChat({ sessionId, cwd });
 
-  const { marker, cleanedEnvelopes } = useWorkflowMarkers(displayEnvelopes, mode);
+  const { marker, cleanedEnvelopes, isComplete } = useWorkflowMarkers(displayEnvelopes, mode);
 
   const canSend = !!handle?.id && isLive;
 
   useEffect(() => {
-    if (!marker || workflow.kind !== "running") return;
+    if (!marker || workflow.kind !== "running" || !isComplete) return;
     if (lastHandledMarker.current === marker) return;
     lastHandledMarker.current = marker;
 
@@ -134,23 +134,18 @@ export function ChatTab({
         setMode("normal");
         return;
       }
-      const timer = setTimeout(() => {
-        const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
-        send(nextCommand).catch((err: unknown) => {
-          setWorkflow({
-            kind: "error",
-            mode: workflow.mode,
-            stepId: workflow.stepId,
-            message: err instanceof Error ? err.message : "auto-advance failed",
-          });
+      const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
+      send(nextCommand).catch((err: unknown) => {
+        setWorkflow({
+          kind: "error",
+          mode: workflow.mode,
+          stepId: workflow.stepId,
+          message: err instanceof Error ? err.message : "auto-advance failed",
         });
-        setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId, autoContinue: true });
-      }, 600);
-      return () => {
-        clearTimeout(timer);
-      };
+      });
+      setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId });
     }
-  }, [marker, workflow, send]);
+  }, [marker, workflow, send, isComplete]);
 
   const onSend = () => {
     const text = followUp.trim();
@@ -167,13 +162,16 @@ export function ChatTab({
       const firstStep = getWorkflowSteps(mode)[0];
       if (!firstStep) return;
       const combined = `${firstStep.command} ${payload.text}`.trim();
-      setWorkflow({ kind: "running", mode, stepId: firstStep.id, autoContinue: true });
+      // TODO: start() only accepts a string prompt, so attachments from the
+      // first workflow send are dropped. Extend start() to accept a SendPayload
+      // when we want full attachment support here.
+      setWorkflow({ kind: "running", mode, stepId: firstStep.id });
       await start(combined);
       return;
     }
 
     if (workflow.kind === "paused") {
-      setWorkflow((w) => (w.kind === "paused" ? { ...w, kind: "running", autoContinue: true } : w));
+      setWorkflow((w) => (w.kind === "paused" ? { ...w, kind: "running" } : w));
       await send(payload);
       return;
     }

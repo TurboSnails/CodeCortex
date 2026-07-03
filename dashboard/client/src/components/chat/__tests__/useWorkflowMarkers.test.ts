@@ -49,7 +49,7 @@ describe("extractWorkflowMarkers", () => {
 });
 
 describe("useWorkflowMarkers", () => {
-  it("in normal mode, does not strip markers and returns marker null", () => {
+  it("in normal mode, does not strip markers, returns marker null, and isComplete true", () => {
     const envelopes: Envelope[] = [
       {
         type: "assistant",
@@ -58,6 +58,7 @@ describe("useWorkflowMarkers", () => {
     ];
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, "normal"));
     expect(result.current.marker).toBeNull();
+    expect(result.current.isComplete).toBe(true);
     const cleaned = (result.current.cleanedEnvelopes[0] as { message?: { content?: string } }).message?.content;
     expect(cleaned).toBe("Step 1\n<!-- __WORKFLOW:PAUSE__ -->");
     expect(result.current.cleanedEnvelopes).toBe(envelopes);
@@ -119,12 +120,37 @@ describe("useWorkflowMarkers", () => {
     expect(result.current.marker).toEqual({ kind: "pause" });
   });
 
-  it("returns null when there are no assistant envelopes", () => {
+  it("returns isComplete true for a complete assistant envelope", () => {
+    const envelopes: Envelope[] = [
+      { type: "assistant", message: { content: "Just a normal reply." } },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
+    expect(result.current.isComplete).toBe(true);
+  });
+
+  it("returns isComplete false while the latest assistant envelope is streaming", () => {
+    const envelopes: Envelope[] = [
+      { type: "assistant", message: { content: "Still stream", _streaming: true } },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
+    expect(result.current.marker).toEqual({ kind: "pause" });
+    expect(result.current.isComplete).toBe(false);
+  });
+
+  it("returns isComplete true once the latest assistant envelope finishes streaming", () => {
+    const envelopes: Envelope[] = [
+      { type: "assistant", message: { content: "Done", _streaming: false } },
+    ];
+    const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
+    expect(result.current.isComplete).toBe(true);
+  });
+
+  it("returns isComplete false when there are no assistant envelopes", () => {
     const envelopes: Envelope[] = [
       { type: "user", message: { content: "hello" } },
       { type: "result", result: "ok" },
     ];
     const { result } = renderHook(() => useWorkflowMarkers(envelopes, WORKFLOW_MODE));
-    expect(result.current.marker).toBeNull();
+    expect(result.current.isComplete).toBe(false);
   });
 });
