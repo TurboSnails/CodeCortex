@@ -57,10 +57,13 @@ function scopeOf(req) {
 
 function cwdOf(req) {
   // The dashboard server's own cwd is the natural "project" — but allow
-  // override via ?cwd= so the user can inspect another working dir without
-  // restarting the server.
-  const c = typeof req.query.cwd === "string" && req.query.cwd ? req.query.cwd : null;
-  return c || process.cwd();
+  // override via ?cwd= (GET) or body.cwd (POST) so the user can inspect
+  // another working dir without restarting the server. Without an
+  // explicit override, this still resolves to process.cwd(), which is
+  // what the rest of the file-tree plumbing already assumed.
+  const q = typeof req.query.cwd === "string" && req.query.cwd ? req.query.cwd : null;
+  const b = req.body && typeof req.body.cwd === "string" && req.body.cwd ? req.body.cwd : null;
+  return q || b || process.cwd();
 }
 
 router.get("/overview", (req, res) => {

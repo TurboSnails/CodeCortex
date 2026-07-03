@@ -436,9 +436,9 @@ export const api = {
       request<{ items: CcSettingsSource[] }>(`/cc-config/settings${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`),
     memory: (cwd?: string) =>
       request<{ items: CcMemoryItem[] }>(`/cc-config/memory${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`),
-    file: (absPath: string) =>
+    file: (absPath: string, cwd?: string) =>
       request<CcFileResponse>(
-        `/cc-config/file?path=${encodeURIComponent(absPath)}`,
+        `/cc-config/file?path=${encodeURIComponent(absPath)}${cwd ? `&cwd=${encodeURIComponent(cwd)}` : ""}`,
       ),
     write: (args: CcWriteArgs) =>
       request<CcMutationResult>("/cc-config/file", {
@@ -455,7 +455,7 @@ export const api = {
     keybindings: () => request<CcKeybindings>("/cc-config/keybindings"),
     statusline: () => request<CcStatusline>("/cc-config/statusline"),
     hookScripts: () => request<CcHookScripts>("/cc-config/hook-scripts"),
-    backups: (params?: { scope?: "user" | "project"; type?: CcArtifactType }) =>
+    backups: (params?: { scope?: "user" | "project"; type?: CcArtifactType; cwd?: string }) =>
       requestBackupsHelper(params),
   },
 
@@ -703,10 +703,12 @@ export const api = {
 function requestBackupsHelper(params?: {
   scope?: "user" | "project";
   type?: CcArtifactType;
+  cwd?: string;
 }) {
   const qs = new URLSearchParams();
   if (params?.scope) qs.set("scope", params.scope);
   if (params?.type) qs.set("type", params.type);
+  if (params?.cwd) qs.set("cwd", params.cwd);
   const q = qs.toString();
   return request<{ items: CcBackup[] }>(
     `/cc-config/backups${q ? `?${q}` : ""}`,
@@ -723,6 +725,11 @@ export interface CcWriteArgs {
   name?: string;
   content: string;
   project?: string;
+  /** When `scope === "project"`, the chat's working directory. Sent in the
+   *  request body so the server can resolve the project `.claude/`
+   *  correctly even when its own process.cwd() is elsewhere (e.g. the
+   *  dev server runs from `dashboard/`, not the project root). */
+  cwd?: string;
 }
 
 export interface CcDeleteArgs {
@@ -730,6 +737,7 @@ export interface CcDeleteArgs {
   type: CcArtifactType;
   name?: string;
   project?: string;
+  cwd?: string;
 }
 
 export interface CcMutationResult {

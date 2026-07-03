@@ -4679,6 +4679,31 @@ exports[`screen snapshots > Claude Config 1`] = `
       </div>
     </header>
     <div
+      class="flex items-center gap-2 px-1 py-1"
+    >
+      <span
+        class="text-[11px] uppercase tracking-wider text-gray-500 font-semibold"
+      >
+        Project cwd
+      </span>
+      <select
+        class="input text-xs min-w-[16rem]"
+      >
+        <option
+          value=""
+        >
+          loading…
+        </option>
+      </select>
+      <input
+        aria-label="Custom project cwd"
+        class="input text-xs font-mono flex-1 min-w-[20rem]"
+        placeholder="/abs/path/to/project"
+        spellcheck="false"
+        value=""
+      />
+    </div>
+    <div
       class="relative rounded-xl border border-border bg-surface-1"
     >
       <div
