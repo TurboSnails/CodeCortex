@@ -68,3 +68,14 @@ Task 1: complete (commits dd70842..0a41d0f, review APPROVED after 2 fix rounds)
 Task 2: complete (commits 0a41d0f..9ef4be4, review clean)
 Task 3: complete (commits 9ef4be4..a3eefbf, review APPROVED with minor radio-group a11y notes)
 Task 4: complete (commits a3eefbf..efe91ee, review APPROVED with minor notes)
+Task 5: complete (commits efe91ee..312883b, review APPROVED with 4 minors; 600 ms delay restored and fake-timer leak fixed in final fix commit)
+Task 7: complete (commits 312883b..d508fb9, review APPROVED with 3 minors; marker instructions appended verbatim)
+Task 8: complete (commits d508fb9..e4b404f, review APPROVED with 2 minors; plugin files patched outside repo, README committed)
+```
+
+## Minor findings carried forward (chat workflow mode selector)
+
+- T5-minor-1: Missing integration test for no-marker default-to-PAUSE in `ChatTab.workflow.test.tsx`. Hook-level coverage exists; deferred to final review.
+- T5-minor-2: `react-hooks/exhaustive-deps` disable in `ChatTab.tsx` marker effect is intentional because `marker` identity changes each typewriter tick. Documented in code; consider a ref-based comparison if refactor later.
+- T5-minor-3: Duplicated error banner markup between `useRunChat` error and workflow error. Could extract a small `ErrorBanner` component at final review.
+- T5-minor-4: Hardcoded Chinese mode-switch confirmation matches the brief and has a `// TODO(i18n)` comment.
