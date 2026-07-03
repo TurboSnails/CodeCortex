@@ -36,6 +36,18 @@ import type {
 
 const BASE = "/api";
 
+/** Build a `?a=x&b=y` query string from a record. Empty/undefined values are
+ * skipped, so `{scope: "all", cwd: undefined}` produces just `?scope=all`.
+ * Returns "" (no leading "?") when the record has no usable entries. */
+function withQuery(params: Record<string, string | undefined>): string {
+  const entries = Object.entries(params).filter(
+    (e): e is [string, string] => typeof e[1] === "string" && e[1].length > 0,
+  );
+  if (entries.length === 0) return "";
+  const qs = entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join("&");
+  return `?${qs}`;
+}
+
 /**
  * Optional dashboard auth token (GHSA-gr74-4xfh-6jw9). Only needed when the
  * operator binds the server to a LAN and sets DASHBOARD_TOKEN; for the default
@@ -398,29 +410,32 @@ export const api = {
   },
 
   ccConfig: {
-    overview: () => request<CcOverview>("/cc-config/overview"),
-    skills: (scope?: CcScope) =>
+    overview: (cwd?: string) =>
+      request<CcOverview>(`/cc-config/overview${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`),
+    skills: (scope?: CcScope, cwd?: string) =>
       request<{ items: CcMdItem[] }>(
-        `/cc-config/skills${scope ? `?scope=${scope}` : ""}`,
+        `/cc-config/skills${withQuery({ scope, cwd })}`,
       ),
-    agents: (scope?: CcScope) =>
+    agents: (scope?: CcScope, cwd?: string) =>
       request<{ items: CcMdItem[] }>(
-        `/cc-config/agents${scope ? `?scope=${scope}` : ""}`,
+        `/cc-config/agents${withQuery({ scope, cwd })}`,
       ),
-    commands: (scope?: CcScope) =>
+    commands: (scope?: CcScope, cwd?: string) =>
       request<{ items: CcMdItem[] }>(
-        `/cc-config/commands${scope ? `?scope=${scope}` : ""}`,
+        `/cc-config/commands${withQuery({ scope, cwd })}`,
       ),
-    outputStyles: (scope?: CcScope) =>
+    outputStyles: (scope?: CcScope, cwd?: string) =>
       request<{ items: CcMdItem[] }>(
-        `/cc-config/output-styles${scope ? `?scope=${scope}` : ""}`,
+        `/cc-config/output-styles${withQuery({ scope, cwd })}`,
       ),
     plugins: () => request<CcPluginsResponse>("/cc-config/plugins"),
     mcp: () => request<CcMcpResponse>("/cc-config/mcp"),
-    hooks: () => request<{ items: CcHookSource[] }>("/cc-config/hooks"),
-    settings: () =>
-      request<{ items: CcSettingsSource[] }>("/cc-config/settings"),
-    memory: () => request<{ items: CcMemoryItem[] }>("/cc-config/memory"),
+    hooks: (cwd?: string) =>
+      request<{ items: CcHookSource[] }>(`/cc-config/hooks${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`),
+    settings: (cwd?: string) =>
+      request<{ items: CcSettingsSource[] }>(`/cc-config/settings${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`),
+    memory: (cwd?: string) =>
+      request<{ items: CcMemoryItem[] }>(`/cc-config/memory${cwd ? `?cwd=${encodeURIComponent(cwd)}` : ""}`),
     file: (absPath: string) =>
       request<CcFileResponse>(
         `/cc-config/file?path=${encodeURIComponent(absPath)}`,
