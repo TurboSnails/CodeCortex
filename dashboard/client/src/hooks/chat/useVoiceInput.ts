@@ -23,14 +23,30 @@ interface SpeechRecognitionLike {
   abort: () => void;
 }
 
+export interface UseVoiceInputOptions {
+  /**
+   * Test seam: an optional recognition constructor. When provided it is used
+   * in place of the global `window.SpeechRecognition` /
+   * `webkitSpeechRecognition`. Production callers leave this unset.
+   */
+  recognitionCtor?: RecognitionCtor;
+  /**
+   * Test seam: invoked once per freshly constructed recognition instance, so
+   * tests can drive the recognition lifecycle without poking globalThis.
+   * Production callers leave this unset.
+   */
+  onRecognition?: (rec: SpeechRecognitionLike) => void;
+}
+
 function getRecognitionCtor(): RecognitionCtor | null {
   if (typeof window === "undefined") return null;
   const w = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
-export function useVoiceInput(): VoiceInputApi {
-  const Ctor = getRecognitionCtor();
+export function useVoiceInput(options: UseVoiceInputOptions = {}): VoiceInputApi {
+  const { recognitionCtor, onRecognition } = options;
+  const Ctor = recognitionCtor ?? getRecognitionCtor();
   const available = !!Ctor;
 
   const recRef = useRef<SpeechRecognitionLike | null>(null);
@@ -73,10 +89,10 @@ export function useVoiceInput(): VoiceInputApi {
     };
     rec.onend = () => setListening(false);
     recRef.current = rec;
-    (globalThis as any).__lastRec = rec;
+    onRecognition?.(rec);
     rec.start();
     setListening(true);
-  }, [Ctor]);
+  }, [Ctor, onRecognition]);
 
   const stop = useCallback(() => {
     recRef.current?.stop();

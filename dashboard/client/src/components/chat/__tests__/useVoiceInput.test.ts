@@ -27,6 +27,17 @@ function removeRecognition() {
   delete (globalThis as any).window.webkitSpeechRecognition;
 }
 
+// Render the hook with an `onRecognition` capture, returning the latest
+// recognition instance so tests can drive its lifecycle without any
+// globalThis back-channel.
+function renderWithCapture() {
+  const capture: { current: InstanceType<typeof FakeRecognition> | null } = { current: null };
+  const { result } = renderHook(() =>
+    useVoiceInput({ onRecognition: (rec) => { capture.current = rec as InstanceType<typeof FakeRecognition>; } })
+  );
+  return { result, getRec: () => capture.current };
+}
+
 describe("useVoiceInput", () => {
   beforeEach(() => installRecognition());
   afterEach(() => removeRecognition());
@@ -38,7 +49,7 @@ describe("useVoiceInput", () => {
   });
 
   it("toggles listening and reports state", () => {
-    const { result } = renderHook(() => useVoiceInput());
+    const { result } = renderWithCapture();
     expect(result.current.listening).toBe(false);
     act(() => result.current.toggle());
     expect(result.current.listening).toBe(true);
@@ -47,31 +58,31 @@ describe("useVoiceInput", () => {
   });
 
   it("delivers interim text via onInterim", () => {
-    const { result } = renderHook(() => useVoiceInput());
+    const { result, getRec } = renderWithCapture();
     const interim = vi.fn();
     act(() => result.current.onInterim(interim));
     act(() => result.current.toggle());
-    const rec = (globalThis as any).__lastRec;
+    const rec = getRec();
     act(() => rec?.onresult?.({ results: { 0: { 0: { transcript: "hello" }, isFinal: false }, length: 1 } }));
     expect(interim).toHaveBeenCalledWith("hello");
   });
 
   it("delivers final text via onFinal and clears interim", () => {
-    const { result } = renderHook(() => useVoiceInput());
+    const { result, getRec } = renderWithCapture();
     const final = vi.fn();
     const interim = vi.fn();
     act(() => { result.current.onFinal(final); result.current.onInterim(interim); });
     act(() => result.current.toggle());
-    const rec = (globalThis as any).__lastRec;
+    const rec = getRec();
     act(() => rec?.onresult?.({ results: { 0: { 0: { transcript: "done" }, isFinal: true }, length: 1 } }));
     expect(final).toHaveBeenCalledWith("done");
     expect(result.current.interimText).toBe("");
   });
 
   it("disables after 3 consecutive errors", () => {
-    const { result } = renderHook(() => useVoiceInput());
+    const { result, getRec } = renderWithCapture();
     act(() => result.current.toggle());
-    const rec = (globalThis as any).__lastRec;
+    const rec = getRec();
     act(() => { rec?.onerror?.({ error: "x" }); rec?.onerror?.({ error: "x" }); rec?.onerror?.({ error: "x" }); });
     expect(result.current.listening).toBe(false);
     // subsequent toggle has no effect because recognition is locked
