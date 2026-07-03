@@ -15,6 +15,7 @@ import {
   getWorkflowSteps,
   type ChatMode,
 } from "./workflowConfig";
+import type { SendPayload } from "../../lib/types";
 
 const BUILTIN_SLASH_COMMANDS: ChatSlashCommand[] = [
   { name: "help", description: "List available commands", source: "builtin" },
@@ -63,7 +64,8 @@ export function ChatTab({
   const lastHandledKey = useRef<number | null>(null);
   const autoAdvanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingAutoAdvance, setPendingAutoAdvance] = useState<{ command: string; stepId: string } | null>(null);
-  const lastWorkflowInputRef = useRef<string>("");
+  const [isAutoAdvancePending, setIsAutoAdvancePending] = useState(false);
+  const lastWorkflowPayloadRef = useRef<SendPayload | null>(null);
   const lastWorkflowActionRef = useRef<"start" | "send" | null>(null);
 
   useEffect(() => {
@@ -128,17 +130,20 @@ export function ChatTab({
     lastHandledKey.current = latestAssistantKey;
 
     if (marker.kind === "error") {
+      setIsAutoAdvancePending(false);
       setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: marker.message });
       return;
     }
 
     if (marker.kind === "done") {
+      setIsAutoAdvancePending(false);
       setWorkflow({ kind: "done", mode: workflow.mode });
       setMode("normal");
       return;
     }
 
     if (marker.kind === "pause") {
+      setIsAutoAdvancePending(false);
       setWorkflow({ kind: "paused", mode: workflow.mode, stepId: workflow.stepId, reason: "Waiting for user input" });
       return;
     }
@@ -146,16 +151,20 @@ export function ChatTab({
     if (marker.kind === "continue") {
       const nextCommand = getNextCommand(workflow.mode, workflow.stepId);
       if (!nextCommand) {
+        setIsAutoAdvancePending(false);
         setWorkflow({ kind: "done", mode: workflow.mode });
         setMode("normal");
         return;
       }
       const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
       setPendingAutoAdvance({ command: nextCommand, stepId: nextStepId });
+      setIsAutoAdvancePending(true);
       autoAdvanceTimeout.current = setTimeout(() => {
         autoAdvanceTimeout.current = null;
         setPendingAutoAdvance(null);
+        setIsAutoAdvancePending(false);
         lastWorkflowActionRef.current = "send";
+        lastWorkflowPayloadRef.current = { text: nextCommand, attachments: [] };
         send(nextCommand).catch(() => {
           // Error is surfaced via useRunChat.error and handled by the error effect above.
         });
@@ -169,6 +178,7 @@ export function ChatTab({
         autoAdvanceTimeout.current = null;
       }
       setPendingAutoAdvance(null);
+      setIsAutoAdvancePending(false);
     };
     // `marker` is intentionally omitted: it is derived from the same envelopes
     // that produce `isComplete` and `latestAssistantKey`, but its object identity
@@ -195,7 +205,7 @@ export function ChatTab({
       // TODO: start() only accepts a string prompt, so attachments from the
       // first workflow send are dropped. Extend start() to accept a SendPayload
       // when we want full attachment support here.
-      lastWorkflowInputRef.current = payload.text;
+      lastWorkflowPayloadRef.current = { text: combined, attachments: [] };
       lastWorkflowActionRef.current = "start";
       setWorkflow({ kind: "running", mode, stepId: firstStep.id });
       await start(combined);
@@ -203,7 +213,7 @@ export function ChatTab({
     }
 
     if (workflow.kind === "paused") {
-      lastWorkflowInputRef.current = payload.text;
+      lastWorkflowPayloadRef.current = payload;
       lastWorkflowActionRef.current = "send";
       setWorkflow((w) => (w.kind === "paused" ? { ...w, kind: "running" } : w));
       await send(payload);
@@ -217,12 +227,12 @@ export function ChatTab({
   const handleRetry = async () => {
     if (workflow.kind !== "error") return;
     setWorkflow({ kind: "running", mode: workflow.mode, stepId: workflow.stepId });
-    if (lastWorkflowActionRef.current === "start") {
-      const step = getWorkflowSteps(workflow.mode).find((s) => s.id === workflow.stepId);
-      if (!step) return;
-      const combined = `${step.command} ${lastWorkflowInputRef.current}`.trim();
+    if (lastWorkflowActionRef.current === "start" && lastWorkflowPayloadRef.current) {
       lastWorkflowActionRef.current = "start";
-      await start(combined);
+      await start(lastWorkflowPayloadRef.current.text);
+    } else if (lastWorkflowActionRef.current === "send" && lastWorkflowPayloadRef.current) {
+      lastWorkflowActionRef.current = "send";
+      await send(lastWorkflowPayloadRef.current);
     } else {
       const step = getWorkflowSteps(workflow.mode).find((s) => s.id === workflow.stepId);
       if (!step) return;
@@ -232,6 +242,12 @@ export function ChatTab({
   };
 
   const handleCancel = () => {
+    if (autoAdvanceTimeout.current) {
+      clearTimeout(autoAdvanceTimeout.current);
+      autoAdvanceTimeout.current = null;
+    }
+    setPendingAutoAdvance(null);
+    setIsAutoAdvancePending(false);
     void stop();
     setWorkflow({ kind: "idle" });
     setMode("normal");
@@ -243,7 +259,7 @@ export function ChatTab({
         className ?? "h-[min(70vh,600px)] md:h-[600px]"
       }`}
     >
-      {error && (
+      {error && workflow.kind !== "error" && (
         <div className="px-4 py-2.5 border-b border-red-500/20 bg-red-500/10 flex items-center gap-2 text-sm text-red-200">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           {error}
@@ -285,6 +301,12 @@ export function ChatTab({
             // TODO(i18n): hardcoded Chinese confirmation per brief; replace with i18n key when available.
             const ok = window.confirm("当前工作流尚未完成，切换模式将取消进度。是否继续？");
             if (!ok) return;
+            if (autoAdvanceTimeout.current) {
+              clearTimeout(autoAdvanceTimeout.current);
+              autoAdvanceTimeout.current = null;
+            }
+            setPendingAutoAdvance(null);
+            setIsAutoAdvancePending(false);
             void stop();
             setWorkflow({ kind: "idle" });
           }
@@ -297,6 +319,12 @@ export function ChatTab({
           mode={workflow.mode}
           currentStepId={workflow.stepId}
           onCancel={() => {
+            if (autoAdvanceTimeout.current) {
+              clearTimeout(autoAdvanceTimeout.current);
+              autoAdvanceTimeout.current = null;
+            }
+            setPendingAutoAdvance(null);
+            setIsAutoAdvancePending(false);
             void stop();
             setWorkflow({ kind: "idle" });
             setMode("normal");
@@ -334,7 +362,7 @@ export function ChatTab({
         onSendWithPayload={onSendWithPayload}
         onError={(msg) => workspaceActions.addProblem({ source: "chat-attachments", message: msg })}
         onStop={stop}
-        disabled={busy === "start" || busy === "send" || busy === "stop"}
+        disabled={busy === "start" || busy === "send" || busy === "stop" || isAutoAdvancePending}
         isLive={isLive}
         placeholder={mode === "normal" ? (canSend ? t("chat.followUpPlaceholder") : t("chat.startPlaceholder")) : getPlaceholder(mode)}
         slashCommands={slashCommands}

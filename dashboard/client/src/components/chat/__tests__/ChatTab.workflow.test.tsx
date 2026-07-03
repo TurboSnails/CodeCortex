@@ -234,9 +234,9 @@ describe("ChatTab workflow mode", () => {
     await waitFor(() =>
       expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore fail me" }))
     );
-    // The useRunChat error banner surfaces the failure; the workflow error banner
-    // offers Retry / Cancel and the progress banner is not shown.
-    await waitFor(() => expect(screen.getAllByText("backend down").length).toBeGreaterThanOrEqual(1));
+    // The generic useRunChat error banner is suppressed when the workflow is
+    // already showing its own error banner with Retry / Cancel.
+    await waitFor(() => expect(screen.getAllByText("backend down")).toHaveLength(1));
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
     expect(screen.queryByLabelText("Cancel workflow")).not.toBeInTheDocument();
@@ -333,6 +333,78 @@ describe("ChatTab workflow mode", () => {
 
       await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []));
       expect(mockSend).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("retries a paused user follow-up with the original input", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockSend.mockRejectedValueOnce(new Error("send failed"));
+    mockSend.mockResolvedValueOnce({ messageId: "msg-3" });
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "plan api" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+    await waitFor(() =>
+      expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore plan api" }))
+    );
+    await waitFor(() => expect(busCallback).not.toBeNull());
+
+    publishEnvelope("run-1", {
+      type: "assistant",
+      message: { content: [{ type: "text", text: "waiting <!-- __WORKFLOW:PAUSE__ -->" }] },
+    });
+
+    await waitFor(() => expect(screen.getByText("explore")).toBeInTheDocument());
+
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "add oauth" } });
+    fireEvent.keyDown(textarea, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "add oauth", []));
+    await waitFor(() => expect(screen.getByText("send failed")).toBeInTheDocument());
+    expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+
+    await waitFor(() => expect(mockSend).toHaveBeenCalledTimes(2));
+    expect(mockSend).toHaveBeenLastCalledWith("run-1", "add oauth", []);
+  });
+
+  it("disables input while a workflow auto-advance is pending", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
+
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderChatTab();
+
+      fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: "build feature" } });
+      fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+      await waitFor(() =>
+        expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore build feature" }))
+      );
+      await waitFor(() => expect(busCallback).not.toBeNull());
+
+      publishEnvelope("run-1", {
+        type: "assistant",
+        message: { content: [{ type: "text", text: "ok <!-- __WORKFLOW:CONTINUE__ -->" }] },
+      });
+
+      await waitFor(() => expect(screen.getByRole("textbox")).toBeDisabled());
+      expect(screen.getByText(/下一步将自动执行/)).toBeInTheDocument();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(700);
+      });
+
+      await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "/opsx:propose", []));
     } finally {
       vi.useRealTimers();
     }
