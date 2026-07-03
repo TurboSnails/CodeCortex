@@ -82,8 +82,15 @@ export function ChatTab({
   const onSend = () => {
     const text = followUp.trim();
     if (!text) return;
-    if (canSend) send(text);
+    if (canSend) send({ text, attachments: [] });
     else start(text);
+  };
+
+  const onSendWithPayload = async (payload: import("../../lib/types").SendPayload) => {
+    const hasContent = !!payload.text || payload.attachments.length > 0;
+    if (!hasContent) return;
+    if (canSend) await send(payload);
+    else await start(payload.text);
   };
 
   return (
@@ -119,6 +126,8 @@ export function ChatTab({
         value={followUp}
         onChange={setFollowUp}
         onSend={onSend}
+        onSendWithPayload={onSendWithPayload}
+        onError={(msg) => console.warn(msg)}
         onStop={stop}
         disabled={busy === "start" || busy === "send" || busy === "stop"}
         isLive={isLive}
