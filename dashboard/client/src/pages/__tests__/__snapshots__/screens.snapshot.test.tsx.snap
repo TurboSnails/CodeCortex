@@ -357,7 +357,7 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
                 >
                   <textarea
                     class="w-full min-h-[40px] max-h-32 bg-transparent text-sm text-gray-200 placeholder-gray-600 resize-none outline-none py-2"
-                    placeholder="Ask Claude…"
+                    placeholder="Ask Claude to do something…"
                     rows="1"
                     spellcheck="false"
                   />
@@ -4109,7 +4109,7 @@ exports[`screen snapshots > Chat 1`] = `
                 >
                   <textarea
                     class="w-full min-h-[40px] max-h-32 bg-transparent text-sm text-gray-200 placeholder-gray-600 resize-none outline-none py-2"
-                    placeholder="Ask Claude…"
+                    placeholder="Ask Claude to do something…"
                     rows="1"
                     spellcheck="false"
                   />

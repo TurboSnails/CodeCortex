@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, Play } from "lucide-react";
 import { api } from "../../lib/api";
@@ -105,8 +105,6 @@ export function ChatTab({
 
   const canSend = !!handle?.id && isLive;
 
-  const autoAdvanceRef = useRef(false);
-
   useEffect(() => {
     if (!marker || workflow.kind !== "running") return;
 
@@ -133,9 +131,7 @@ export function ChatTab({
         setMode("normal");
         return;
       }
-      autoAdvanceRef.current = true;
       const timer = setTimeout(() => {
-        if (!autoAdvanceRef.current) return;
         const nextStepId = getWorkflowSteps(workflow.mode).find((s) => s.command === nextCommand)?.id ?? workflow.stepId;
         send(nextCommand).catch(() => {});
         setWorkflow({ kind: "running", mode: workflow.mode, stepId: nextStepId, autoContinue: true });
@@ -144,7 +140,7 @@ export function ChatTab({
         clearTimeout(timer);
       };
     }
-  }, [marker, workflow.kind, workflow.mode, workflow.stepId, send]);
+  }, [marker, workflow, send]);
 
   const onSend = () => {
     const text = followUp.trim();
@@ -200,6 +196,7 @@ export function ChatTab({
         mode={mode}
         onChange={(next) => {
           if (workflow.kind !== "idle") {
+            // TODO(i18n): hardcoded Chinese confirmation per brief; replace with i18n key when available.
             const ok = window.confirm("当前工作流尚未完成，切换模式将取消进度。是否继续？");
             if (!ok) return;
             void stop();
@@ -239,7 +236,7 @@ export function ChatTab({
         onStop={stop}
         disabled={busy === "start" || busy === "send" || busy === "stop"}
         isLive={isLive}
-        placeholder={getPlaceholder(mode)}
+        placeholder={mode === "normal" ? (canSend ? t("chat.followUpPlaceholder") : t("chat.startPlaceholder")) : getPlaceholder(mode)}
         slashCommands={slashCommands}
         fileCwd={cwd}
       />
