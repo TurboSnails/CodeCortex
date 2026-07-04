@@ -2,6 +2,7 @@
   "refresh": "Refresh",
   "retry": "Retry",
   "cancel": "Cancel",
+  "confirm": "Confirm",
   "export": "Export",
   "loading": "Loading...",
   "noData": "No data",

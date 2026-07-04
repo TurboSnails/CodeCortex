@@ -1,10 +1,24 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { ChatTab } from "../ChatTab";
 import { ChatWorkspaceProvider } from "../ChatWorkspaceContext";
 import { api } from "../../../lib/api";
 import type { RunHandle } from "../../../lib/api";
 import type { Envelope } from "../types";
+
+beforeAll(() => {
+  // jsdom doesn't implement <dialog>'s imperative methods (see ConfirmDialog.test.tsx).
+  if (!HTMLDialogElement.prototype.showModal) {
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    };
+  }
+  if (!HTMLDialogElement.prototype.close) {
+    HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+      this.removeAttribute("open");
+    };
+  }
+});
 
 vi.mock("../../../lib/api", () => ({
   api: {
@@ -399,7 +413,7 @@ describe("ChatTab workflow mode", () => {
       });
 
       await waitFor(() => expect(screen.getByRole("textbox")).toBeDisabled());
-      expect(screen.getByText(/下一步将自动执行/)).toBeInTheDocument();
+      expect(screen.getByText(/will run automatically/)).toBeInTheDocument();
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(700);
@@ -626,7 +640,7 @@ describe("ChatTab workflow mode", () => {
     });
 
     expect(mockSend).not.toHaveBeenCalled();
-    await waitFor(() => expect(screen.getByText(/当前步骤需要你的输入/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/needs your input/)).toBeInTheDocument());
     expect(screen.getByText("explore")).toBeInTheDocument();
 
     const textarea = screen.getByRole("textbox");
@@ -634,5 +648,51 @@ describe("ChatTab workflow mode", () => {
     fireEvent.keyDown(textarea, { key: "Enter", code: "Enter" });
 
     await waitFor(() => expect(mockSend).toHaveBeenCalledWith("run-1", "use REST", []));
+  });
+
+  it("shows a themed confirm dialog (not window.confirm) when switching modes mid-workflow", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+    const confirmSpy = vi.spyOn(window, "confirm");
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "add login" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    await waitFor(() => expect(mockStart).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByRole("radio", { name: /Superpower/i }));
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    const confirmButton = screen.getByRole("button", { name: /switch anyway/i });
+    expect(confirmButton).toBeInTheDocument();
+    // Mode hasn't switched yet - still on OpenSpec until confirmed.
+    expect(screen.getByRole("radio", { name: /OpenSpec/i })).toHaveAttribute("aria-checked", "true");
+
+    fireEvent.click(confirmButton);
+
+    await waitFor(() =>
+      expect(screen.getByRole("radio", { name: /Superpower/i })).toHaveAttribute("aria-checked", "true")
+    );
+  });
+
+  it("dismisses the confirm dialog without switching modes when Cancel is clicked", async () => {
+    mockStart.mockResolvedValueOnce(makeHandle());
+
+    renderChatTab();
+
+    fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "add login" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    await waitFor(() => expect(mockStart).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByRole("radio", { name: /Superpower/i }));
+    // Exact match: WorkflowProgress's "Cancel workflow" button also matches /cancel/i.
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByRole("button", { name: /switch anyway/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /OpenSpec/i })).toHaveAttribute("aria-checked", "true");
   });
 });

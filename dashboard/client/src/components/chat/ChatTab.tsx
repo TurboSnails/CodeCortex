@@ -7,6 +7,7 @@ import { ChatMessageList } from "./ChatMessageList";
 import { ChatInput, type ChatSlashCommand } from "./ChatInput";
 import { useChatWorkspaceActions } from "./ChatWorkspaceContext";
 import { ChatModeSelector } from "./ChatModeSelector";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { WorkflowProgress } from "./WorkflowProgress";
 import { useWorkflowMarkers } from "./useWorkflowMarkers";
 import {
@@ -66,10 +67,11 @@ export function ChatTab({
   cwd: string;
   className?: string;
 }) {
-  const { t } = useTranslation("sessions");
+  const { t } = useTranslation(["sessions", "common"]);
   const workspaceActions = useChatWorkspaceActions();
   const [slashCommands, setSlashCommands] = useState<ChatSlashCommand[]>(BUILTIN_SLASH_COMMANDS);
   const [mode, setMode] = useState<ChatMode>("normal");
+  const [pendingModeSwitch, setPendingModeSwitch] = useState<ChatMode | null>(null);
   const [workflow, setWorkflow] = useState<WorkflowState>({ kind: "idle" });
   const lastHandledKey = useRef<number | null>(null);
   const autoAdvanceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -375,13 +377,28 @@ export function ChatTab({
         mode={mode}
         onChange={(next) => {
           if (workflow.kind !== "idle") {
-            // TODO(i18n): hardcoded Chinese confirmation per brief; replace with i18n key when available.
-            const ok = window.confirm("当前工作流尚未完成，切换模式将取消进度。是否继续？");
-            if (!ok) return;
-            cancelWorkflow();
+            setPendingModeSwitch(next);
+            return;
           }
           setMode(next);
         }}
+      />
+      <ConfirmDialog
+        open={pendingModeSwitch !== null}
+        title={t("sessions:chat.modeSwitchConfirmTitle")}
+        message={t("sessions:chat.modeSwitchConfirmMessage")}
+        confirmLabel={t("sessions:chat.modeSwitchConfirmAction")}
+        cancelLabel={t("common:cancel")}
+        destructive
+        onConfirm={() => {
+          const next = pendingModeSwitch;
+          setPendingModeSwitch(null);
+          if (next) {
+            cancelWorkflow();
+            setMode(next);
+          }
+        }}
+        onCancel={() => setPendingModeSwitch(null)}
       />
       {workflow.kind !== "idle" && workflow.kind !== "done" && workflow.kind !== "error" && (
         <WorkflowProgress
@@ -393,15 +410,13 @@ export function ChatTab({
 
       {workflow.kind === "paused" && (
         <div className="px-4 py-2 border-b border-amber-500/20 bg-amber-500/10 text-xs text-amber-200">
-          {/* TODO(i18n): hardcoded Chinese string per brief; replace with i18n key when available. */}
-          当前步骤需要你的输入，请继续描述需求或回答问题。
+          {t("sessions:chat.workflowPaused")}
         </div>
       )}
 
       {workflow.kind === "running" && pendingAutoAdvance && (
         <div className="px-4 py-2 border-b border-blue-500/20 bg-blue-500/10 text-xs text-blue-200">
-          {/* TODO(i18n): hardcoded Chinese string per brief; replace with i18n key when available. */}
-          当前步骤已完成，下一步将自动执行 {pendingAutoAdvance.command}。
+          {t("sessions:chat.workflowAutoAdvance", { command: pendingAutoAdvance.command })}
         </div>
       )}
 
