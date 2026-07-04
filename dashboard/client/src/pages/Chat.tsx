@@ -260,6 +260,11 @@ function ChatWorkspace() {
     }
   }, [cwd, loadGitStatus, actions]);
 
+  const startNewSession = useCallback(() => {
+    runChat.reset();
+    setSessionId(newSessionId());
+  }, [runChat]);
+
   const leftHeader =
     state.leftSidebar.activeView === "explorer"
       ? "Explorer"
@@ -360,7 +365,7 @@ function ChatWorkspace() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setSessionId(newSessionId())}
+            onClick={startNewSession}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -416,7 +421,7 @@ function ChatWorkspace() {
 
           <div className="flex-1 min-h-0">
             {cwd ? (
-              <ChatTab key={sessionId} cwd={cwd} className="h-full border-0 rounded-none" />
+              <ChatTab key={sessionId} runChat={runChat} cwd={cwd} className="h-full border-0 rounded-none" />
             ) : null}
           </div>
 
