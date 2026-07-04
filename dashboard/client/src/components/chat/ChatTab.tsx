@@ -209,6 +209,23 @@ export function ChatTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workflow, send, isComplete, latestAssistantKey]);
 
+  // If a permission request arrives while an auto-advance is pending, pause the
+  // workflow immediately so the user can approve/reject before the timer fires.
+  useEffect(() => {
+    if (!activePermissionRequest) return;
+    if (!pendingAutoAdvance) return;
+    if (workflow.kind !== "running") return;
+
+    if (autoAdvanceTimeout.current) {
+      clearTimeout(autoAdvanceTimeout.current);
+      autoAdvanceTimeout.current = null;
+    }
+    lastPermissionDecisionRef.current = null;
+    setWorkflow({ kind: "paused", mode: workflow.mode, stepId: workflow.stepId, reason: "Waiting for permission approval" });
+    // Keep pendingAutoAdvance and isAutoAdvancePending so the resume effect can
+    // continue with the same next step after the permission decision.
+  }, [activePermissionRequest, pendingAutoAdvance, workflow]);
+
   // Resume a workflow auto-advance that was paused by an active permission request.
   useEffect(() => {
     if (!pendingAutoAdvance) return;
@@ -216,9 +233,9 @@ export function ChatTab({
     if (activePermissionRequest) return;
 
     const decision = lastPermissionDecisionRef.current;
+    const { command, stepId } = pendingAutoAdvance;
     if (decision === "approved") {
       lastPermissionDecisionRef.current = null;
-      const { command, stepId } = pendingAutoAdvance;
       setPendingAutoAdvance(null);
       setIsAutoAdvancePending(false);
       lastWorkflowActionRef.current = "send";
@@ -231,6 +248,9 @@ export function ChatTab({
       lastPermissionDecisionRef.current = null;
       setPendingAutoAdvance(null);
       setIsAutoAdvancePending(false);
+      const step = getWorkflowSteps(workflow.mode).find((s) => s.id === workflow.stepId);
+      lastWorkflowActionRef.current = "send";
+      lastWorkflowPayloadRef.current = { text: step?.command ?? command, attachments: [] };
       setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: "Permission denied" });
     } else {
       // No decision recorded yet; clear pending state and stay paused.
