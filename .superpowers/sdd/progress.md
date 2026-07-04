@@ -93,3 +93,33 @@ Final review fix wave 7: complete (commit aac9727, removes duplicate permission-
 - T5-minor-2: `react-hooks/exhaustive-deps` disable in `ChatTab.tsx` marker effect is intentional because `marker` identity changes each typewriter tick. Documented in code; consider a ref-based comparison if refactor later.
 - T5-minor-3: FIXED — duplicated error banner markup was extracted into a small `ErrorBanner` component in `ChatTab.tsx` during final review fix wave 1/2.
 - T5-minor-4: Hardcoded Chinese mode-switch confirmation matches the brief and has a `// TODO(i18n)` comment.
+
+---
+
+# SDD Progress — Chat Interaction Improvements
+
+**Branch:** `master`
+**BranchBase:** `c1723981` (commit before SDD execution begins)
+**Plan:** `docs/superpowers/plans/2026-07-04-chat-interaction-improvements.md`
+**Spec:** `docs/superpowers/specs/2026-07-04-chat-interaction-improvements-design.md`
+
+Task ledger — append one line per clean task:
+
+```
+Task 1: complete (commits c1723981..01eee8cb, review clean, 0 issues)
+Task 2: complete (commits 01eee8cb..1e23e28c, review APPROVED after 1 fix round: sessionId left required in UseRunChatOptions broke tsc -b; also swept 2 unrelated pre-existing unused-import errors blocking tsc -b for all later tasks)
+Task 3: complete (commits 1e23e28c..5bf34c94, review APPROVED, 0 issues; 1 minor noted re: test2 coverage gap for reset() specifically, low risk)
+Task 4: complete (commits 5bf34c94..1d90860b, review APPROVED, 0 blocking issues; 2 trivial minors noted, no action needed)
+Task 5: complete (commits 1d90860b..18027284, review APPROVED, 0 issues; implementer regenerated 2 snapshot baselines early (originally slated for Task 11) - verified by reviewer as scoped exactly to the new button markup, no stray diffs)
+Task 6: complete (commits 18027284..b13ee48f, review APPROVED, 0 issues; 2 trivial minors noted, no action needed)
+Task 7: complete (commits b13ee48f..f8ad188d, review APPROVED, 0 blocking issues; 1 minor - brief's own test spec doesn't meaningfully exercise showModal/close due to optional chaining, carried forward as awareness only)
+Task 8: complete (commits f8ad188d..40c5fb7d, review APPROVED, 0 issues; snapshot staleness from Tasks 6+8 confirmed and correctly deferred to Task 11; 3 justified test-text deviations from brief verified narrow)
+Task 9: complete (commits 40c5fb7d..cc5863d1, review APPROVED, 0 issues; also closed a real pre-existing i18n gap - zh users previously saw English "New Session"/"History" labels via fallback-only t() calls)
+Task 10: complete (commits cc5863d1..e6c8eea8, review APPROVED, 0 issues; snapshot count now at 2 known failures accumulated from Tasks 6/8/9/10, all deferred to Task 11 as planned)
+Task 11: complete (commits e6c8eea8..bd5bd150, review APPROVED, 0 issues; snapshot diff audited hunk-by-hunk, confirmed exactly Tasks 6/8/9/10's accumulated drift with nothing unexplained; 425/425 tests pass, tsc -b + vite build clean)
+
+## Final review
+
+- **Final whole-branch review: READY TO MERGE (Yes)** — 0 Critical, 0 Important, 3 Minor (all non-blocking): (1) ChatTab's internal useRunChat fallback instance is provably inert but redundant when an external runChat is supplied - acceptable, comment recommended; (2) getModePreview's hover text is hardcoded Chinese, consistent with pre-existing getPlaceholder in the same file, not a new gap; (3) cosmetic i18n namespace-prefix style inconsistency between ChatTab.tsx and Chat.tsx's t() calls, no functional impact.
+- **Final state (HEAD bd5bd150):** 47/47 test files, 425/425 tests passing; tsc -b exit 0; vite build succeeds.
+- **Status: READY on master.** No PR needed since this ran directly on master per explicit user choice; nothing further required before considering this branch of work complete.
