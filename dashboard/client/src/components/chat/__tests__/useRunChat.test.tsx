@@ -83,6 +83,61 @@ describe("useRunChat", () => {
     expect(result.current.handle).toEqual(handle);
   });
 
+  it("clears followUp after a successful start()", async () => {
+    const handle: RunHandle = {
+      id: "run-1",
+      status: "spawning",
+      mode: "conversation",
+      cwd: "/tmp",
+      permissionMode: "acceptEdits",
+      model: null,
+      effort: null,
+      prompt: "hello",
+      argv: [],
+      pid: null,
+      resumeSessionId: null,
+      startedAt: Date.now(),
+      endedAt: null,
+      exitCode: null,
+      signal: null,
+      error: null,
+      sessionId: null,
+      envelopeCount: 0,
+      stdoutTail: "",
+      stderrTail: "",
+    };
+    mockStart.mockResolvedValueOnce(handle);
+
+    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+
+    act(() => {
+      result.current.setFollowUp("hello");
+    });
+
+    await act(async () => {
+      await result.current.start("hello");
+    });
+
+    expect(result.current.followUp).toBe("");
+  });
+
+  it("leaves followUp untouched when start() fails", async () => {
+    mockStart.mockRejectedValueOnce(new Error("boom"));
+
+    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+
+    act(() => {
+      result.current.setFollowUp("hello");
+    });
+
+    await act(async () => {
+      await result.current.start("hello");
+    });
+
+    expect(result.current.followUp).toBe("hello");
+    expect(result.current.error).toBe("boom");
+  });
+
   it("sends a follow-up through the API and clears input", async () => {
     const handle: RunHandle = {
       id: "run-1",
@@ -125,6 +180,75 @@ describe("useRunChat", () => {
 
     expect(mockSend).toHaveBeenCalledWith("run-1", "do more", []);
     expect(result.current.followUp).toBe("");
+  });
+
+  it("isResponding is true right after start() and false once the reply completes", async () => {
+    const handle: RunHandle = {
+      id: "run-1",
+      status: "spawning",
+      mode: "conversation",
+      cwd: "/tmp",
+      permissionMode: "acceptEdits",
+      model: null,
+      effort: null,
+      prompt: "hello",
+      argv: [],
+      pid: null,
+      resumeSessionId: null,
+      startedAt: Date.now(),
+      endedAt: null,
+      exitCode: null,
+      signal: null,
+      error: null,
+      sessionId: null,
+      envelopeCount: 0,
+      stdoutTail: "",
+      stderrTail: "",
+    };
+    mockStart.mockResolvedValueOnce(handle);
+
+    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+
+    await act(async () => {
+      await result.current.start("hello");
+    });
+
+    // Right after start(), the only envelope is the optimistic "user" one and
+    // the process just spawned (isLive) - the assistant hasn't replied yet.
+    expect(result.current.isResponding).toBe(true);
+
+    act(() => {
+      busCallback?.({
+        type: "run_status",
+        data: { id: "run-1", status: "running", at: Date.now() },
+      });
+    });
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: { type: "stream_event", event: { type: "message_start", message: { id: "m1" } } },
+        },
+      });
+    });
+
+    // Streaming assistant message in progress.
+    expect(result.current.isResponding).toBe(true);
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: { type: "stream_event", event: { type: "message_stop", message: { id: "m1" } } },
+        },
+      });
+    });
+
+    // Reply finished streaming - it's the user's turn again.
+    expect(result.current.isResponding).toBe(false);
   });
 
   it("kills the run through the API", async () => {

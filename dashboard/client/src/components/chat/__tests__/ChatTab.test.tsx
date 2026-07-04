@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { ChatTab } from "../ChatTab";
 import { ChatWorkspaceProvider } from "../ChatWorkspaceContext";
+import { api } from "../../../lib/api";
+import type { RunHandle } from "../../../lib/api";
 
 vi.mock("../../../lib/api", () => ({
   api: {
@@ -18,9 +20,15 @@ vi.mock("../../../lib/api", () => ({
   },
 }));
 
+let busCallback: ((msg: unknown) => void) | null = null;
 vi.mock("../../../lib/eventBus", () => ({
   eventBus: {
-    subscribe: vi.fn(() => () => {}),
+    subscribe: vi.fn((cb: (msg: unknown) => void) => {
+      busCallback = cb;
+      return () => {
+        busCallback = null;
+      };
+    }),
     connected: true,
     onConnection: vi.fn(() => () => {}),
   },
@@ -38,7 +46,10 @@ function renderChatTab(props: { sessionId: string; cwd: string }) {
 }
 
 describe("ChatTab", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    busCallback = null;
+  });
 
   it("renders start prompt placeholder when no run is active", () => {
     renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
@@ -69,5 +80,64 @@ describe("ChatTab", () => {
     fireEvent.change(textarea, { target: { value: "hello" } });
     const sendBtn = screen.getByRole("button", { name: /send/i });
     expect(sendBtn).not.toBeDisabled();
+  });
+
+  it("disables the input while the assistant is responding, and re-enables once the reply completes", async () => {
+    const handle: RunHandle = {
+      id: "run-1",
+      status: "spawning",
+      mode: "conversation",
+      cwd: "/tmp",
+      permissionMode: "acceptEdits",
+      model: null,
+      effort: null,
+      prompt: "hi",
+      argv: [],
+      pid: null,
+      resumeSessionId: null,
+      startedAt: Date.now(),
+      endedAt: null,
+      exitCode: null,
+      signal: null,
+      error: null,
+      sessionId: null,
+      envelopeCount: 0,
+      stdoutTail: "",
+      stderrTail: "",
+    };
+    (api.run.start as ReturnType<typeof vi.fn>).mockResolvedValueOnce(handle);
+
+    renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
+    const textarea = screen.getByRole("textbox");
+    fireEvent.change(textarea, { target: { value: "hi" } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    });
+
+    await waitFor(() => expect(textarea).toBeDisabled());
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: { type: "stream_event", event: { type: "message_start", message: { id: "m1" } } },
+        },
+      });
+    });
+    expect(textarea).toBeDisabled();
+
+    act(() => {
+      busCallback?.({
+        type: "run_stream",
+        data: {
+          id: "run-1",
+          envelope: { type: "stream_event", event: { type: "message_stop", message: { id: "m1" } } },
+        },
+      });
+    });
+
+    await waitFor(() => expect(textarea).not.toBeDisabled());
   });
 });

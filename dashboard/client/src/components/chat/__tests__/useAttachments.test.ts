@@ -77,6 +77,17 @@ describe("useAttachments", () => {
     expect(result.current.items.length).toBe(1);
   });
 
+  it("onPaste ignores text-only clipboard content (no files) and does not intercept the default paste", () => {
+    const { result } = renderHook(() => useAttachments({ onError: () => {} }));
+    const e = { clipboardData: { files: { length: 0, item: () => null } } } as unknown as ClipboardEvent;
+    const prevent = vi.fn();
+    act(() => {
+      result.current.onPaste({ ...e, preventDefault: prevent } as unknown as ClipboardEvent);
+    });
+    expect(prevent).not.toHaveBeenCalled();
+    expect(result.current.items.length).toBe(0);
+  });
+
   it("onDrop prevents default and accepts the image", async () => {
     const { result } = renderHook(() => useAttachments({ onError: () => {} }));
     const f = new FakeFile("drop.png", 100, "image/png");

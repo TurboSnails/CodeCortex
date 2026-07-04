@@ -179,6 +179,17 @@ describe("ChatInput upgrades", () => {
     await waitFor(() => expect(screen.getByRole("listitem")).toBeInTheDocument());
   });
 
+  it("does not intercept a text-only paste (no files on the clipboard)", () => {
+    const clipboard = { getData: () => "some text", files: [] } as unknown as DataTransfer;
+    render(<ChatInput value="" onChange={() => {}} onSend={() => {}} fileCwd="/" />);
+    const ta = screen.getByPlaceholderText(/ask claude/i);
+    const pasteEvent = createEvent.paste(ta, { clipboardData: clipboard });
+    const preventDefault = vi.spyOn(pasteEvent, "preventDefault");
+    fireEvent(ta, pasteEvent);
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+  });
+
   it("history recall: empty textarea + ArrowUp fills value", async () => {
     // precondition: localStorage has entries; latest is "alpha"
     const key = "cc-chat:prompt-history:anon";

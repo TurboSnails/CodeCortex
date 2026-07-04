@@ -48,6 +48,7 @@ export interface UseRunChatReturn {
   activePermissionRequest: PermissionRequestEnvelope | null;
   respondToPermission: (approved: boolean, remember?: boolean) => Promise<void>;
   isLive: boolean;
+  isResponding: boolean;
 }
 
 function findLastStreamingAssistant(prev: Envelope[]): number {
@@ -389,6 +390,7 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
         });
         setHandle(result);
         setEnvelopes([{ type: "user", message: { content: prompt } } as UserMessage]);
+        setFollowUp("");
       } catch (err) {
         setError(err instanceof Error ? err.message : "start failed");
       } finally {
@@ -455,6 +457,21 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
 
   const isLive = handle?.status === "spawning" || handle?.status === "running";
 
+  // `isLive` reflects whether the underlying Claude Code subprocess is alive for
+  // the whole session (it never toggles between turns - see run-spawner.js status
+  // transitions), so it can't be used to gate "is the assistant currently
+  // replying". Derive that separately from the shape of the latest envelope.
+  const isResponding = useMemo(() => {
+    if (!isLive) return false;
+    const last = envelopes[envelopes.length - 1] as
+      | { type?: string; message?: { _streaming?: boolean } }
+      | undefined;
+    if (!last) return false;
+    if (last.type === "user" || last.type === "tool_use") return true;
+    if (last.type === "assistant") return !!last.message?._streaming;
+    return false;
+  }, [isLive, envelopes]);
+
   return {
     handle,
     envelopes,
@@ -469,5 +486,6 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
     activePermissionRequest,
     respondToPermission,
     isLive,
+    isResponding,
   };
 }

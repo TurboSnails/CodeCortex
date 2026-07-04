@@ -117,6 +117,7 @@ export function ChatTab({
     activePermissionRequest,
     respondToPermission,
     isLive,
+    isResponding,
   } = useRunChat({ sessionId, cwd });
 
   const { marker, cleanedEnvelopes, isComplete, latestAssistantKey } = useWorkflowMarkers(displayEnvelopes, mode);
@@ -424,7 +425,9 @@ export function ChatTab({
         onSendWithPayload={onSendWithPayload}
         onError={(msg) => workspaceActions.addProblem({ source: "chat-attachments", message: msg })}
         onStop={stop}
-        disabled={busy === "start" || busy === "send" || busy === "stop" || isAutoAdvancePending}
+        disabled={
+          busy === "start" || busy === "send" || busy === "stop" || isAutoAdvancePending || isResponding
+        }
         isLive={isLive}
         placeholder={mode === "normal" ? (canSend ? t("chat.followUpPlaceholder") : t("chat.startPlaceholder")) : getPlaceholder(mode)}
         slashCommands={slashCommands}

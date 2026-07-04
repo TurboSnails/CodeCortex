@@ -71,8 +71,9 @@ export function useAttachments(options: UseAttachmentsOptions = {}): Attachments
 
   const onPaste = useCallback(
     (e: ClipboardEvent | React.ClipboardEvent) => {
-      e.preventDefault?.();
       const files = filesToArray((e as ClipboardEvent).clipboardData?.files as FileList | undefined);
+      if (files.length === 0) return;
+      e.preventDefault?.();
       void accept(files);
     },
     [accept]
