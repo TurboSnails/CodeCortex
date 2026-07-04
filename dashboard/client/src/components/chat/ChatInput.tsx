@@ -11,6 +11,7 @@ import { FileMentionList } from "./input/FileMentionList";
 import { AttachmentStrip } from "./input/AttachmentStrip";
 import { VoiceButton } from "./input/VoiceButton";
 import { InputHintBar } from "./input/InputHintBar";
+import { ShortcutDropdown } from "./input/ShortcutDropdown";
 
 export interface ChatSlashCommand {
   name: string;
@@ -247,7 +248,7 @@ export function ChatInput({
         return;
       }
     }
-    if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+    if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       doSend();
       return;
@@ -329,6 +330,7 @@ export function ChatInput({
         </div>
 
         <VoiceButton voice={voice} disabled={disabled} />
+        <ShortcutDropdown />
 
         {isLive ? (
           <button
@@ -352,7 +354,6 @@ export function ChatInput({
           </button>
         )}
       </div>
-      <InputHintBar />
       {pulseHint && value.trim() === "" && history.size > 0 && (
         <div role="status" aria-live="polite" className={`absolute right-3 bottom-16 text-[10px] text-accent/70 inline-flex items-center gap-1 ${animations.recallPulse}`}>
           <icons.arrowUp className="w-3 h-3" />

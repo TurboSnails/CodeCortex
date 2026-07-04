@@ -88,22 +88,85 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
         </p>
       </div>
       <div
-        class="min-w-[16rem]"
+        class="flex items-center gap-3"
       >
-        <label
-          class="block text-xs font-medium text-gray-400 mb-1.5"
+        <button
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
+          type="button"
         >
-          Working directory
-        </label>
-        <select
-          class="input w-full text-sm"
-        >
-          <option
-            value="/tmp/test"
+          <svg
+            class="lucide lucide-refresh-cw w-3.5 h-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            /tmp/test
-          </option>
-        </select>
+            <path
+              d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+            />
+            <path
+              d="M21 3v5h-5"
+            />
+            <path
+              d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+            />
+            <path
+              d="M8 16H3v5"
+            />
+          </svg>
+          New Session
+        </button>
+        <button
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
+          type="button"
+        >
+          <svg
+            class="lucide lucide-history w-3.5 h-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+            />
+            <path
+              d="M3 3v5h5"
+            />
+            <path
+              d="M12 7v5l4 2"
+            />
+          </svg>
+          History
+        </button>
+        <div
+          class="min-w-[16rem]"
+        >
+          <label
+            class="block text-xs font-medium text-gray-400 mb-1.5"
+          >
+            Working directory
+          </label>
+          <select
+            class="input w-full text-sm"
+          >
+            <option
+              value="/tmp/test"
+            >
+              /tmp/test
+            </option>
+          </select>
+        </div>
       </div>
     </div>
     <div
@@ -363,6 +426,203 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
                   />
                 </div>
                 <button
+                  aria-label="Keyboard shortcuts"
+                  class="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-surface-3 transition-colors"
+                  type="button"
+                >
+                  <svg
+                    class="lucide lucide-keyboard w-4 h-4"
+                    fill="none"
+                    height="24"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10 8h.01"
+                    />
+                    <path
+                      d="M12 12h.01"
+                    />
+                    <path
+                      d="M14 8h.01"
+                    />
+                    <path
+                      d="M16 12h.01"
+                    />
+                    <path
+                      d="M18 8h.01"
+                    />
+                    <path
+                      d="M6 8h.01"
+                    />
+                    <path
+                      d="M7 16h10"
+                    />
+                    <path
+                      d="M8 12h.01"
+                    />
+                    <rect
+                      height="16"
+                      rx="2"
+                      width="20"
+                      x="2"
+                      y="4"
+                    />
+                  </svg>
+                </button>
+                <dialog
+                  class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
+                  style="max-width: 20rem; width: 90vw;"
+                >
+                  <div
+                    class="px-4 py-3 border-b border-border flex items-center justify-between"
+                  >
+                    <span
+                      class="text-sm font-medium text-gray-200"
+                    >
+                      Keyboard Shortcuts
+                    </span>
+                    <button
+                      class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+                      type="button"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <ul
+                    class="py-2"
+                  >
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Send
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⏎
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Newline
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⇧
+                        </kbd>
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⏎
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Force send
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⌘
+                        </kbd>
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⏎
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Commands
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          /
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Files
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          @
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Recall history
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ↑
+                        </kbd>
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ↓
+                        </kbd>
+                      </span>
+                    </li>
+                  </ul>
+                </dialog>
+                <button
                   aria-label="send"
                   class="p-3 md:p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40"
                   disabled=""
@@ -388,74 +648,6 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
                     />
                   </svg>
                 </button>
-              </div>
-              <div
-                class="px-3 py-1 text-[10px] text-gray-500 whitespace-normal md:whitespace-nowrap"
-              >
-                <span>
-                  Send
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ⏎
-                </kbd>
-                 
-                <span>
-                  · 
-                  Newline
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ⇧⏎
-                </kbd>
-                 
-                <span>
-                  · 
-                  Force send
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ⌘⏎
-                </kbd>
-                 
-                <span>
-                  · 
-                  Commands
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  /
-                </kbd>
-                 
-                <span>
-                  · 
-                  Files
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  @
-                </kbd>
-                 
-                <span>
-                  · 
-                  Recall history
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ↑↓
-                </kbd>
               </div>
             </div>
           </div>
@@ -817,6 +1009,76 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
         />
       </div>
     </div>
+    <dialog
+      class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
+      style="max-width: 28rem; width: 90vw; max-height: 80vh;"
+    >
+      <div
+        class="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0"
+      >
+        <span
+          class="text-sm font-medium text-gray-200 flex items-center gap-2"
+        >
+          <svg
+            class="lucide lucide-history w-4 h-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+            />
+            <path
+              d="M3 3v5h5"
+            />
+            <path
+              d="M12 7v5l4 2"
+            />
+          </svg>
+          Session History
+        </span>
+        <button
+          class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+          type="button"
+        >
+          <svg
+            class="lucide lucide-x w-4 h-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M18 6 6 18"
+            />
+            <path
+              d="m6 6 12 12"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="overflow-auto"
+        style="max-height: calc(80vh - 3rem);"
+      >
+        <div
+          class="p-4 text-sm text-gray-500 text-center"
+        >
+          No sessions found
+        </div>
+      </div>
+    </dialog>
   </div>
 </div>
 `;
@@ -3840,22 +4102,85 @@ exports[`screen snapshots > Chat 1`] = `
         </p>
       </div>
       <div
-        class="min-w-[16rem]"
+        class="flex items-center gap-3"
       >
-        <label
-          class="block text-xs font-medium text-gray-400 mb-1.5"
+        <button
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
+          type="button"
         >
-          Working directory
-        </label>
-        <select
-          class="input w-full text-sm"
-        >
-          <option
-            value="/tmp/test"
+          <svg
+            class="lucide lucide-refresh-cw w-3.5 h-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            /tmp/test
-          </option>
-        </select>
+            <path
+              d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"
+            />
+            <path
+              d="M21 3v5h-5"
+            />
+            <path
+              d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"
+            />
+            <path
+              d="M8 16H3v5"
+            />
+          </svg>
+          New Session
+        </button>
+        <button
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
+          type="button"
+        >
+          <svg
+            class="lucide lucide-history w-3.5 h-3.5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+            />
+            <path
+              d="M3 3v5h5"
+            />
+            <path
+              d="M12 7v5l4 2"
+            />
+          </svg>
+          History
+        </button>
+        <div
+          class="min-w-[16rem]"
+        >
+          <label
+            class="block text-xs font-medium text-gray-400 mb-1.5"
+          >
+            Working directory
+          </label>
+          <select
+            class="input w-full text-sm"
+          >
+            <option
+              value="/tmp/test"
+            >
+              /tmp/test
+            </option>
+          </select>
+        </div>
       </div>
     </div>
     <div
@@ -4115,6 +4440,203 @@ exports[`screen snapshots > Chat 1`] = `
                   />
                 </div>
                 <button
+                  aria-label="Keyboard shortcuts"
+                  class="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-surface-3 transition-colors"
+                  type="button"
+                >
+                  <svg
+                    class="lucide lucide-keyboard w-4 h-4"
+                    fill="none"
+                    height="24"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10 8h.01"
+                    />
+                    <path
+                      d="M12 12h.01"
+                    />
+                    <path
+                      d="M14 8h.01"
+                    />
+                    <path
+                      d="M16 12h.01"
+                    />
+                    <path
+                      d="M18 8h.01"
+                    />
+                    <path
+                      d="M6 8h.01"
+                    />
+                    <path
+                      d="M7 16h10"
+                    />
+                    <path
+                      d="M8 12h.01"
+                    />
+                    <rect
+                      height="16"
+                      rx="2"
+                      width="20"
+                      x="2"
+                      y="4"
+                    />
+                  </svg>
+                </button>
+                <dialog
+                  class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
+                  style="max-width: 20rem; width: 90vw;"
+                >
+                  <div
+                    class="px-4 py-3 border-b border-border flex items-center justify-between"
+                  >
+                    <span
+                      class="text-sm font-medium text-gray-200"
+                    >
+                      Keyboard Shortcuts
+                    </span>
+                    <button
+                      class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+                      type="button"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <ul
+                    class="py-2"
+                  >
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Send
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⏎
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Newline
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⇧
+                        </kbd>
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⏎
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Force send
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⌘
+                        </kbd>
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ⏎
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Commands
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          /
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Files
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          @
+                        </kbd>
+                      </span>
+                    </li>
+                    <li
+                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    >
+                      <span
+                        class="text-sm text-gray-300"
+                      >
+                        Recall history
+                      </span>
+                      <span
+                        class="flex items-center gap-0.5"
+                      >
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ↑
+                        </kbd>
+                        <kbd
+                          class="kbd text-[10px]"
+                        >
+                          ↓
+                        </kbd>
+                      </span>
+                    </li>
+                  </ul>
+                </dialog>
+                <button
                   aria-label="send"
                   class="p-3 md:p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40"
                   disabled=""
@@ -4140,74 +4662,6 @@ exports[`screen snapshots > Chat 1`] = `
                     />
                   </svg>
                 </button>
-              </div>
-              <div
-                class="px-3 py-1 text-[10px] text-gray-500 whitespace-normal md:whitespace-nowrap"
-              >
-                <span>
-                  Send
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ⏎
-                </kbd>
-                 
-                <span>
-                  · 
-                  Newline
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ⇧⏎
-                </kbd>
-                 
-                <span>
-                  · 
-                  Force send
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ⌘⏎
-                </kbd>
-                 
-                <span>
-                  · 
-                  Commands
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  /
-                </kbd>
-                 
-                <span>
-                  · 
-                  Files
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  @
-                </kbd>
-                 
-                <span>
-                  · 
-                  Recall history
-                </span>
-                 
-                <kbd
-                  class="kbd"
-                >
-                  ↑↓
-                </kbd>
               </div>
             </div>
           </div>
@@ -4569,6 +5023,76 @@ exports[`screen snapshots > Chat 1`] = `
         />
       </div>
     </div>
+    <dialog
+      class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
+      style="max-width: 28rem; width: 90vw; max-height: 80vh;"
+    >
+      <div
+        class="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0"
+      >
+        <span
+          class="text-sm font-medium text-gray-200 flex items-center gap-2"
+        >
+          <svg
+            class="lucide lucide-history w-4 h-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+            />
+            <path
+              d="M3 3v5h5"
+            />
+            <path
+              d="M12 7v5l4 2"
+            />
+          </svg>
+          Session History
+        </span>
+        <button
+          class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+          type="button"
+        >
+          <svg
+            class="lucide lucide-x w-4 h-4"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M18 6 6 18"
+            />
+            <path
+              d="m6 6 12 12"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="overflow-auto"
+        style="max-height: calc(80vh - 3rem);"
+      >
+        <div
+          class="p-4 text-sm text-gray-500 text-center"
+        >
+          No sessions found
+        </div>
+      </div>
+    </dialog>
   </div>
 </div>
 `;

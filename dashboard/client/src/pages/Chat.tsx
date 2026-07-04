@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, MessageSquare } from "lucide-react";
+import { Menu, MessageSquare, History, RefreshCw } from "lucide-react";
 import { api } from "../lib/api";
 import type { CwdSuggestion } from "../lib/api";
 import { ChatTab } from "../components/chat/ChatTab";
@@ -23,6 +23,7 @@ import { ChatStatusBar } from "../components/chat/ChatStatusBar";
 import { ChatToastContainer } from "../components/chat/ChatToast";
 import { useChatShortcuts } from "../components/chat/useChatShortcuts";
 import { useRunChat } from "../components/chat/useRunChat";
+import { SessionHistoryDialog } from "../components/chat/SessionHistoryDialog";
 
 function ChatWorkspace() {
   const { t } = useTranslation(["sessions", "run"]);
@@ -30,16 +31,17 @@ function ChatWorkspace() {
   const actions = useChatWorkspaceActions();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const sessionId = useMemo(() => {
-    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-      return crypto.randomUUID();
-    }
-    return `chat-${Date.now()}`;
-  }, []);
+  const newSessionId = () =>
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `chat-${Date.now()}`;
+
+  const [sessionId, setSessionId] = useState(newSessionId);
 
   const [cwd, setCwd] = useState("");
   const [cwds, setCwds] = useState<CwdSuggestion[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   useEffect(() => {
     api.run
@@ -355,21 +357,39 @@ function ChatWorkspace() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">{t("chat.startHint")}</p>
         </div>
-        <div className="min-w-[16rem]">
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">
-            {t("run:fields.cwd")}
-          </label>
-          <select
-            className="input w-full text-sm"
-            value={cwd}
-            onChange={(e) => setCwd(e.target.value)}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setSessionId(newSessionId())}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
           >
-            {cwds.map((item) => (
-              <option key={item.path} value={item.path}>
-                {item.path}
-              </option>
-            ))}
-          </select>
+            <RefreshCw className="w-3.5 h-3.5" />
+            {t("chat.newSession", "New Session")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setHistoryOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
+          >
+            <History className="w-3.5 h-3.5" />
+            {t("chat.history", "History")}
+          </button>
+          <div className="min-w-[16rem]">
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+              {t("run:fields.cwd")}
+            </label>
+            <select
+              className="input w-full text-sm"
+              value={cwd}
+              onChange={(e) => setCwd(e.target.value)}
+            >
+              {cwds.map((item) => (
+                <option key={item.path} value={item.path}>
+                  {item.path}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -396,7 +416,7 @@ function ChatWorkspace() {
 
           <div className="flex-1 min-h-0">
             {cwd ? (
-              <ChatTab sessionId={sessionId} cwd={cwd} className="h-full border-0 rounded-none" />
+              <ChatTab key={sessionId} sessionId={sessionId} cwd={cwd} className="h-full border-0 rounded-none" />
             ) : null}
           </div>
 
@@ -449,6 +469,12 @@ function ChatWorkspace() {
           {rightContent}
         </ResizablePanel>
       </div>
+
+      <SessionHistoryDialog
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        onSelect={(id) => setSessionId(id)}
+      />
     </div>
   );
 }
