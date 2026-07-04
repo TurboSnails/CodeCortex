@@ -10,7 +10,6 @@ import { SlashList } from "./input/SlashList";
 import { FileMentionList } from "./input/FileMentionList";
 import { AttachmentStrip } from "./input/AttachmentStrip";
 import { VoiceButton } from "./input/VoiceButton";
-import { InputHintBar } from "./input/InputHintBar";
 import { ShortcutDropdown } from "./input/ShortcutDropdown";
 
 export interface ChatSlashCommand {

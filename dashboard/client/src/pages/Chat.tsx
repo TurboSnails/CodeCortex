@@ -5,7 +5,7 @@
  * Git panel, Tool details, output log, and status bar.
  */
 
-import { useEffect, useMemo, useCallback, useRef, useState } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu, MessageSquare, History, RefreshCw } from "lucide-react";
 import { api } from "../lib/api";
