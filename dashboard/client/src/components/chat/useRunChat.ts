@@ -49,6 +49,7 @@ export interface UseRunChatReturn {
   respondToPermission: (approved: boolean, remember?: boolean) => Promise<void>;
   isLive: boolean;
   isResponding: boolean;
+  reset: () => void;
 }
 
 function findLastStreamingAssistant(prev: Envelope[]): number {
@@ -472,6 +473,15 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
     return false;
   }, [isLive, envelopes]);
 
+  const reset = useCallback(() => {
+    setHandle(null);
+    setEnvelopes([]);
+    setFollowUp("");
+    setBusy(null);
+    setError(null);
+    setActivePermissionRequest(null);
+  }, []);
+
   return {
     handle,
     envelopes,
@@ -487,5 +497,6 @@ export function useRunChat(options: UseRunChatOptions): UseRunChatReturn {
     respondToPermission,
     isLive,
     isResponding,
+    reset,
   };
 }

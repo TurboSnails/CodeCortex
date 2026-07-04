@@ -290,6 +290,52 @@ describe("useRunChat", () => {
     expect(mockKill).toHaveBeenCalledWith("run-1");
   });
 
+  it("reset() clears handle, envelopes, followUp, error, and permission request", async () => {
+    const handle: RunHandle = {
+      id: "run-1",
+      status: "running",
+      mode: "conversation",
+      cwd: "/tmp",
+      permissionMode: "acceptEdits",
+      model: null,
+      effort: null,
+      prompt: "hello",
+      argv: [],
+      pid: 123,
+      resumeSessionId: null,
+      startedAt: Date.now(),
+      endedAt: null,
+      exitCode: null,
+      signal: null,
+      error: null,
+      sessionId: "sess-1",
+      envelopeCount: 1,
+      stdoutTail: "",
+      stderrTail: "",
+    };
+    mockStart.mockResolvedValueOnce(handle);
+
+    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+
+    await act(async () => {
+      await result.current.start("hello");
+    });
+    act(() => {
+      result.current.setFollowUp("draft text");
+    });
+    expect(result.current.handle).not.toBeNull();
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.handle).toBeNull();
+    expect(result.current.envelopes).toEqual([]);
+    expect(result.current.followUp).toBe("");
+    expect(result.current.error).toBeNull();
+    expect(result.current.activePermissionRequest).toBeNull();
+  });
+
   it("ignores run_stream events for other run ids", async () => {
     const handle: RunHandle = {
       id: "run-1",
