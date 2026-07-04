@@ -38,6 +38,8 @@
     "startHint": "输入消息以开始此会话的 Claude Code 运行。",
     "startPlaceholder": "让 Claude 做点什么…",
     "followUpPlaceholder": "发送后续消息…",
+    "focusMode": "专注模式",
+    "exitFocusMode": "退出专注",
     "permissionApprove": "批准",
     "permissionReject": "拒绝",
     "permissionAlways": "始终批准",

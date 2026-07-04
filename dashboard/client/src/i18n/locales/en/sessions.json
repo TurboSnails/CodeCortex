@@ -38,6 +38,8 @@
     "startHint": "Type a message to start a new Claude Code run for this session.",
     "startPlaceholder": "Ask Claude to do something…",
     "followUpPlaceholder": "Send a follow-up…",
+    "focusMode": "Focus",
+    "exitFocusMode": "Exit Focus",
     "permissionApprove": "Approve",
     "permissionReject": "Reject",
     "permissionAlways": "Always approve",

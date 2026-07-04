@@ -7,7 +7,7 @@
 
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, MessageSquare, History, RefreshCw } from "lucide-react";
+import { Menu, MessageSquare, History, RefreshCw, Maximize2, Minimize2 } from "lucide-react";
 import { api } from "../lib/api";
 import type { CwdSuggestion } from "../lib/api";
 import { ChatTab } from "../components/chat/ChatTab";
@@ -198,6 +198,7 @@ function ChatWorkspace() {
     toggleBottomPanel: actions.toggleBottomPanel,
     setBottomTab: actions.setBottomTab,
     stopRun: isLive ? stop : undefined,
+    toggleFocusMode: actions.toggleFocusMode,
   });
 
   const handleFileSelect = useCallback(
@@ -365,6 +366,14 @@ function ChatWorkspace() {
         <div className="flex items-center gap-3">
           <button
             type="button"
+            onClick={actions.toggleFocusMode}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
+          >
+            {state.focusMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            {state.focusMode ? t("chat.exitFocusMode") : t("chat.focusMode")}
+          </button>
+          <button
+            type="button"
             onClick={startNewSession}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
           >
@@ -399,18 +408,20 @@ function ChatWorkspace() {
       </div>
 
       <div className="flex-1 min-h-0 flex border border-border rounded-xl overflow-hidden bg-surface-1">
-        <div className={mobileSidebarOpen ? "block md:contents" : "hidden md:contents"}>
-          <ActivityBar active={state.leftSidebar.activeView} onChange={(v) => { actions.setLeftView(v); setMobileSidebarOpen(false); }} />
-          <ResizablePanel
-            side="left"
-            visible={state.leftSidebar.visible}
-            defaultWidth={240}
-            onToggle={actions.toggleLeftSidebar}
-            header={leftHeader}
-          >
-            {leftContent}
-          </ResizablePanel>
-        </div>
+        {!state.focusMode && (
+          <div className={mobileSidebarOpen ? "block md:contents" : "hidden md:contents"}>
+            <ActivityBar active={state.leftSidebar.activeView} onChange={(v) => { actions.setLeftView(v); setMobileSidebarOpen(false); }} />
+            <ResizablePanel
+              side="left"
+              visible={state.leftSidebar.visible}
+              defaultWidth={240}
+              onToggle={actions.toggleLeftSidebar}
+              header={leftHeader}
+            >
+              {leftContent}
+            </ResizablePanel>
+          </div>
+        )}
 
         <div className="flex-1 min-w-0 flex flex-col">
           {error && (

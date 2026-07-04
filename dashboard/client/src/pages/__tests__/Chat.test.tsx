@@ -137,4 +137,17 @@ describe("Chat page", () => {
     fireEvent.click(screen.getByRole("button", { name: /send/i }));
     await waitFor(() => expect(mockStart).toHaveBeenCalledTimes(2));
   });
+
+  it("Focus button hides side/bottom panels and the shortcut toggles it back", async () => {
+    render(<Chat />);
+    await waitFor(() => expect(screen.getByRole("textbox")).toBeInTheDocument());
+
+    expect(screen.getByTitle("Explorer")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^focus$/i }));
+    expect(screen.queryByTitle("Explorer")).not.toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: "f", metaKey: true, shiftKey: true });
+    expect(screen.getByTitle("Explorer")).toBeInTheDocument();
+  });
 });

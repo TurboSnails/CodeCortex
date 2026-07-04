@@ -14,6 +14,7 @@ interface ShortcutActions {
   toggleBottomPanel: () => void;
   setBottomTab: (tab: BottomPanelTab) => void;
   stopRun?: () => void;
+  toggleFocusMode?: () => void;
 }
 
 export function useChatShortcuts(actions: ShortcutActions) {
@@ -55,6 +56,13 @@ export function useChatShortcuts(actions: ShortcutActions) {
         e.preventDefault();
         actions.setBottomTab("problems");
         actions.toggleBottomPanel();
+        return;
+      }
+
+      // Cmd+Shift+F: toggle Focus mode
+      if (meta && shift && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        actions.toggleFocusMode?.();
         return;
       }
 
