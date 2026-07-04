@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertCircle, Play } from "lucide-react";
 import { api } from "../../lib/api";
-import { useRunChat } from "./useRunChat";
+import { useRunChat, type UseRunChatReturn } from "./useRunChat";
 import { ChatMessageList } from "./ChatMessageList";
 import { ChatInput, type ChatSlashCommand } from "./ChatInput";
 import { useChatWorkspaceActions } from "./ChatWorkspaceContext";
@@ -58,11 +58,11 @@ type WorkflowState =
   | { kind: "done"; mode: ChatMode };
 
 export function ChatTab({
-  sessionId,
+  runChat: externalRunChat,
   cwd,
   className,
 }: {
-  sessionId: string;
+  runChat?: UseRunChatReturn;
   cwd: string;
   className?: string;
 }) {
@@ -104,6 +104,8 @@ export function ChatTab({
     };
   }, [cwd]);
 
+  const internalRunChat = useRunChat({ cwd });
+  const runChat = externalRunChat ?? internalRunChat;
   const {
     handle,
     displayEnvelopes,
@@ -118,7 +120,7 @@ export function ChatTab({
     respondToPermission,
     isLive,
     isResponding,
-  } = useRunChat({ sessionId, cwd });
+  } = runChat;
 
   const { marker, cleanedEnvelopes, isComplete, latestAssistantKey } = useWorkflowMarkers(displayEnvelopes, mode);
 

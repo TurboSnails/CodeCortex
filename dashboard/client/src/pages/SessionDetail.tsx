@@ -968,7 +968,7 @@ export function SessionDetail() {
         >
           {session.cwd && (
             <ChatWorkspaceProvider>
-              <ChatTab sessionId={session.id} cwd={session.cwd} />
+              <ChatTab cwd={session.cwd} />
             </ChatWorkspaceProvider>
           )}
         </div>

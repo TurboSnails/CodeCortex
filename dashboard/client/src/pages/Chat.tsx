@@ -416,7 +416,7 @@ function ChatWorkspace() {
 
           <div className="flex-1 min-h-0">
             {cwd ? (
-              <ChatTab key={sessionId} sessionId={sessionId} cwd={cwd} className="h-full border-0 rounded-none" />
+              <ChatTab key={sessionId} cwd={cwd} className="h-full border-0 rounded-none" />
             ) : null}
           </div>
 

@@ -37,10 +37,10 @@ vi.mock("../../../lib/eventBus", () => ({
 // ChatTab now wires attachment errors through the workspace's addProblem
 // action (which the ChatToast container reads), so it must be rendered
 // inside the workspace provider.
-function renderChatTab(props: { sessionId: string; cwd: string }) {
+function renderChatTab(props: { sessionId?: string; cwd: string }) {
   return render(
     <ChatWorkspaceProvider>
-      <ChatTab {...props} />
+      <ChatTab cwd={props.cwd} />
     </ChatWorkspaceProvider>
   );
 }
@@ -80,6 +80,32 @@ describe("ChatTab", () => {
     fireEvent.change(textarea, { target: { value: "hello" } });
     const sendBtn = screen.getByRole("button", { name: /send/i });
     expect(sendBtn).not.toBeDisabled();
+  });
+
+  it("uses an externally-supplied runChat instead of creating its own", () => {
+    const externalRunChat = {
+      handle: null,
+      envelopes: [],
+      displayEnvelopes: [],
+      busy: null,
+      error: null,
+      followUp: "external draft",
+      setFollowUp: vi.fn(),
+      start: vi.fn(),
+      send: vi.fn(),
+      stop: vi.fn(),
+      activePermissionRequest: null,
+      respondToPermission: vi.fn(),
+      isLive: false,
+      isResponding: false,
+      reset: vi.fn(),
+    };
+    render(
+      <ChatWorkspaceProvider>
+        <ChatTab cwd="/tmp" runChat={externalRunChat} />
+      </ChatWorkspaceProvider>
+    );
+    expect(screen.getByRole("textbox")).toHaveValue("external draft");
   });
 
   it("disables the input while the assistant is responding, and re-enables once the reply completes", async () => {
