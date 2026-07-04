@@ -63,3 +63,11 @@ export function getPlaceholder(mode: ChatMode): string {
       return "Ask Claude…";
   }
 }
+
+export function getModePreview(mode: ChatMode): string | undefined {
+  if (mode === "normal") return undefined;
+  const chain = getWorkflowSteps(mode)
+    .map((s) => s.command)
+    .join(" → ");
+  return `自动执行：${chain}（每步完成后自动推进到下一步）`;
+}

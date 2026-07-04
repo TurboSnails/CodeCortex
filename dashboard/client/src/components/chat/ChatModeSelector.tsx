@@ -1,4 +1,5 @@
-import { CHAT_MODES, type ChatMode } from "./workflowConfig";
+import { CHAT_MODES, getModePreview, type ChatMode } from "./workflowConfig";
+import { Tip } from "../Tip";
 
 export interface ChatModeSelectorProps {
   mode: ChatMode;
@@ -10,9 +11,8 @@ export function ChatModeSelector({ mode, onChange }: ChatModeSelectorProps) {
     <div className="flex items-center gap-2 px-3 py-2" role="group" aria-label="Chat mode">
       {CHAT_MODES.map((m) => {
         const active = m.id === mode;
-        return (
+        const button = (
           <button
-            key={m.id}
             type="button"
             role="radio"
             aria-checked={active}
@@ -25,6 +25,11 @@ export function ChatModeSelector({ mode, onChange }: ChatModeSelectorProps) {
           >
             {m.label}
           </button>
+        );
+        return (
+          <Tip key={m.id} raw={getModePreview(m.id)}>
+            {button}
+          </Tip>
         );
       })}
     </div>
