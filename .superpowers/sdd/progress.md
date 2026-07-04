@@ -78,11 +78,12 @@ Final review fix wave 2: complete (commits 58a2d05..3268238, addresses duplicate
 Final review fix wave 3: complete (commit a663ddf, addresses mode-switch confirmation, strict marker regex, no-marker default-to-PAUSE integration test)
 Final review fix wave 4: complete (commit 2c45c74, addresses permission-request auto-advance pause, dead ChatModeSelector.disabled prop, onSend alignment, stale carry-forward minors)
 Final review fix wave 5: complete (commit 914d9da, addresses permission rejection auto-advance bug + integration test)
+Final review fix wave 6: complete (commit 93a44f4, addresses quick-permission pause race and retry refs after rejection)
 ```
 
 ## Final review outstanding
 
-- **Final whole-branch review:** First pass returned Important findings; five fix waves applied. Final re-review pending.
+- **Final whole-branch review:** First pass returned Important findings; six fix waves applied. Final re-review pending.
 - **Manual end-to-end tests (Task 9):** Deferred to human reviewer.
 
 ## Minor findings carried forward (chat workflow mode selector)
