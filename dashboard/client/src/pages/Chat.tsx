@@ -137,10 +137,10 @@ function ChatWorkspace() {
   }, [cwd, actions]);
 
   useEffect(() => {
-    if (state.leftSidebar.activeView === "git" || state.rightPanel.activeTab === "git") {
+    if (state.rightPanel.activeTab === "git") {
       loadGitStatus();
     }
-  }, [state.leftSidebar.activeView, state.rightPanel.activeTab, cwd, loadGitStatus]);
+  }, [state.rightPanel.activeTab, cwd, loadGitStatus]);
 
   // Load Git diff when selected file changes
   useEffect(() => {
@@ -276,12 +276,7 @@ function ChatWorkspace() {
     resetToNewSession();
   }, [runChat, resetToNewSession]);
 
-  const leftHeader =
-    state.leftSidebar.activeView === "explorer"
-      ? "Explorer"
-      : state.leftSidebar.activeView === "git"
-        ? "Source Control"
-        : "Settings";
+  const leftHeader = state.leftSidebar.activeView === "explorer" ? "Explorer" : "Settings";
 
   const leftContent =
     state.leftSidebar.activeView === "explorer" ? (
@@ -299,21 +294,6 @@ function ChatWorkspace() {
       ) : (
         <div className="p-3 text-xs text-red-300">{state.explorer.error || "No files"}</div>
       )
-    ) : state.leftSidebar.activeView === "git" ? (
-      <GitPanel
-        cwd={cwd}
-        status={state.git.status}
-        diff={state.git.diff}
-        loading={state.git.loading}
-        diffLoading={state.git.diffLoading}
-        error={state.git.error}
-        selectedFile={state.git.selectedFile}
-        onSelectFile={actions.selectGitFile}
-        onStage={handleGitStage}
-        onUnstage={handleGitUnstage}
-        onCommit={handleGitCommit}
-        onPush={handleGitPush}
-      />
     ) : (
       <div className="p-3 text-xs text-gray-500">Settings panel placeholder.</div>
     );

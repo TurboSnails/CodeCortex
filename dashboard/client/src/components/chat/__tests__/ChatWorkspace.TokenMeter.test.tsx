@@ -118,9 +118,9 @@ describe("ChatWorkspaceContext", () => {
     });
     act(() => result.current.actions.toggleLeftSidebar());
     expect(result.current.state.leftSidebar.visible).toBe(false);
-    act(() => result.current.actions.setLeftView("git"));
+    act(() => result.current.actions.setLeftView("settings"));
     expect(result.current.state.leftSidebar.visible).toBe(true);
-    expect(result.current.state.leftSidebar.activeView).toBe("git");
+    expect(result.current.state.leftSidebar.activeView).toBe("settings");
   });
 
   it("setExplorerTree updates tree and clears loading/error", () => {

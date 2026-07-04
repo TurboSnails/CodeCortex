@@ -37,10 +37,10 @@ export function useChatShortcuts(actions: ShortcutActions) {
         return;
       }
 
-      // Cmd+Shift+G: Git
+      // Cmd+Shift+G: Git (lives only in the right panel now)
       if (meta && shift && e.key.toLowerCase() === "g") {
         e.preventDefault();
-        actions.setLeftView("git");
+        actions.setRightTab("git");
         return;
       }
 

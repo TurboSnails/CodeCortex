@@ -1,10 +1,11 @@
 /**
  * @file ActivityBar.tsx
  * @description Vertical icon bar on the far left of the IDE-style /chat page.
- * Switches the left sidebar between Explorer, Git, and Settings views.
+ * Switches the left sidebar between Explorer and Settings views. Git lives
+ * only in the right panel now (no more duplicated Git view).
  */
 
-import { FolderTree, GitBranch, Settings } from "lucide-react";
+import { FolderTree, Settings } from "lucide-react";
 import type { LeftSidebarView } from "./ChatWorkspaceContext";
 
 interface ActivityBarProps {
@@ -14,7 +15,6 @@ interface ActivityBarProps {
 
 const ITEMS: { view: LeftSidebarView; icon: typeof FolderTree; label: string }[] = [
   { view: "explorer", icon: FolderTree, label: "Explorer" },
-  { view: "git", icon: GitBranch, label: "Source Control" },
   { view: "settings", icon: Settings, label: "Settings" },
 ];
 

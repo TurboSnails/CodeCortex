@@ -16,7 +16,7 @@ import {
 } from "react";
 import type { FileTreeNode, GitStatusResponse, GitDiffResponse } from "../../lib/api";
 
-export type LeftSidebarView = "explorer" | "git" | "settings";
+export type LeftSidebarView = "explorer" | "settings";
 export type RightPanelTab = "tool" | "file" | "git";
 export type BottomPanelTab = "terminal" | "problems";
 
