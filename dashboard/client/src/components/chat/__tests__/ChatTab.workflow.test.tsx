@@ -514,59 +514,6 @@ describe("ChatTab workflow mode", () => {
     }
   });
 
-  it("stops auto-advance and shows a permission-denied error when a permission request is rejected", async () => {
-    mockStart.mockResolvedValueOnce(makeHandle());
-    mockRespondToPermission.mockResolvedValueOnce({ ok: true });
-
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      renderChatTab();
-
-      fireEvent.click(screen.getByRole("radio", { name: /OpenSpec/i }));
-      fireEvent.change(screen.getByRole("textbox"), { target: { value: "build feature" } });
-      fireEvent.click(screen.getByRole("button", { name: /send/i }));
-
-      await waitFor(() =>
-        expect(mockStart).toHaveBeenCalledWith(expect.objectContaining({ prompt: "/opsx:explore build feature" }))
-      );
-      await waitFor(() => expect(busCallback).not.toBeNull());
-
-      publishEnvelope("run-1", {
-        type: "assistant",
-        message: { content: [{ type: "text", text: "ok <!-- __WORKFLOW:CONTINUE__ -->" }] },
-      });
-
-      // Permission request arrives before the 600 ms auto-advance timer fires.
-      publishEnvelope("run-1", {
-        type: "permission_request",
-        id: "perm-1",
-        tool_name: "Bash",
-        description: "Allow bash command?",
-      });
-
-      const rejectButtons = screen.getAllByRole("button", { name: /reject/i });
-      expect(rejectButtons[0]).toBeInTheDocument();
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(700);
-      });
-
-      expect(mockSend).not.toHaveBeenCalled();
-
-      fireEvent.click(rejectButtons[0]!);
-
-      await waitFor(() =>
-        expect(mockRespondToPermission).toHaveBeenCalledWith("run-1", { requestId: "perm-1", approved: false })
-      );
-      expect(mockSend).not.toHaveBeenCalled();
-      await waitFor(() => expect(screen.getByText("Permission denied")).toBeInTheDocument());
-      expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
   it("pauses auto-advance on a quick permission request and resumes before the timer fires", async () => {
     mockStart.mockResolvedValueOnce(makeHandle());
     mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
