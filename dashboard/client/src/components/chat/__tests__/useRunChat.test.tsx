@@ -66,7 +66,7 @@ describe("useRunChat", () => {
     };
     mockStart.mockResolvedValueOnce(handle);
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       await result.current.start("hello");
@@ -108,7 +108,7 @@ describe("useRunChat", () => {
     };
     mockStart.mockResolvedValueOnce(handle);
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     act(() => {
       result.current.setFollowUp("hello");
@@ -124,7 +124,7 @@ describe("useRunChat", () => {
   it("leaves followUp untouched when start() fails", async () => {
     mockStart.mockRejectedValueOnce(new Error("boom"));
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     act(() => {
       result.current.setFollowUp("hello");
@@ -164,7 +164,7 @@ describe("useRunChat", () => {
     mockStart.mockResolvedValueOnce(handle);
     mockSend.mockResolvedValueOnce({ messageId: "msg-2" });
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       await result.current.start("hello");
@@ -207,7 +207,7 @@ describe("useRunChat", () => {
     };
     mockStart.mockResolvedValueOnce(handle);
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       await result.current.start("hello");
@@ -277,7 +277,7 @@ describe("useRunChat", () => {
     mockStart.mockResolvedValueOnce(handle);
     mockKill.mockResolvedValueOnce({ ok: true });
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       await result.current.start("hello");
@@ -315,7 +315,7 @@ describe("useRunChat", () => {
     };
     mockStart.mockResolvedValueOnce(handle);
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       await result.current.start("hello");
@@ -361,7 +361,7 @@ describe("useRunChat", () => {
     };
     mockStart.mockResolvedValueOnce(handle);
 
-    renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       // subscribe called during render; busCallback should be set
@@ -402,7 +402,7 @@ describe("useRunChat", () => {
     };
     mockStart.mockResolvedValueOnce(handle);
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       await result.current.start("hello");
@@ -452,7 +452,7 @@ describe("useRunChat", () => {
     mockStart.mockResolvedValueOnce(handle);
     mockRespondToPermission.mockResolvedValueOnce({ ok: true });
 
-    const { result } = renderHook(() => useRunChat({ sessionId: "sess-1", cwd: "/tmp" }));
+    const { result } = renderHook(() => useRunChat({ cwd: "/tmp" }));
 
     await act(async () => {
       await result.current.start("hello");

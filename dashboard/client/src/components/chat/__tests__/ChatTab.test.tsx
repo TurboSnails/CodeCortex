@@ -37,7 +37,7 @@ vi.mock("../../../lib/eventBus", () => ({
 // ChatTab now wires attachment errors through the workspace's addProblem
 // action (which the ChatToast container reads), so it must be rendered
 // inside the workspace provider.
-function renderChatTab(props: { sessionId?: string; cwd: string }) {
+function renderChatTab(props: { cwd: string }) {
   return render(
     <ChatWorkspaceProvider>
       <ChatTab cwd={props.cwd} />
@@ -52,30 +52,30 @@ describe("ChatTab", () => {
   });
 
   it("renders start prompt placeholder when no run is active", () => {
-    renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
+    renderChatTab({ cwd: "/tmp" });
     expect(screen.getByPlaceholderText(/Ask Claude/)).toBeInTheDocument();
   });
 
   it("renders a textarea for input", () => {
-    renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
+    renderChatTab({ cwd: "/tmp" });
     expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 
   it("has a send button disabled when input is empty", () => {
-    renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
+    renderChatTab({ cwd: "/tmp" });
     const sendBtn = screen.getByRole("button", { name: /send/i });
     expect(sendBtn).toBeDisabled();
   });
 
   it("allows typing in the textarea", () => {
-    renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
+    renderChatTab({ cwd: "/tmp" });
     const textarea = screen.getByRole("textbox");
     fireEvent.change(textarea, { target: { value: "hello world" } });
     expect(textarea).toHaveValue("hello world");
   });
 
   it("enables send button when text is entered", () => {
-    renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
+    renderChatTab({ cwd: "/tmp" });
     const textarea = screen.getByRole("textbox");
     fireEvent.change(textarea, { target: { value: "hello" } });
     const sendBtn = screen.getByRole("button", { name: /send/i });
@@ -133,7 +133,7 @@ describe("ChatTab", () => {
     };
     (api.run.start as ReturnType<typeof vi.fn>).mockResolvedValueOnce(handle);
 
-    renderChatTab({ sessionId: "sess-1", cwd: "/tmp" });
+    renderChatTab({ cwd: "/tmp" });
     const textarea = screen.getByRole("textbox");
     fireEvent.change(textarea, { target: { value: "hi" } });
 

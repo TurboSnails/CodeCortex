@@ -27,7 +27,6 @@ import type {
 } from "./types";
 
 export interface UseRunChatOptions {
-  sessionId: string;
   cwd: string;
   initialMode?: RunMode;
   initialPermissionMode?: PermissionMode;

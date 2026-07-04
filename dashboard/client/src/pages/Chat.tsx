@@ -56,7 +56,7 @@ function ChatWorkspace() {
       .catch(console.error);
   }, []);
 
-  const runChat = useRunChat({ sessionId, cwd, initialModel: selectedModel || undefined });
+  const runChat = useRunChat({ cwd, initialModel: selectedModel || undefined });
   const {
     handle,
     displayEnvelopes,
