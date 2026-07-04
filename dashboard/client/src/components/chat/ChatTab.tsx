@@ -77,6 +77,7 @@ export function ChatTab({
   const [isAutoAdvancePending, setIsAutoAdvancePending] = useState(false);
   const lastWorkflowPayloadRef = useRef<SendPayload | null>(null);
   const lastWorkflowActionRef = useRef<"start" | "send" | null>(null);
+  const lastPermissionDecisionRef = useRef<"approved" | "rejected" | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -178,6 +179,7 @@ export function ChatTab({
       autoAdvanceTimeout.current = setTimeout(() => {
         autoAdvanceTimeout.current = null;
         if (activePermissionRequestRef.current) {
+          lastPermissionDecisionRef.current = null;
           setWorkflow({ kind: "paused", mode: workflow.mode, stepId: workflow.stepId, reason: "Waiting for permission approval" });
           return;
         }
@@ -213,18 +215,31 @@ export function ChatTab({
     if (workflow.kind !== "paused" || workflow.reason !== "Waiting for permission approval") return;
     if (activePermissionRequest) return;
 
-    const { command, stepId } = pendingAutoAdvance;
-    setPendingAutoAdvance(null);
-    setIsAutoAdvancePending(false);
-    lastWorkflowActionRef.current = "send";
-    lastWorkflowPayloadRef.current = { text: command, attachments: [] };
-    send(command).catch(() => {
-      // Error is surfaced via useRunChat.error and handled by the error effect above.
-    });
-    setWorkflow({ kind: "running", mode, stepId });
+    const decision = lastPermissionDecisionRef.current;
+    if (decision === "approved") {
+      lastPermissionDecisionRef.current = null;
+      const { command, stepId } = pendingAutoAdvance;
+      setPendingAutoAdvance(null);
+      setIsAutoAdvancePending(false);
+      lastWorkflowActionRef.current = "send";
+      lastWorkflowPayloadRef.current = { text: command, attachments: [] };
+      send(command).catch(() => {
+        // Error is surfaced via useRunChat.error and handled by the error effect above.
+      });
+      setWorkflow({ kind: "running", mode: workflow.mode, stepId });
+    } else if (decision === "rejected") {
+      lastPermissionDecisionRef.current = null;
+      setPendingAutoAdvance(null);
+      setIsAutoAdvancePending(false);
+      setWorkflow({ kind: "error", mode: workflow.mode, stepId: workflow.stepId, message: "Permission denied" });
+    } else {
+      // No decision recorded yet; clear pending state and stay paused.
+      setPendingAutoAdvance(null);
+      setIsAutoAdvancePending(false);
+    }
     // `workflow` is needed so the effect runs when the paused state is entered.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePermissionRequest, pendingAutoAdvance, workflow, send, mode]);
+  }, [activePermissionRequest, pendingAutoAdvance, workflow, send]);
 
   const onSend = () => {
     const text = followUp.trim();
@@ -371,8 +386,14 @@ export function ChatTab({
         envelopes={cleanedEnvelopes}
         isLive={isLive && !activePermissionRequest}
         activePermissionRequest={activePermissionRequest}
-        onApprovePermission={() => respondToPermission(true)}
-        onRejectPermission={() => respondToPermission(false)}
+        onApprovePermission={() => {
+          lastPermissionDecisionRef.current = "approved";
+          respondToPermission(true);
+        }}
+        onRejectPermission={() => {
+          lastPermissionDecisionRef.current = "rejected";
+          respondToPermission(false);
+        }}
         permissionBusy={busy !== null}
       />
 
