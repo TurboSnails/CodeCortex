@@ -63,6 +63,8 @@ export interface ChatWorkspaceState {
   problems: Problem[];
   activeToolId: string | null;
   highlightedPaths: Set<string>;
+  focusMode: boolean;
+  preFocusSnapshot: { left: boolean; right: boolean; bottom: boolean } | null;
 }
 
 type Action =
@@ -91,7 +93,8 @@ type Action =
   | { type: "remove_problem"; payload: string }
   | { type: "set_active_tool"; payload: string | null }
   | { type: "set_highlighted_paths"; payload: Set<string> }
-  | { type: "open_file_preview"; payload: string };
+  | { type: "open_file_preview"; payload: string }
+  | { type: "toggle_focus_mode" };
 
 const initialState: ChatWorkspaceState = {
   leftSidebar: { visible: true, activeView: "explorer" },
@@ -120,6 +123,8 @@ const initialState: ChatWorkspaceState = {
   problems: [],
   activeToolId: null,
   highlightedPaths: new Set(),
+  focusMode: false,
+  preFocusSnapshot: null,
 };
 
 function reducer(state: ChatWorkspaceState, action: Action): ChatWorkspaceState {
@@ -196,6 +201,31 @@ function reducer(state: ChatWorkspaceState, action: Action): ChatWorkspaceState 
       return { ...state, activeToolId: action.payload };
     case "set_highlighted_paths":
       return { ...state, highlightedPaths: action.payload };
+    case "toggle_focus_mode": {
+      if (!state.focusMode) {
+        return {
+          ...state,
+          focusMode: true,
+          preFocusSnapshot: {
+            left: state.leftSidebar.visible,
+            right: state.rightPanel.visible,
+            bottom: state.bottomPanel.visible,
+          },
+          leftSidebar: { ...state.leftSidebar, visible: false },
+          rightPanel: { ...state.rightPanel, visible: false },
+          bottomPanel: { ...state.bottomPanel, visible: false },
+        };
+      }
+      const snap = state.preFocusSnapshot ?? { left: true, right: true, bottom: false };
+      return {
+        ...state,
+        focusMode: false,
+        preFocusSnapshot: null,
+        leftSidebar: { ...state.leftSidebar, visible: snap.left },
+        rightPanel: { ...state.rightPanel, visible: snap.right },
+        bottomPanel: { ...state.bottomPanel, visible: snap.bottom },
+      };
+    }
     default:
       return state;
   }
@@ -260,6 +290,7 @@ export function useChatWorkspaceActions() {
   const removeProblem = useCallback((id: string) => dispatch({ type: "remove_problem", payload: id }), [dispatch]);
   const setActiveTool = useCallback((id: string | null) => dispatch({ type: "set_active_tool", payload: id }), [dispatch]);
   const setHighlightedPaths = useCallback((paths: Set<string>) => dispatch({ type: "set_highlighted_paths", payload: paths }), [dispatch]);
+  const toggleFocusMode = useCallback(() => dispatch({ type: "toggle_focus_mode" }), [dispatch]);
 
   return useMemo(
     () => ({
@@ -289,6 +320,7 @@ export function useChatWorkspaceActions() {
       removeProblem,
       setActiveTool,
       setHighlightedPaths,
+      toggleFocusMode,
     }),
     [
       toggleLeftSidebar,
@@ -317,6 +349,7 @@ export function useChatWorkspaceActions() {
       removeProblem,
       setActiveTool,
       setHighlightedPaths,
+      toggleFocusMode,
     ]
   );
 }

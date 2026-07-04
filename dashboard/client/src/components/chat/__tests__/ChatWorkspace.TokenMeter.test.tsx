@@ -160,6 +160,37 @@ describe("ChatWorkspaceContext", () => {
     expect(result.current.state.problems[0]!.message).toBe("problem 104");
   });
 
+  it("toggleFocusMode hides all panels and snapshots prior visibility", () => {
+    const { result } = renderHook(
+      () => ({ state: useChatWorkspace().state, actions: useChatWorkspaceActions() }),
+      { wrapper }
+    );
+    act(() => result.current.actions.toggleBottomPanel()); // bottom becomes visible
+
+    act(() => result.current.actions.toggleFocusMode());
+
+    expect(result.current.state.focusMode).toBe(true);
+    expect(result.current.state.leftSidebar.visible).toBe(false);
+    expect(result.current.state.rightPanel.visible).toBe(false);
+    expect(result.current.state.bottomPanel.visible).toBe(false);
+  });
+
+  it("toggleFocusMode restores the exact prior visibility on exit", () => {
+    const { result } = renderHook(
+      () => ({ state: useChatWorkspace().state, actions: useChatWorkspaceActions() }),
+      { wrapper }
+    );
+    act(() => result.current.actions.toggleRightPanel()); // right panel becomes hidden (was visible)
+
+    act(() => result.current.actions.toggleFocusMode()); // enter focus
+    act(() => result.current.actions.toggleFocusMode()); // exit focus
+
+    expect(result.current.state.focusMode).toBe(false);
+    expect(result.current.state.leftSidebar.visible).toBe(true);
+    expect(result.current.state.rightPanel.visible).toBe(false);
+    expect(result.current.state.bottomPanel.visible).toBe(false);
+  });
+
   it("clearProblems removes all problems", () => {
     const { result } = renderHook(() => ({ state: useChatWorkspace().state, actions: useChatWorkspaceActions() }), {
       wrapper,
