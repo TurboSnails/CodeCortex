@@ -76,11 +76,12 @@ Task 10: complete (tsc 0 errors, client tests 390/390 pass, server tests 497/497
 Final review fix wave 1: complete (commits cb4bc4b..1516151, addresses normal-mode marker stripping, workflow step hint, error retry/cancel)
 Final review fix wave 2: complete (commits 58a2d05..3268238, addresses duplicate error banner, retry payload preservation, disable input during auto-advance)
 Final review fix wave 3: complete (commit a663ddf, addresses mode-switch confirmation, strict marker regex, no-marker default-to-PAUSE integration test)
+Final review fix wave 4: complete (commit 2c45c74, addresses permission-request auto-advance pause, dead ChatModeSelector.disabled prop, onSend alignment, stale carry-forward minors)
 ```
 
 ## Final review outstanding
 
-- **Final whole-branch review:** First pass returned Important findings; three fix waves applied. Final re-review pending.
+- **Final whole-branch review:** First pass returned Important findings; four fix waves applied. Final re-review pending.
 - **Manual end-to-end tests (Task 9):** Deferred to human reviewer.
 
 ## Minor findings carried forward (chat workflow mode selector)
