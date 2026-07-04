@@ -1,8 +1,22 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { Chat } from "../Chat";
 import { api } from "../../lib/api";
 import type { RunHandle } from "../../lib/api";
+
+beforeAll(() => {
+  // jsdom doesn't implement <dialog>'s imperative methods (see ConfirmDialog.test.tsx).
+  if (!HTMLDialogElement.prototype.showModal) {
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+      this.setAttribute("open", "");
+    };
+  }
+  if (!HTMLDialogElement.prototype.close) {
+    HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+      this.removeAttribute("open");
+    };
+  }
+});
 
 vi.mock("../../lib/api", () => ({
   api: {
@@ -136,6 +150,35 @@ describe("Chat page", () => {
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "second" } });
     fireEvent.click(screen.getByRole("button", { name: /send/i }));
     await waitFor(() => expect(mockStart).toHaveBeenCalledTimes(2));
+  });
+
+  it("confirms before starting a new session while a run is active", async () => {
+    render(<Chat />);
+    await waitFor(() => expect(screen.getByRole("textbox")).toBeInTheDocument());
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "hi" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    await waitFor(() => expect(mockStart).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole("button", { name: /new session/i }));
+
+    expect(screen.getByText(/start a new session/i)).toBeInTheDocument();
+    expect(mockStart).toHaveBeenCalledTimes(1); // not reset yet
+
+    fireEvent.click(screen.getByRole("button", { name: /^start new session$/i }));
+
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "second" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    await waitFor(() => expect(mockStart).toHaveBeenCalledTimes(2));
+  });
+
+  it("confirms before starting a new session with an unsent draft, even if idle", async () => {
+    render(<Chat />);
+    await waitFor(() => expect(screen.getByRole("textbox")).toBeInTheDocument());
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "unsent draft" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /new session/i }));
+
+    expect(screen.getByText(/start a new session/i)).toBeInTheDocument();
   });
 
   it("Focus button hides side/bottom panels and the shortcut toggles it back", async () => {

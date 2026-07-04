@@ -24,9 +24,10 @@ import { ChatToastContainer } from "../components/chat/ChatToast";
 import { useChatShortcuts } from "../components/chat/useChatShortcuts";
 import { useRunChat } from "../components/chat/useRunChat";
 import { SessionHistoryDialog } from "../components/chat/SessionHistoryDialog";
+import { ConfirmDialog } from "../components/chat/ConfirmDialog";
 
 function ChatWorkspace() {
-  const { t } = useTranslation(["sessions", "run"]);
+  const { t } = useTranslation(["sessions", "run", "common"]);
   const { state } = useChatWorkspace();
   const actions = useChatWorkspaceActions();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -42,6 +43,7 @@ function ChatWorkspace() {
   const [cwds, setCwds] = useState<CwdSuggestion[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [pendingNewSession, setPendingNewSession] = useState(false);
 
   useEffect(() => {
     api.run
@@ -261,10 +263,18 @@ function ChatWorkspace() {
     }
   }, [cwd, loadGitStatus, actions]);
 
-  const startNewSession = useCallback(() => {
+  const resetToNewSession = useCallback(() => {
     runChat.reset();
     setSessionId(newSessionId());
   }, [runChat]);
+
+  const handleNewSessionClick = useCallback(() => {
+    if (runChat.isLive || runChat.followUp.trim().length > 0) {
+      setPendingNewSession(true);
+      return;
+    }
+    resetToNewSession();
+  }, [runChat, resetToNewSession]);
 
   const leftHeader =
     state.leftSidebar.activeView === "explorer"
@@ -374,11 +384,11 @@ function ChatWorkspace() {
           </button>
           <button
             type="button"
-            onClick={startNewSession}
+            onClick={handleNewSessionClick}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            {t("chat.newSession", "New Session")}
+            {t("chat.newSession")}
           </button>
           <button
             type="button"
@@ -386,7 +396,7 @@ function ChatWorkspace() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-gray-300 border border-border hover:bg-surface-3 hover:text-gray-100 transition-colors"
           >
             <History className="w-3.5 h-3.5" />
-            {t("chat.history", "History")}
+            {t("chat.history")}
           </button>
           <div className="min-w-[16rem]">
             <label className="block text-xs font-medium text-gray-400 mb-1.5">
@@ -486,6 +496,19 @@ function ChatWorkspace() {
         </ResizablePanel>
       </div>
 
+      <ConfirmDialog
+        open={pendingNewSession}
+        title={t("chat.newSessionConfirmTitle")}
+        message={t("chat.newSessionConfirmMessage")}
+        confirmLabel={t("chat.newSessionConfirmAction")}
+        cancelLabel={t("common:cancel")}
+        destructive
+        onConfirm={() => {
+          setPendingNewSession(false);
+          resetToNewSession();
+        }}
+        onCancel={() => setPendingNewSession(false)}
+      />
       <SessionHistoryDialog
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
