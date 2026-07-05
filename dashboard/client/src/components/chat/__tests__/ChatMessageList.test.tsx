@@ -61,7 +61,7 @@ const streamingAssistantText: Envelope = {
   type: "assistant",
   message: {
     id: "stream-2",
-    content: [{ type: "text", text: "Partial " }],
+    content: [{ type: "text", text: "This is a long streaming text that definitely exceeds forty characters total" }],
     _streaming: true,
   },
 };
@@ -144,7 +144,7 @@ describe("ChatMessageList", () => {
 
   it("shows a blinking cursor after the last streaming text block", () => {
     render(<ChatMessageList envelopes={[streamingAssistantText]} isLive={true} />);
-    expect(screen.getByText("Partial")).toBeInTheDocument();
+    expect(screen.getByText(/definitely exceeds forty characters total/)).toBeInTheDocument();
     expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 });

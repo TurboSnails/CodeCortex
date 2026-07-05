@@ -171,9 +171,13 @@ function StreamingIndicator({ env }: { env: Envelope | null }) {
   }
 
   if (last.type === "text") {
+    const preview = (last.text || "").slice(-40);
     return (
-      <span className="inline-block text-sm text-gray-200">
+      <span className="inline-flex items-center gap-2 text-sm text-gray-200">
         <span className="animate-pulse text-gray-400">▍</span>
+        {preview && (
+          <span className="text-xs text-gray-500 max-w-[12rem] truncate">{preview}</span>
+        )}
       </span>
     );
   }
