@@ -1,5 +1,5 @@
-import { useRef, useEffect } from "react";
-import { Bot, Sparkles, Wrench } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
+import { Bot, Sparkles, Wrench, ChevronDown } from "lucide-react";
 import type {
   Envelope,
   AssistantMessage,
@@ -206,17 +206,34 @@ export function ChatMessageList({
   permissionBusy?: boolean;
 }) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const near = distFromBottom < 100;
+    setIsNearBottom(near);
+    setShowScrollButton(!near && envelopes.length > 2);
+  };
+
   useEffect(() => {
-    if (typeof bottomRef.current?.scrollIntoView === "function") {
+    if (isNearBottom && typeof bottomRef.current?.scrollIntoView === "function") {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [envelopes.length, activePermissionRequest?.id]);
+  }, [envelopes.length, activePermissionRequest?.id, isNearBottom]);
 
   const lastEnvelope = envelopes[envelopes.length - 1] ?? null;
   const showStreamingIndicator = isLive && !activePermissionRequest;
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4"
+    >
       {envelopes.map((env, i) => {
         if (isUserEnvelope(env)) {
           return (
@@ -298,6 +315,20 @@ export function ChatMessageList({
             <StreamingIndicator env={lastEnvelope} />
           </div>
         </div>
+      )}
+      {showScrollButton && (
+        <button
+          type="button"
+          onClick={() => {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+            setShowScrollButton(false);
+          }}
+          className="fixed bottom-24 right-6 z-10 flex items-center gap-1 px-3 py-1.5 rounded-full bg-surface-2 border border-border text-xs text-gray-300 shadow-lg hover:bg-surface-3 transition-colors"
+          aria-label="Scroll to bottom"
+        >
+          <ChevronDown className="w-3 h-3" />
+          滚动到底部
+        </button>
       )}
       <div ref={bottomRef} />
     </div>
