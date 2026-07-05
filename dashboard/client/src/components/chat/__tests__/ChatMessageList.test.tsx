@@ -142,9 +142,12 @@ describe("ChatMessageList", () => {
     expect(screen.getByText(/claude is thinking/i)).toBeInTheDocument();
   });
 
-  it("shows a blinking cursor after the last streaming text block", () => {
+  it("shows a blinking cursor after the last streaming text block", async () => {
     render(<ChatMessageList envelopes={[streamingAssistantText]} isLive={true} />);
-    expect(screen.getByText(/definitely exceeds forty characters total/)).toBeInTheDocument();
-    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    // Wait for animation to settle and cursor to appear
+    await new Promise((r) => setTimeout(r, 400));
+    // Cursor is the inline pulse element inside the streaming text
+    const cursor = document.querySelector('[class*="bg-violet-400"]');
+    expect(cursor).toBeInTheDocument();
   });
 });

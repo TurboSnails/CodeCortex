@@ -440,6 +440,7 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
                 <button
                   aria-label="Keyboard shortcuts"
                   class="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-surface-3 transition-colors"
+                  title="Keyboard shortcuts"
                   type="button"
                 >
                   <svg
@@ -489,14 +490,58 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
                 </button>
                 <dialog
                   class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
-                  style="max-width: 20rem; width: 90vw;"
+                  style="max-width: 26rem; width: 90vw;"
                 >
                   <div
                     class="px-4 py-3 border-b border-border flex items-center justify-between"
                   >
                     <span
-                      class="text-sm font-medium text-gray-200"
+                      class="text-sm font-medium text-gray-200 flex items-center gap-2"
                     >
+                      <svg
+                        class="lucide lucide-keyboard w-4 h-4 text-gray-400"
+                        fill="none"
+                        height="24"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M10 8h.01"
+                        />
+                        <path
+                          d="M12 12h.01"
+                        />
+                        <path
+                          d="M14 8h.01"
+                        />
+                        <path
+                          d="M16 12h.01"
+                        />
+                        <path
+                          d="M18 8h.01"
+                        />
+                        <path
+                          d="M6 8h.01"
+                        />
+                        <path
+                          d="M7 16h10"
+                        />
+                        <path
+                          d="M8 12h.01"
+                        />
+                        <rect
+                          height="16"
+                          rx="2"
+                          width="20"
+                          x="2"
+                          y="4"
+                        />
+                      </svg>
                       Keyboard Shortcuts
                     </span>
                     <button
@@ -506,133 +551,510 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
                       ✕
                     </button>
                   </div>
-                  <ul
-                    class="py-2"
+                  <div
+                    class="max-h-[70vh] overflow-y-auto"
                   >
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    <div>
+                      <div
+                        class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                      >
+                        Input
+                      </div>
+                      <ul
+                        class="py-1"
+                      >
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Send message
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↵
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            New line
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↵
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Force send
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↵
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Command palette
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              /
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Reference file
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              @
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Recall history
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↑
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Next suggestion
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↓
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Select suggestion
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              Tab
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Close autocomplete
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              Esc
+                            </kbd>
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div
+                        class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                      >
+                        IDE Navigation
+                      </div>
+                      <ul
+                        class="py-1"
+                      >
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-folder-open w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"
+                                />
+                              </svg>
+                            </span>
+                            Toggle sidebar
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              B
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-search w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <circle
+                                  cx="11"
+                                  cy="11"
+                                  r="8"
+                                />
+                                <path
+                                  d="m21 21-4.3-4.3"
+                                />
+                              </svg>
+                            </span>
+                            Explorer
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              E
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-git-branch w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <line
+                                  x1="6"
+                                  x2="6"
+                                  y1="3"
+                                  y2="15"
+                                />
+                                <circle
+                                  cx="18"
+                                  cy="6"
+                                  r="3"
+                                />
+                                <circle
+                                  cx="6"
+                                  cy="18"
+                                  r="3"
+                                />
+                                <path
+                                  d="M18 9a9 9 0 0 1-9 9"
+                                />
+                              </svg>
+                            </span>
+                            Git panel
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              G
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-panel-bottom w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <rect
+                                  height="18"
+                                  rx="2"
+                                  width="18"
+                                  x="3"
+                                  y="3"
+                                />
+                                <path
+                                  d="M3 15h18"
+                                />
+                              </svg>
+                            </span>
+                            Toggle terminal
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              J
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-focus w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <circle
+                                  cx="12"
+                                  cy="12"
+                                  r="3"
+                                />
+                                <path
+                                  d="M3 7V5a2 2 0 0 1 2-2h2"
+                                />
+                                <path
+                                  d="M17 3h2a2 2 0 0 1 2 2v2"
+                                />
+                                <path
+                                  d="M21 17v2a2 2 0 0 1-2 2h-2"
+                                />
+                                <path
+                                  d="M7 21H5a2 2 0 0 1-2-2v-2"
+                                />
+                              </svg>
+                            </span>
+                            Focus mode
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              F
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Stop run
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              Esc
+                            </kbd>
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div
+                    class="px-4 py-2 border-t border-border/50 text-[10px] text-gray-600 text-center"
+                  >
+                    <span
+                      class="inline-flex items-center gap-1"
                     >
-                      <span
-                        class="text-sm text-gray-300"
+                      <kbd
+                        class="px-1 py-0.5 rounded bg-surface-3 text-[9px]"
                       >
-                        Send
+                        ⌘
+                      </kbd>
+                      <span>
+                        = Cmd on Mac, Ctrl on Windows
                       </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⏎
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Newline
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⇧
-                        </kbd>
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⏎
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Force send
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⌘
-                        </kbd>
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⏎
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Commands
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          /
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Files
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          @
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Recall history
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ↑
-                        </kbd>
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ↓
-                        </kbd>
-                      </span>
-                    </li>
-                  </ul>
+                    </span>
+                  </div>
                 </dialog>
                 <button
                   aria-label="send"
@@ -660,6 +1082,701 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
                     />
                   </svg>
                 </button>
+              </div>
+              <div
+                class="px-3 py-1.5 text-[10px] text-gray-500 flex items-center gap-3 whitespace-nowrap overflow-x-auto no-scrollbar"
+              >
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    ⏎
+                  </kbd>
+                  <span>
+                    Send
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    ⇧⏎
+                  </kbd>
+                  <span
+                    class="hidden sm:inline"
+                  >
+                    Newline
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    /
+                  </kbd>
+                  <span
+                    class="hidden md:inline"
+                  >
+                    Commands
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    @
+                  </kbd>
+                  <span
+                    class="hidden md:inline"
+                  >
+                    Files
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    ↑↓
+                  </kbd>
+                  <span
+                    class="hidden sm:inline"
+                  >
+                    Recall history
+                  </span>
+                </span>
+                <span
+                  class="ml-auto shrink-0"
+                >
+                  <button
+                    aria-label="Keyboard shortcuts"
+                    class="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-surface-3 transition-colors"
+                    title="Keyboard shortcuts"
+                    type="button"
+                  >
+                    <svg
+                      class="lucide lucide-keyboard w-4 h-4"
+                      fill="none"
+                      height="24"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 8h.01"
+                      />
+                      <path
+                        d="M12 12h.01"
+                      />
+                      <path
+                        d="M14 8h.01"
+                      />
+                      <path
+                        d="M16 12h.01"
+                      />
+                      <path
+                        d="M18 8h.01"
+                      />
+                      <path
+                        d="M6 8h.01"
+                      />
+                      <path
+                        d="M7 16h10"
+                      />
+                      <path
+                        d="M8 12h.01"
+                      />
+                      <rect
+                        height="16"
+                        rx="2"
+                        width="20"
+                        x="2"
+                        y="4"
+                      />
+                    </svg>
+                  </button>
+                  <dialog
+                    class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
+                    style="max-width: 26rem; width: 90vw;"
+                  >
+                    <div
+                      class="px-4 py-3 border-b border-border flex items-center justify-between"
+                    >
+                      <span
+                        class="text-sm font-medium text-gray-200 flex items-center gap-2"
+                      >
+                        <svg
+                          class="lucide lucide-keyboard w-4 h-4 text-gray-400"
+                          fill="none"
+                          height="24"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                          width="24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M10 8h.01"
+                          />
+                          <path
+                            d="M12 12h.01"
+                          />
+                          <path
+                            d="M14 8h.01"
+                          />
+                          <path
+                            d="M16 12h.01"
+                          />
+                          <path
+                            d="M18 8h.01"
+                          />
+                          <path
+                            d="M6 8h.01"
+                          />
+                          <path
+                            d="M7 16h10"
+                          />
+                          <path
+                            d="M8 12h.01"
+                          />
+                          <rect
+                            height="16"
+                            rx="2"
+                            width="20"
+                            x="2"
+                            y="4"
+                          />
+                        </svg>
+                        Keyboard Shortcuts
+                      </span>
+                      <button
+                        class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+                        type="button"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div
+                      class="max-h-[70vh] overflow-y-auto"
+                    >
+                      <div>
+                        <div
+                          class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                        >
+                          Input
+                        </div>
+                        <ul
+                          class="py-1"
+                        >
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Send message
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↵
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              New line
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↵
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Force send
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↵
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Command palette
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                /
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Reference file
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                @
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Recall history
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↑
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Next suggestion
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↓
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Select suggestion
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                Tab
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Close autocomplete
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                Esc
+                              </kbd>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <div
+                          class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                        >
+                          IDE Navigation
+                        </div>
+                        <ul
+                          class="py-1"
+                        >
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-folder-open w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"
+                                  />
+                                </svg>
+                              </span>
+                              Toggle sidebar
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                B
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-search w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <circle
+                                    cx="11"
+                                    cy="11"
+                                    r="8"
+                                  />
+                                  <path
+                                    d="m21 21-4.3-4.3"
+                                  />
+                                </svg>
+                              </span>
+                              Explorer
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                E
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-git-branch w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <line
+                                    x1="6"
+                                    x2="6"
+                                    y1="3"
+                                    y2="15"
+                                  />
+                                  <circle
+                                    cx="18"
+                                    cy="6"
+                                    r="3"
+                                  />
+                                  <circle
+                                    cx="6"
+                                    cy="18"
+                                    r="3"
+                                  />
+                                  <path
+                                    d="M18 9a9 9 0 0 1-9 9"
+                                  />
+                                </svg>
+                              </span>
+                              Git panel
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                G
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-panel-bottom w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <rect
+                                    height="18"
+                                    rx="2"
+                                    width="18"
+                                    x="3"
+                                    y="3"
+                                  />
+                                  <path
+                                    d="M3 15h18"
+                                  />
+                                </svg>
+                              </span>
+                              Toggle terminal
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                J
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-focus w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="3"
+                                  />
+                                  <path
+                                    d="M3 7V5a2 2 0 0 1 2-2h2"
+                                  />
+                                  <path
+                                    d="M17 3h2a2 2 0 0 1 2 2v2"
+                                  />
+                                  <path
+                                    d="M21 17v2a2 2 0 0 1-2 2h-2"
+                                  />
+                                  <path
+                                    d="M7 21H5a2 2 0 0 1-2-2v-2"
+                                  />
+                                </svg>
+                              </span>
+                              Focus mode
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                F
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Stop run
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                Esc
+                              </kbd>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div
+                      class="px-4 py-2 border-t border-border/50 text-[10px] text-gray-600 text-center"
+                    >
+                      <span
+                        class="inline-flex items-center gap-1"
+                      >
+                        <kbd
+                          class="px-1 py-0.5 rounded bg-surface-3 text-[9px]"
+                        >
+                          ⌘
+                        </kbd>
+                        <span>
+                          = Cmd on Mac, Ctrl on Windows
+                        </span>
+                      </span>
+                    </div>
+                  </dialog>
+                </span>
               </div>
             </div>
           </div>
@@ -1024,16 +2141,78 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
     <dialog />
     <dialog
       class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
-      style="max-width: 28rem; width: 90vw; max-height: 80vh;"
+      style="max-width: 36rem; width: 90vw; max-height: 85vh;"
     >
       <div
-        class="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0"
+        class="px-4 py-3 border-b border-border flex flex-col gap-3 flex-shrink-0"
       >
-        <span
-          class="text-sm font-medium text-gray-200 flex items-center gap-2"
+        <div
+          class="flex items-center justify-between"
+        >
+          <span
+            class="text-sm font-medium text-gray-200 flex items-center gap-2"
+          >
+            <svg
+              class="lucide lucide-history w-4 h-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+              />
+              <path
+                d="M3 3v5h5"
+              />
+              <path
+                d="M12 7v5l4 2"
+              />
+            </svg>
+            Session History
+            <span
+              class="text-[10px] text-gray-500 font-normal ml-1"
+            >
+              (
+              0
+               sessions)
+            </span>
+          </span>
+          <button
+            class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+            type="button"
+          >
+            <svg
+              class="lucide lucide-x w-4 h-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="relative"
         >
           <svg
-            class="lucide lucide-history w-4 h-4"
+            class="lucide lucide-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -1044,51 +2223,191 @@ exports[`chat mobile snapshot > renders hamburger header at 375px 1`] = `
             width="24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+            <circle
+              cx="11"
+              cy="11"
+              r="8"
             />
             <path
-              d="M3 3v5h5"
-            />
-            <path
-              d="M12 7v5l4 2"
+              d="m21 21-4.3-4.3"
             />
           </svg>
-          Session History
-        </span>
-        <button
-          class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
-          type="button"
+          <input
+            class="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-2 border border-border rounded-lg text-gray-200 placeholder-gray-500 outline-none focus:border-accent/50"
+            placeholder="Search sessions by name, path, or model..."
+            type="text"
+            value=""
+          />
+        </div>
+        <div
+          class="flex items-center gap-2 flex-wrap"
         >
-          <svg
-            class="lucide lucide-x w-4 h-4"
-            fill="none"
-            height="24"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="24"
-            xmlns="http://www.w3.org/2000/svg"
+          <div
+            class="flex items-center gap-1"
           >
-            <path
-              d="M18 6 6 18"
-            />
-            <path
-              d="m6 6 12 12"
-            />
-          </svg>
-        </button>
+            <svg
+              class="lucide lucide-filter w-3 h-3 text-gray-500"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <polygon
+                points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
+              />
+            </svg>
+            <select
+              class="text-[10px] bg-surface-2 border border-border rounded px-1.5 py-1 text-gray-300 outline-none focus:border-accent/50"
+            >
+              <option
+                value="all"
+              >
+                All Status
+              </option>
+              <option
+                value="active"
+              >
+                Active
+              </option>
+              <option
+                value="completed"
+              >
+                Completed
+              </option>
+              <option
+                value="error"
+              >
+                Error
+              </option>
+              <option
+                value="abandoned"
+              >
+                Abandoned
+              </option>
+            </select>
+          </div>
+          <div
+            class="flex items-center gap-1 ml-auto"
+          >
+            <svg
+              class="lucide lucide-arrow-up-down w-3 h-3 text-gray-500"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m21 16-4 4-4-4"
+              />
+              <path
+                d="M17 20V4"
+              />
+              <path
+                d="m3 8 4-4 4 4"
+              />
+              <path
+                d="M7 4v16"
+              />
+            </svg>
+            <select
+              class="text-[10px] bg-surface-2 border border-border rounded px-1.5 py-1 text-gray-300 outline-none focus:border-accent/50"
+            >
+              <option
+                value="lastActivity"
+              >
+                Last Activity
+              </option>
+              <option
+                value="name"
+              >
+                Name
+              </option>
+              <option
+                value="status"
+              >
+                Status
+              </option>
+              <option
+                value="duration"
+              >
+                Duration
+              </option>
+            </select>
+            <button
+              class="p-1 rounded hover:bg-surface-3 transition-colors text-gray-500"
+              title="Descending"
+              type="button"
+            >
+              <svg
+                class="lucide lucide-arrow-up-down w-3 h-3"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m21 16-4 4-4-4"
+                />
+                <path
+                  d="M17 20V4"
+                />
+                <path
+                  d="m3 8 4-4 4 4"
+                />
+                <path
+                  d="M7 4v16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
       <div
         class="overflow-auto"
-        style="max-height: calc(80vh - 3rem);"
+        style="max-height: calc(85vh - 7.5rem);"
       >
         <div
-          class="p-4 text-sm text-gray-500 text-center"
+          class="p-8 text-sm text-gray-500 text-center"
         >
-          No sessions found
+          <svg
+            class="lucide lucide-message-square w-8 h-8 mx-auto mb-2 opacity-30"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+          </svg>
+          <div>
+            No sessions found
+          </div>
+          <div
+            class="text-[10px] text-gray-600 mt-1"
+          >
+            Start a new chat to create your first session
+          </div>
         </div>
       </div>
     </dialog>
@@ -4467,6 +5786,7 @@ exports[`screen snapshots > Chat 1`] = `
                 <button
                   aria-label="Keyboard shortcuts"
                   class="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-surface-3 transition-colors"
+                  title="Keyboard shortcuts"
                   type="button"
                 >
                   <svg
@@ -4516,14 +5836,58 @@ exports[`screen snapshots > Chat 1`] = `
                 </button>
                 <dialog
                   class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
-                  style="max-width: 20rem; width: 90vw;"
+                  style="max-width: 26rem; width: 90vw;"
                 >
                   <div
                     class="px-4 py-3 border-b border-border flex items-center justify-between"
                   >
                     <span
-                      class="text-sm font-medium text-gray-200"
+                      class="text-sm font-medium text-gray-200 flex items-center gap-2"
                     >
+                      <svg
+                        class="lucide lucide-keyboard w-4 h-4 text-gray-400"
+                        fill="none"
+                        height="24"
+                        stroke="currentColor"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M10 8h.01"
+                        />
+                        <path
+                          d="M12 12h.01"
+                        />
+                        <path
+                          d="M14 8h.01"
+                        />
+                        <path
+                          d="M16 12h.01"
+                        />
+                        <path
+                          d="M18 8h.01"
+                        />
+                        <path
+                          d="M6 8h.01"
+                        />
+                        <path
+                          d="M7 16h10"
+                        />
+                        <path
+                          d="M8 12h.01"
+                        />
+                        <rect
+                          height="16"
+                          rx="2"
+                          width="20"
+                          x="2"
+                          y="4"
+                        />
+                      </svg>
                       Keyboard Shortcuts
                     </span>
                     <button
@@ -4533,133 +5897,510 @@ exports[`screen snapshots > Chat 1`] = `
                       ✕
                     </button>
                   </div>
-                  <ul
-                    class="py-2"
+                  <div
+                    class="max-h-[70vh] overflow-y-auto"
                   >
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
+                    <div>
+                      <div
+                        class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                      >
+                        Input
+                      </div>
+                      <ul
+                        class="py-1"
+                      >
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Send message
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↵
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            New line
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↵
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Force send
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↵
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Command palette
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              /
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Reference file
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              @
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Recall history
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↑
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Next suggestion
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ↓
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Select suggestion
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              Tab
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Close autocomplete
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              Esc
+                            </kbd>
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div
+                        class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                      >
+                        IDE Navigation
+                      </div>
+                      <ul
+                        class="py-1"
+                      >
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-folder-open w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"
+                                />
+                              </svg>
+                            </span>
+                            Toggle sidebar
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              B
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-search w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <circle
+                                  cx="11"
+                                  cy="11"
+                                  r="8"
+                                />
+                                <path
+                                  d="m21 21-4.3-4.3"
+                                />
+                              </svg>
+                            </span>
+                            Explorer
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              E
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-git-branch w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <line
+                                  x1="6"
+                                  x2="6"
+                                  y1="3"
+                                  y2="15"
+                                />
+                                <circle
+                                  cx="18"
+                                  cy="6"
+                                  r="3"
+                                />
+                                <circle
+                                  cx="6"
+                                  cy="18"
+                                  r="3"
+                                />
+                                <path
+                                  d="M18 9a9 9 0 0 1-9 9"
+                                />
+                              </svg>
+                            </span>
+                            Git panel
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              G
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-panel-bottom w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <rect
+                                  height="18"
+                                  rx="2"
+                                  width="18"
+                                  x="3"
+                                  y="3"
+                                />
+                                <path
+                                  d="M3 15h18"
+                                />
+                              </svg>
+                            </span>
+                            Toggle terminal
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              J
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            <span
+                              class="text-gray-500 group-hover:text-gray-400"
+                            >
+                              <svg
+                                class="lucide lucide-focus w-3 h-3"
+                                fill="none"
+                                height="24"
+                                stroke="currentColor"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                viewBox="0 0 24 24"
+                                width="24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <circle
+                                  cx="12"
+                                  cy="12"
+                                  r="3"
+                                />
+                                <path
+                                  d="M3 7V5a2 2 0 0 1 2-2h2"
+                                />
+                                <path
+                                  d="M17 3h2a2 2 0 0 1 2 2v2"
+                                />
+                                <path
+                                  d="M21 17v2a2 2 0 0 1-2 2h-2"
+                                />
+                                <path
+                                  d="M7 21H5a2 2 0 0 1-2-2v-2"
+                                />
+                              </svg>
+                            </span>
+                            Focus mode
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⌘
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              ⇧
+                            </kbd>
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              F
+                            </kbd>
+                          </span>
+                        </li>
+                        <li
+                          class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                        >
+                          <span
+                            class="flex items-center gap-2 text-sm text-gray-300"
+                          >
+                            Stop run
+                          </span>
+                          <span
+                            class="flex items-center gap-1"
+                          >
+                            <kbd
+                              class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                            >
+                              Esc
+                            </kbd>
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div
+                    class="px-4 py-2 border-t border-border/50 text-[10px] text-gray-600 text-center"
+                  >
+                    <span
+                      class="inline-flex items-center gap-1"
                     >
-                      <span
-                        class="text-sm text-gray-300"
+                      <kbd
+                        class="px-1 py-0.5 rounded bg-surface-3 text-[9px]"
                       >
-                        Send
+                        ⌘
+                      </kbd>
+                      <span>
+                        = Cmd on Mac, Ctrl on Windows
                       </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⏎
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Newline
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⇧
-                        </kbd>
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⏎
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Force send
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⌘
-                        </kbd>
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ⏎
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Commands
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          /
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Files
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          @
-                        </kbd>
-                      </span>
-                    </li>
-                    <li
-                      class="flex items-center justify-between px-4 py-1.5 hover:bg-surface-2"
-                    >
-                      <span
-                        class="text-sm text-gray-300"
-                      >
-                        Recall history
-                      </span>
-                      <span
-                        class="flex items-center gap-0.5"
-                      >
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ↑
-                        </kbd>
-                        <kbd
-                          class="kbd text-[10px]"
-                        >
-                          ↓
-                        </kbd>
-                      </span>
-                    </li>
-                  </ul>
+                    </span>
+                  </div>
                 </dialog>
                 <button
                   aria-label="send"
@@ -4687,6 +6428,701 @@ exports[`screen snapshots > Chat 1`] = `
                     />
                   </svg>
                 </button>
+              </div>
+              <div
+                class="px-3 py-1.5 text-[10px] text-gray-500 flex items-center gap-3 whitespace-nowrap overflow-x-auto no-scrollbar"
+              >
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    ⏎
+                  </kbd>
+                  <span>
+                    Send
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    ⇧⏎
+                  </kbd>
+                  <span
+                    class="hidden sm:inline"
+                  >
+                    Newline
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    /
+                  </kbd>
+                  <span
+                    class="hidden md:inline"
+                  >
+                    Commands
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    @
+                  </kbd>
+                  <span
+                    class="hidden md:inline"
+                  >
+                    Files
+                  </span>
+                </span>
+                <span
+                  class="flex items-center gap-1 shrink-0"
+                >
+                  <kbd
+                    class="kbd"
+                  >
+                    ↑↓
+                  </kbd>
+                  <span
+                    class="hidden sm:inline"
+                  >
+                    Recall history
+                  </span>
+                </span>
+                <span
+                  class="ml-auto shrink-0"
+                >
+                  <button
+                    aria-label="Keyboard shortcuts"
+                    class="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-surface-3 transition-colors"
+                    title="Keyboard shortcuts"
+                    type="button"
+                  >
+                    <svg
+                      class="lucide lucide-keyboard w-4 h-4"
+                      fill="none"
+                      height="24"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 8h.01"
+                      />
+                      <path
+                        d="M12 12h.01"
+                      />
+                      <path
+                        d="M14 8h.01"
+                      />
+                      <path
+                        d="M16 12h.01"
+                      />
+                      <path
+                        d="M18 8h.01"
+                      />
+                      <path
+                        d="M6 8h.01"
+                      />
+                      <path
+                        d="M7 16h10"
+                      />
+                      <path
+                        d="M8 12h.01"
+                      />
+                      <rect
+                        height="16"
+                        rx="2"
+                        width="20"
+                        x="2"
+                        y="4"
+                      />
+                    </svg>
+                  </button>
+                  <dialog
+                    class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
+                    style="max-width: 26rem; width: 90vw;"
+                  >
+                    <div
+                      class="px-4 py-3 border-b border-border flex items-center justify-between"
+                    >
+                      <span
+                        class="text-sm font-medium text-gray-200 flex items-center gap-2"
+                      >
+                        <svg
+                          class="lucide lucide-keyboard w-4 h-4 text-gray-400"
+                          fill="none"
+                          height="24"
+                          stroke="currentColor"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          viewBox="0 0 24 24"
+                          width="24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M10 8h.01"
+                          />
+                          <path
+                            d="M12 12h.01"
+                          />
+                          <path
+                            d="M14 8h.01"
+                          />
+                          <path
+                            d="M16 12h.01"
+                          />
+                          <path
+                            d="M18 8h.01"
+                          />
+                          <path
+                            d="M6 8h.01"
+                          />
+                          <path
+                            d="M7 16h10"
+                          />
+                          <path
+                            d="M8 12h.01"
+                          />
+                          <rect
+                            height="16"
+                            rx="2"
+                            width="20"
+                            x="2"
+                            y="4"
+                          />
+                        </svg>
+                        Keyboard Shortcuts
+                      </span>
+                      <button
+                        class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+                        type="button"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div
+                      class="max-h-[70vh] overflow-y-auto"
+                    >
+                      <div>
+                        <div
+                          class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                        >
+                          Input
+                        </div>
+                        <ul
+                          class="py-1"
+                        >
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Send message
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↵
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              New line
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↵
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Force send
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↵
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Command palette
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                /
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Reference file
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                @
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Recall history
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↑
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Next suggestion
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ↓
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Select suggestion
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                Tab
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Close autocomplete
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                Esc
+                              </kbd>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <div
+                          class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500 border-b border-border/50"
+                        >
+                          IDE Navigation
+                        </div>
+                        <ul
+                          class="py-1"
+                        >
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-folder-open w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"
+                                  />
+                                </svg>
+                              </span>
+                              Toggle sidebar
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                B
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-search w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <circle
+                                    cx="11"
+                                    cy="11"
+                                    r="8"
+                                  />
+                                  <path
+                                    d="m21 21-4.3-4.3"
+                                  />
+                                </svg>
+                              </span>
+                              Explorer
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                E
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-git-branch w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <line
+                                    x1="6"
+                                    x2="6"
+                                    y1="3"
+                                    y2="15"
+                                  />
+                                  <circle
+                                    cx="18"
+                                    cy="6"
+                                    r="3"
+                                  />
+                                  <circle
+                                    cx="6"
+                                    cy="18"
+                                    r="3"
+                                  />
+                                  <path
+                                    d="M18 9a9 9 0 0 1-9 9"
+                                  />
+                                </svg>
+                              </span>
+                              Git panel
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                G
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-panel-bottom w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <rect
+                                    height="18"
+                                    rx="2"
+                                    width="18"
+                                    x="3"
+                                    y="3"
+                                  />
+                                  <path
+                                    d="M3 15h18"
+                                  />
+                                </svg>
+                              </span>
+                              Toggle terminal
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                J
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              <span
+                                class="text-gray-500 group-hover:text-gray-400"
+                              >
+                                <svg
+                                  class="lucide lucide-focus w-3 h-3"
+                                  fill="none"
+                                  height="24"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  viewBox="0 0 24 24"
+                                  width="24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="3"
+                                  />
+                                  <path
+                                    d="M3 7V5a2 2 0 0 1 2-2h2"
+                                  />
+                                  <path
+                                    d="M17 3h2a2 2 0 0 1 2 2v2"
+                                  />
+                                  <path
+                                    d="M21 17v2a2 2 0 0 1-2 2h-2"
+                                  />
+                                  <path
+                                    d="M7 21H5a2 2 0 0 1-2-2v-2"
+                                  />
+                                </svg>
+                              </span>
+                              Focus mode
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⌘
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                ⇧
+                              </kbd>
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                F
+                              </kbd>
+                            </span>
+                          </li>
+                          <li
+                            class="flex items-center justify-between px-4 py-2 hover:bg-surface-2/70 transition-colors group"
+                          >
+                            <span
+                              class="flex items-center gap-2 text-sm text-gray-300"
+                            >
+                              Stop run
+                            </span>
+                            <span
+                              class="flex items-center gap-1"
+                            >
+                              <kbd
+                                class="px-1.5 py-0.5 rounded bg-surface-3 text-[10px] font-mono text-gray-400 border border-border/50"
+                              >
+                                Esc
+                              </kbd>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div
+                      class="px-4 py-2 border-t border-border/50 text-[10px] text-gray-600 text-center"
+                    >
+                      <span
+                        class="inline-flex items-center gap-1"
+                      >
+                        <kbd
+                          class="px-1 py-0.5 rounded bg-surface-3 text-[9px]"
+                        >
+                          ⌘
+                        </kbd>
+                        <span>
+                          = Cmd on Mac, Ctrl on Windows
+                        </span>
+                      </span>
+                    </div>
+                  </dialog>
+                </span>
               </div>
             </div>
           </div>
@@ -5051,16 +7487,78 @@ exports[`screen snapshots > Chat 1`] = `
     <dialog />
     <dialog
       class="rounded-xl border border-border bg-surface-1 shadow-xl shadow-black/50 p-0 m-auto"
-      style="max-width: 28rem; width: 90vw; max-height: 80vh;"
+      style="max-width: 36rem; width: 90vw; max-height: 85vh;"
     >
       <div
-        class="px-4 py-3 border-b border-border flex items-center justify-between flex-shrink-0"
+        class="px-4 py-3 border-b border-border flex flex-col gap-3 flex-shrink-0"
       >
-        <span
-          class="text-sm font-medium text-gray-200 flex items-center gap-2"
+        <div
+          class="flex items-center justify-between"
+        >
+          <span
+            class="text-sm font-medium text-gray-200 flex items-center gap-2"
+          >
+            <svg
+              class="lucide lucide-history w-4 h-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+              />
+              <path
+                d="M3 3v5h5"
+              />
+              <path
+                d="M12 7v5l4 2"
+              />
+            </svg>
+            Session History
+            <span
+              class="text-[10px] text-gray-500 font-normal ml-1"
+            >
+              (
+              0
+               sessions)
+            </span>
+          </span>
+          <button
+            class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
+            type="button"
+          >
+            <svg
+              class="lucide lucide-x w-4 h-4"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="relative"
         >
           <svg
-            class="lucide lucide-history w-4 h-4"
+            class="lucide lucide-search absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -5071,51 +7569,191 @@ exports[`screen snapshots > Chat 1`] = `
             width="24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+            <circle
+              cx="11"
+              cy="11"
+              r="8"
             />
             <path
-              d="M3 3v5h5"
-            />
-            <path
-              d="M12 7v5l4 2"
+              d="m21 21-4.3-4.3"
             />
           </svg>
-          Session History
-        </span>
-        <button
-          class="text-xs text-gray-500 hover:text-gray-200 transition-colors"
-          type="button"
+          <input
+            class="w-full pl-8 pr-3 py-1.5 text-xs bg-surface-2 border border-border rounded-lg text-gray-200 placeholder-gray-500 outline-none focus:border-accent/50"
+            placeholder="Search sessions by name, path, or model..."
+            type="text"
+            value=""
+          />
+        </div>
+        <div
+          class="flex items-center gap-2 flex-wrap"
         >
-          <svg
-            class="lucide lucide-x w-4 h-4"
-            fill="none"
-            height="24"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="24"
-            xmlns="http://www.w3.org/2000/svg"
+          <div
+            class="flex items-center gap-1"
           >
-            <path
-              d="M18 6 6 18"
-            />
-            <path
-              d="m6 6 12 12"
-            />
-          </svg>
-        </button>
+            <svg
+              class="lucide lucide-filter w-3 h-3 text-gray-500"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <polygon
+                points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
+              />
+            </svg>
+            <select
+              class="text-[10px] bg-surface-2 border border-border rounded px-1.5 py-1 text-gray-300 outline-none focus:border-accent/50"
+            >
+              <option
+                value="all"
+              >
+                All Status
+              </option>
+              <option
+                value="active"
+              >
+                Active
+              </option>
+              <option
+                value="completed"
+              >
+                Completed
+              </option>
+              <option
+                value="error"
+              >
+                Error
+              </option>
+              <option
+                value="abandoned"
+              >
+                Abandoned
+              </option>
+            </select>
+          </div>
+          <div
+            class="flex items-center gap-1 ml-auto"
+          >
+            <svg
+              class="lucide lucide-arrow-up-down w-3 h-3 text-gray-500"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="m21 16-4 4-4-4"
+              />
+              <path
+                d="M17 20V4"
+              />
+              <path
+                d="m3 8 4-4 4 4"
+              />
+              <path
+                d="M7 4v16"
+              />
+            </svg>
+            <select
+              class="text-[10px] bg-surface-2 border border-border rounded px-1.5 py-1 text-gray-300 outline-none focus:border-accent/50"
+            >
+              <option
+                value="lastActivity"
+              >
+                Last Activity
+              </option>
+              <option
+                value="name"
+              >
+                Name
+              </option>
+              <option
+                value="status"
+              >
+                Status
+              </option>
+              <option
+                value="duration"
+              >
+                Duration
+              </option>
+            </select>
+            <button
+              class="p-1 rounded hover:bg-surface-3 transition-colors text-gray-500"
+              title="Descending"
+              type="button"
+            >
+              <svg
+                class="lucide lucide-arrow-up-down w-3 h-3"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m21 16-4 4-4-4"
+                />
+                <path
+                  d="M17 20V4"
+                />
+                <path
+                  d="m3 8 4-4 4 4"
+                />
+                <path
+                  d="M7 4v16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
       <div
         class="overflow-auto"
-        style="max-height: calc(80vh - 3rem);"
+        style="max-height: calc(85vh - 7.5rem);"
       >
         <div
-          class="p-4 text-sm text-gray-500 text-center"
+          class="p-8 text-sm text-gray-500 text-center"
         >
-          No sessions found
+          <svg
+            class="lucide lucide-message-square w-8 h-8 mx-auto mb-2 opacity-30"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+            />
+          </svg>
+          <div>
+            No sessions found
+          </div>
+          <div
+            class="text-[10px] text-gray-600 mt-1"
+          >
+            Start a new chat to create your first session
+          </div>
         </div>
       </div>
     </dialog>

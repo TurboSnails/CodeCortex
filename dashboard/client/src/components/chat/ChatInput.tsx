@@ -11,6 +11,7 @@ import { FileMentionList } from "./input/FileMentionList";
 import { AttachmentStrip } from "./input/AttachmentStrip";
 import { VoiceButton } from "./input/VoiceButton";
 import { ShortcutDropdown } from "./input/ShortcutDropdown";
+import { InputHintBar } from "./input/InputHintBar";
 
 export interface ChatSlashCommand {
   name: string;
@@ -359,6 +360,7 @@ export function ChatInput({
           {t("chat-input:history.recallPulse", "Press ↑ to recall previous prompts")}
         </div>
       )}
+      <InputHintBar />
     </div>
   );
 }

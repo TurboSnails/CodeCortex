@@ -11,7 +11,7 @@ export function ToolInputPreview({ toolName, toolInput }: ToolInputPreviewProps)
   const toolUse: TranscriptContent = {
     type: "tool_use",
     name: toolName,
-    input: typeof toolInput === "object" && toolInput != null
+    input: typeof toolInput === "object" && toolInput !== null
       ? (toolInput as Record<string, unknown>)
       : undefined,
   };
