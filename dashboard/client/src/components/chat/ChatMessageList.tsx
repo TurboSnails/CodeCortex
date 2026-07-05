@@ -242,7 +242,7 @@ export function ChatMessageList({
         if (isToolUseEnvelope(env)) {
           return (
             <div key={i} className="flex justify-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200">
+              <div className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200 shadow-sm">
                 <Wrench className="w-3 h-3" />
                 {env.name}
               </div>
