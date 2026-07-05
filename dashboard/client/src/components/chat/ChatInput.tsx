@@ -266,10 +266,10 @@ export function ChatInput({
     if (!next) setActive(0);
   };
 
-  const handleSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
-    const ta = e.currentTarget;
-    const next = detectAutocomplete(ta.value, ta.selectionStart || 0);
-    setState(next);
+  const handleSelect = (_e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+    // Intentionally empty: calling setState here causes a re-render that
+    // clears the browser's native text selection, breaking copy/paste.
+    // Autocomplete state is already updated via handleChange on input.
   };
 
   return (
